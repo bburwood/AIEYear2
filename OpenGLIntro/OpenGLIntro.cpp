@@ -1,6 +1,9 @@
 // OpenGLIntro.cpp : Defines the entry point for the console application.
 //
 
+//	Download SourceTree to access GitHub:
+//		www.sourcetreeapp.com
+
 #include "stdafx.h"
 
 
