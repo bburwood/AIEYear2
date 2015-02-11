@@ -27,11 +27,15 @@ void	Camera::SetPerspective(float a_fFov, float a_fAspect, float a_fNear, float 
 void	Camera::SetLookAt(vec3 a_pos, vec3 a_lookAt, vec3 a_up)
 {
 	m_viewTransform = glm::lookAt(a_pos, a_lookAt, a_up);
+	m_worldTransform = glm::inverse(m_viewTransform);
+	UpdateProjectionViewTransform();
 }
 
 void	Camera::SetPosition(vec3 a_pos)
 {
 	m_worldTransform = glm::translate(a_pos);
+	m_viewTransform = glm::inverse(m_worldTransform);
+	UpdateProjectionViewTransform();
 }
 
 mat4	Camera::GetProjection()
@@ -111,8 +115,8 @@ bool	FlyCamera::update(float dT)
 		dXDelta -= 1280.0f / 2.0f;
 		dYDelta -= 720.0f / 2.0f;
 
-		dXDelta /= 1280.0f / 2.0f;
-		dYDelta /= 720.0f / 2.0f;
+		dXDelta /= -1280.0f / 2.0f;
+		dYDelta /= -720.0f / 2.0f;
 		vec3	cameraRight = (vec3)m_worldTransform[0];
 		mat4	cameraYaw = glm::rotate((float)dXDelta, vec3(0, 1, 0));
 		mat4	cameraPitch = glm::rotate((float)dYDelta, cameraRight);

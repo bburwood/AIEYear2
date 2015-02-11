@@ -7,11 +7,13 @@
 #include <cstdio>
 #include "IntroToOpenGL.h"
 #include "CameraAndProjections.h"
+#include "RenderingGeometry.h"
 
 int main()
 {
 //	IntroToOpenGL	app;
-	CameraAndProjections	app;
+//	CameraAndProjections	app;
+	RenderingGeometry	app;
 
 	if (app.startup() == false)
 	{
