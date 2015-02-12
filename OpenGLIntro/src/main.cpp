@@ -8,12 +8,16 @@
 #include "IntroToOpenGL.h"
 #include "CameraAndProjections.h"
 #include "RenderingGeometry.h"
+#include "Texturing.h"
+#include "Lighting.h"
 
 int main()
 {
 //	IntroToOpenGL	app;
 //	CameraAndProjections	app;
-	RenderingGeometry	app;
+//	RenderingGeometry	app;
+//	Texturing app;
+	Lighting app;
 
 	if (app.startup() == false)
 	{

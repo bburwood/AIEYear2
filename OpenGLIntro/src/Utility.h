@@ -3,7 +3,7 @@
 
 typedef	unsigned int	GLuint;
 
-bool	LoadShaders(char* vertex_filename, char* fragment_filename, GLuint* result);
+bool	LoadShader(char* vertex_filename, char* fragment_filename, GLuint* result);
 //	to remove fpoen error, define
 //	_CRT_SECURE_NO_WARNINGS
 

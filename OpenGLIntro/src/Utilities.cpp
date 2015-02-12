@@ -1,7 +1,7 @@
 #include "gl_core_4_4.h"
 #include <cstdio>
 
-bool	LoadShaders(char* vertex_filename, char* fragment_filename, GLuint* result)
+bool	LoadShader(char* vertex_filename, char* fragment_filename, GLuint* result)
 {
 	bool	succeeded = false;
 	FILE*	vertex_file = fopen(vertex_filename, "r");
@@ -31,9 +31,9 @@ bool	LoadShaders(char* vertex_filename, char* fragment_filename, GLuint* result)
 		succeeded = true;
 		unsigned int	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 		unsigned int	fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(vertex_shader, 1, &vs_source, 0);
+		glShaderSource(vertex_shader, 1, &vs_source, &vertex_file_length);
 		glCompileShader(vertex_shader);
-		glShaderSource(fragment_shader, 1, &fs_source, 0);
+		glShaderSource(fragment_shader, 1, &fs_source, &fragment_file_length);
 		glCompileShader(fragment_shader);
 		*result = glCreateProgram();
 		glAttachShader(*result, vertex_shader);

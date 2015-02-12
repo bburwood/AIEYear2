@@ -10,9 +10,9 @@
 /////////////////////////////////////////////////////////////////////////////////////
 Camera::Camera(vec3 a_pos, vec3 a_lookAt, float a_fFov, float a_fAspect, float a_fNear, float a_fFar)
 {
+	SetPosition(a_pos);
 	SetLookAt(a_pos, a_lookAt, vec3(0, 1, 0));
 	SetPerspective(a_fFov, a_fAspect, a_fNear, a_fFar);
-	SetPosition(a_pos);
 }
 
 Camera::~Camera()
@@ -59,12 +59,11 @@ void	Camera::UpdateProjectionViewTransform()
 //	FlyCamera functions in this section
 /////////////////////////////////////////////////////////////////////////////////////
 FlyCamera::FlyCamera(vec3 a_pos, vec3 a_lookAt, float a_fFov, float a_fAspect, float a_fNear, float a_fFar)
-	: m_fSpeed(10.0f)
+	: m_fSpeed(20.0f)
 {
+	SetPosition(a_pos);
 	SetLookAt(a_pos, a_lookAt, vec3(0, 1, 0));
 	SetPerspective(a_fFov, a_fAspect, a_fNear, a_fFar);
-	SetPosition(a_pos);
-
 }
 
 FlyCamera::~FlyCamera()

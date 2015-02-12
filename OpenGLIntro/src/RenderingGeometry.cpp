@@ -4,6 +4,7 @@
 #include "gl_core_4_4.h"
 #include <GLFW\glfw3.h>
 #include "Gizmos.h"
+#include "Utility.h"
 
 RenderingGeometry::RenderingGeometry()
 : m_uiRows(0), m_uiCols(0), m_timer(0)
@@ -25,7 +26,7 @@ bool	RenderingGeometry::startup()
 	glfwSetTime(0.0f);
 	Gizmos::create();
 
-	GenerateShader();
+	LoadShader("./shaders/basic_vertex.glsl", "./shaders/basic_fragment.glsl", &m_uiProgramID);
 	GenerateGrid(10, 10);
 
 
