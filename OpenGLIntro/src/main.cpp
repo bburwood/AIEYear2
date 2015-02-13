@@ -10,6 +10,7 @@
 #include "RenderingGeometry.h"
 #include "Texturing.h"
 #include "Lighting.h"
+#include "AdvancedTexturing.h"
 
 int main()
 {
@@ -17,7 +18,8 @@ int main()
 //	CameraAndProjections	app;
 //	RenderingGeometry	app;
 //	Texturing app;
-	Lighting app;
+//	Lighting app;
+	AdvancedTexturing app;
 
 	if (app.startup() == false)
 	{

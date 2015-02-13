@@ -39,7 +39,6 @@ dlldata.c
 *_i.h
 *.ilk
 *.meta
-*.obj
 *.pch
 *.pdb
 *.pgc
@@ -181,3 +180,4 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
+OpenGLIntro/deps/FBXLoader/FBXLoader.lib

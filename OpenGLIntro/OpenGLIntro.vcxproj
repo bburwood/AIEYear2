@@ -41,13 +41,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);./deps/FBXLoader;$(WindowsSDK_IncludePath);./deps/glm;./deps/glfw/include;./deps/FBXLoader;.\deps\FBXLoader;./deps/FBXLoader;./deps/FBXLoader;./deps/FBXLoader;</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);./deps/FBXLoader;./deps/glfw/lib-vc2013;./deps/FBXLoader</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);./deps/glm;./deps/glfw/include;./deps/FBXLoader;.\deps\FBXLoader;./deps/FBXLoader;./deps/FBXLoader;./deps/FBXLoader;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);./deps/glfw/lib-vc2013;./deps/FBXLoader</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);./deps/FBXLoader;.\deps\FBXLoader;$(WindowsSDK_IncludePath);./src/glm;./deps/glfw/include;;.\deps\FBXLoader;./deps/FBXLoader;.\deps\FBXLoader;./deps/FBXLoader;./deps/FBXLoader;./deps/FBXLoader;</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);./deps/FBXLoader;.\deps\FBXLoader;./deps/glfw/lib-vc2013;;./deps/FBXLoader</LibraryPath>
+    <IncludePath>$(VC_IncludePath);.\deps\FBXLoader;$(WindowsSDK_IncludePath);./src/glm;./deps/glfw/include;;.\deps\FBXLoader;./deps/FBXLoader;.\deps\FBXLoader;./deps/FBXLoader;./deps/FBXLoader;./deps/FBXLoader;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);.\deps\FBXLoader;./deps/glfw/lib-vc2013;;./deps/FBXLoader</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -60,7 +60,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;FBXLoader.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -78,13 +78,14 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;FBXLoader.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\AdvancedTexturing.h" />
     <ClInclude Include="src\Application.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\CameraAndProjections.h" />
@@ -96,10 +97,12 @@
     <ClInclude Include="src\RenderingGeometry.h" />
     <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\Texturing.h" />
+    <ClInclude Include="src\tiny_obj_loader.h" />
     <ClInclude Include="src\Utility.h" />
     <ClInclude Include="src\Vertex.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\AdvancedTexturing.cpp" />
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\CameraAndProjections.cpp" />
@@ -110,6 +113,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\RenderingGeometry.cpp" />
     <ClCompile Include="src\Texturing.cpp" />
+    <ClCompile Include="src\tiny_obj_loader.cc" />
     <ClCompile Include="src\Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -117,6 +121,8 @@
     <None Include="data\shaders\basic_vertex.glsl" />
     <None Include="data\shaders\lighting_fragment.glsl" />
     <None Include="data\shaders\lighting_vertex.glsl" />
+    <None Include="data\shaders\normal_mapped_fragment.glsl" />
+    <None Include="data\shaders\normal_mapped_vertex.glsl" />
     <None Include="data\shaders\textured_fragment.glsl" />
     <None Include="data\shaders\textured_vertex.glsl" />
   </ItemGroup>

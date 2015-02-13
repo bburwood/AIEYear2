@@ -4,8 +4,10 @@
 #include "Application.h"
 #include "Camera.h"
 #include "GLMHeader.h"
-
-class	FBXFile;
+#include "tiny_obj_loader.h"
+#include <vector>
+#include "Vertex.h"
+//class	FBXFile;
 
 class Lighting : public Application
 {
@@ -17,14 +19,14 @@ public:
 	bool	update();
 	void	draw();
 
-	void	CreateOpenGlBuffers(FBXFile* a_file);
-	void	CleanUpOpenGLBuffers(FBXFile* a_file);
+	void	CreateOpenGlBuffers(std::vector<tinyobj::shape_t> & a_shapes);
+	void	CleanUpOpenGLBuffers();
 
 	void	ReloadShader();
 
 
 	FlyCamera	m_FlyCamera;
-	FBXFile*	m_FBXfile;
+	//FBXFile*	m_FBXfile;
 
 
 
@@ -32,11 +34,17 @@ public:
 	void	GenerateShader();
 	unsigned int	m_uiProgramID;
 	unsigned int	m_uiIndexCount;
+	std::vector<OpenGLData>	m_GLData;
 
 
 	unsigned int	m_uiVAO;
 	unsigned int	m_uiVBO;
 	unsigned int	m_uiIBO;
+	vec3 light_dir;
+	vec3 light_colour;
+	vec3 material_colour;
+	vec3 ambient_light;
+	float	specular_power;
 private:
 	unsigned int	m_uiRows;
 	unsigned int	m_uiCols;

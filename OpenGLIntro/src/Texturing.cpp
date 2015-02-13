@@ -6,7 +6,7 @@
 #include "Utility.h"
 #include "Vertex.h"
 
-//#define	STB_IMAGE_IMPLEMENTATION
+#define	STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 Texturing::Texturing()
@@ -58,8 +58,6 @@ bool	Texturing::update()
 
 	m_timer += dT;
 	m_FlyCamera.update(dT);
-
-
 
 	return true;
 }
@@ -160,5 +158,4 @@ void	Texturing::GenerateQuad(float a_fSize)
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
 }

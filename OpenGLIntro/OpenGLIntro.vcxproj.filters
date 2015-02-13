@@ -63,6 +63,12 @@
     <ClInclude Include="src\Lighting.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\tiny_obj_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AdvancedTexturing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\gl_core_4_4.c">
@@ -98,6 +104,12 @@
     <ClCompile Include="src\Lighting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\tiny_obj_loader.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AdvancedTexturing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\basic_fragment.glsl">
@@ -116,6 +128,12 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="data\shaders\lighting_fragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\normal_mapped_vertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\normal_mapped_fragment.glsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

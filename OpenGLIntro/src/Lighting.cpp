@@ -7,7 +7,7 @@
 #include "Utility.h"
 //#include "FBXFile.h"
 
-#include "../deps/FBXLoader/FBXFile.h"
+//#include "../deps/FBXLoader/FBXFile.h"
 
 Lighting::Lighting()
 : m_uiRows(0), m_uiCols(0), m_timer(0)
@@ -31,14 +31,28 @@ bool	Lighting::startup()
 
 	LoadShader("./shaders/lighting_vertex.glsl", "./shaders/lighting_fragment.glsl", &m_uiProgramID);
 	//GenerateGrid(10, 10);
+	
 
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+
+	//std::string err = tinyobj::LoadObj(shapes, materials, "./models/stanford/Bunny.obj");
+	//std::string err = tinyobj::LoadObj(shapes, materials, "./models/stanford/buddha.obj");
+	std::string err = tinyobj::LoadObj(shapes, materials, "./models/stanford/dragon.obj");
+	if (err.size() != 0)
+	{
+		return false;
+	}
 
 	m_FlyCamera = FlyCamera(vec3(10, 10, 10), vec3(0, 0, 0), glm::radians(60.0f), 1280.0f / 720.0f, 0.1f, 1000.0f);
 
-	m_FBXfile = new FBXFile();
-	m_FBXfile->load("./models/stanford/Bunny.fbx");
+	CreateOpenGlBuffers(shapes);
 
-	CreateOpenGlBuffers(m_FBXfile);
+	ambient_light = vec3(0.1f, 0.1f, 0.1f);
+	light_dir = vec3(0, -1, 0);
+	light_colour = vec3(0.1f, 0.50f, 0.7f);
+	material_colour = vec3(1.0f);
+	specular_power = 15.0f;
 
 	return true;
 }
@@ -46,6 +60,7 @@ bool	Lighting::startup()
 void	Lighting::shutdown()
 {
 	//	now clean up
+	CleanUpOpenGLBuffers();
 	Gizmos::destroy();
 }
 
@@ -55,7 +70,7 @@ bool	Lighting::update()
 	{
 		return false;
 	}
-	//	check is we need to reload the shaders
+	//	check if we need to reload the shaders
 	if (glfwGetKey(m_window, GLFW_KEY_R) == GLFW_PRESS)
 	{
 		ReloadShader();
@@ -98,26 +113,50 @@ void	Lighting::draw()
 	int	iViewProjUniform = glGetUniformLocation(m_uiProgramID, "projection_view");
 	glUniformMatrix4fv(iViewProjUniform, 1, GL_FALSE, (float*)&m_FlyCamera.GetProjectionView());
 
-	for (unsigned int mesh_index = 0; mesh_index < m_FBXfile->getMeshCount(); ++mesh_index)
+	int	ambient_uniform = glGetUniformLocation(m_uiProgramID, "ambient_light");
+	int	light_colour_uniform = glGetUniformLocation(m_uiProgramID, "light_colour");
+	int	light_dir_uniform = glGetUniformLocation(m_uiProgramID, "light_dir");
+	int	material_colour_uniform = glGetUniformLocation(m_uiProgramID, "material_colour");
+	int	eye_pos_uniform = glGetUniformLocation(m_uiProgramID, "eye_pos");
+	int	specular_uniform = glGetUniformLocation(m_uiProgramID, "specular_power");
+	int	timer_uniform = glGetUniformLocation(m_uiProgramID, "timer");
+
+	glUniform3fv(ambient_uniform, 1, (float*)&ambient_light);
+	glUniform3fv(light_colour_uniform, 1, (float*)&light_colour);
+	glUniform3fv(light_dir_uniform, 1, (float*)&light_dir);
+	glUniform3fv(material_colour_uniform, 1, (float*)&material_colour);
+
+	vec3	camera_pos = m_FlyCamera.m_worldTransform[3].xyz;
+	glUniform3fv(eye_pos_uniform, 1, (float*)&camera_pos);
+	glUniform1f(specular_uniform, specular_power);
+	glUniform1f(timer_uniform, m_timer);
+
+	//	uncomment the following line for wireframe ...
+//	else
+//	{
+//		glPolygonMode(GL_FRONT_AND_BACK, GL_TRIANGLES);
+//	}
+
+	for (unsigned int mesh_index = 0; mesh_index < m_GLData.size(); ++mesh_index)
 	{
-		FBXMeshNode* mesh = m_FBXfile->getMeshByIndex(mesh_index);
-		unsigned int*	gl_data = (unsigned int*)mesh->m_userData;
-
-		glBindVertexArray(gl_data[0]);
-		glDrawElements(GL_TRIANGLES, mesh->m_indices.size(), GL_UNSIGNED_INT, 0);
+		glBindVertexArray(m_GLData[mesh_index].m_uiVAO);
+		if (glfwGetKey(m_window, GLFW_KEY_M) == GLFW_PRESS)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}
+		else
+		{
+			//ReloadShader();
+		}
+		glDrawElements(GL_TRIANGLES, m_GLData[mesh_index].m_uiIndexCount, GL_UNSIGNED_INT, 0);
 	}
-
-
 
 	Application::draw();
 	Gizmos::draw(m_FlyCamera.GetProjectionView());
 	glfwSwapBuffers(m_window);
 	glfwPollEvents();
-
-
-
 }
-
+/*
 void	Lighting::CreateOpenGlBuffers(FBXFile* a_file)
 {
 	for (unsigned int uiMeshIndex = 0; uiMeshIndex < a_file->getMeshCount(); ++uiMeshIndex)
@@ -148,7 +187,45 @@ void	Lighting::CreateOpenGlBuffers(FBXFile* a_file)
 		mesh->m_userData = gl_data;
 	}
 }
+*/
 
+void	Lighting::CreateOpenGlBuffers(std::vector<tinyobj::shape_t> & a_shapes)
+{
+	m_GLData.resize(a_shapes.size());
+	for (unsigned int uiShapeIndex = 0; uiShapeIndex < a_shapes.size(); ++ uiShapeIndex)
+	{
+		std::vector<float>	vertexData;
+
+		unsigned int float_count = a_shapes[uiShapeIndex].mesh.positions.size();
+		float_count += a_shapes[uiShapeIndex].mesh.normals.size();
+		vertexData.reserve(float_count);
+		vertexData.insert(vertexData.end(), a_shapes[uiShapeIndex].mesh.positions.begin(), a_shapes[uiShapeIndex].mesh.positions.end());
+		vertexData.insert(vertexData.end(), a_shapes[uiShapeIndex].mesh.normals.begin(), a_shapes[uiShapeIndex].mesh.normals.end());
+		m_GLData[uiShapeIndex].m_uiIndexCount = a_shapes[uiShapeIndex].mesh.indices.size();
+
+		glGenVertexArrays(1, &m_GLData[uiShapeIndex].m_uiVAO);
+		glGenBuffers(1, &m_GLData[uiShapeIndex].m_uiVBO);
+		glGenBuffers(1, &m_GLData[uiShapeIndex].m_uiIBO);
+
+		glBindVertexArray(m_GLData[uiShapeIndex].m_uiVAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_GLData[uiShapeIndex].m_uiVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * float_count, vertexData.data(), GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_GLData[uiShapeIndex].m_uiIBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, a_shapes[uiShapeIndex].mesh.indices.size() * sizeof(unsigned int), a_shapes[uiShapeIndex].mesh.indices.data(), GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);	//	positions
+		glEnableVertexAttribArray(1);	//	normals
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, 0, (void*)(sizeof(float) * a_shapes[uiShapeIndex].mesh.positions.size()));
+
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
+}
+
+/*
 void	Lighting::CleanUpOpenGLBuffers(FBXFile* a_file)
 {
 	for (unsigned int uiMeshIndex = 0; uiMeshIndex < a_file->getMeshCount(); ++uiMeshIndex)
@@ -160,6 +237,19 @@ void	Lighting::CleanUpOpenGLBuffers(FBXFile* a_file)
 		glDeleteVertexArrays(1, &uigl_data[0]);
 		glDeleteBuffers(2, &uigl_data[1]);
 		delete[]	uigl_data;
+	}
+}
+*/
+
+void	Lighting::CleanUpOpenGLBuffers()
+{
+	glDeleteProgram(m_uiProgramID);
+
+	for (unsigned int i = 0; i < m_GLData.size(); ++i)
+	{
+		glDeleteVertexArrays(1, &m_GLData[i].m_uiVAO);
+		glDeleteBuffers(1, &m_GLData[i].m_uiVBO);
+		glDeleteBuffers(1, &m_GLData[i].m_uiIBO);
 	}
 }
 
