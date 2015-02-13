@@ -218,7 +218,7 @@ void	AdvancedTexturing::GenerateQuad(float a_fSize)
 	glBindVertexArray(m_quad.m_uiVAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_quad.m_uiVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(VertexTexCoord)* 4, vertex_data, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(VertexNormal)* 4, vertex_data, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_quad.m_uiIBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)* 6, index_data, GL_STATIC_DRAW);

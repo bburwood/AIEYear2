@@ -146,7 +146,7 @@ void	Lighting::draw()
 		}
 		else
 		{
-			//ReloadShader();
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 		glDrawElements(GL_TRIANGLES, m_GLData[mesh_index].m_uiIndexCount, GL_UNSIGNED_INT, 0);
 	}
