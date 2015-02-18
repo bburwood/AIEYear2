@@ -35,6 +35,7 @@ bool	AdvancedTexturing::startup()
 	m_fSpecular_power = 15.0f;
 
 	m_FlyCamera = FlyCamera(vec3(10, 10, 10), vec3(0, 0, 0), glm::radians(60.0f), 1280.0f / 720.0f, 0.1f, 1000.0f);
+	LoadTextures();
 
 	return true;
 }

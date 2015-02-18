@@ -35,6 +35,7 @@ bool	Application::startup()
 	int	minor_version = ogl_GetMinorVersion();
 
 	printf("Successfully loaded OpenGL version %d.%d!\n", major_version, minor_version);
+	return true;
 }
 
 void	Application::shutdown()

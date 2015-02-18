@@ -33,6 +33,7 @@ bool	IntroToOpenGL::startup()
 	m_camera_z = -10.0f;
 	m_timer = 0.0f;
 
+	return true;
 }
 
 void	IntroToOpenGL::shutdown()
@@ -54,7 +55,7 @@ bool	IntroToOpenGL::update()
 		return false;
 	}
 
-	float	dT = glfwGetTime();
+	float	dT = (float)glfwGetTime();
 	glfwSetTime(0.0f);
 	//	now we get to the fun stuff
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -110,7 +111,7 @@ bool	IntroToOpenGL::update()
 	//		Gizmos::addSphere(child_two_transform[3].xyz, 1.0f, 20, 20, blue, &child_two_transform);
 
 
-
+	return true;
 }
 
 void	IntroToOpenGL::draw()

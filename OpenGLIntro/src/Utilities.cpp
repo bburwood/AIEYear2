@@ -9,6 +9,14 @@ bool	LoadShader(char* vertex_filename, char* fragment_filename, GLuint* result)
 
 	if (vertex_file == 0 || fragment_file == 0)
 	{
+		if (vertex_file == 0)
+		{
+			printf("ERROR: Failed to open the \"%s\" shader file!!\n", vertex_filename);
+		}
+		if (fragment_file == 0)
+		{
+			printf("ERROR: Failed to open the \"%s\" shader file!!\n", fragment_filename);
+		}
 		succeeded = false;
 	}
 	else
@@ -63,7 +71,13 @@ bool	LoadShader(char* vertex_filename, char* fragment_filename, GLuint* result)
 		delete[] vs_source;
 		delete[] fs_source;
 	}
-	fclose(vertex_file);
-	fclose(fragment_file);
+	if (vertex_file != NULL)
+	{
+		fclose(vertex_file);
+	}
+	if (fragment_file != NULL)
+	{
+		fclose(fragment_file);
+	}
 	return succeeded;
 }
