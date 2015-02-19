@@ -12,6 +12,28 @@ Application::~Application()
 {
 }
 
+void setVSync(bool sync)
+{
+	// Function pointer for the wgl extention function we need to enable/disable
+	// vsync
+	typedef BOOL(APIENTRY *PFNWGLSWAPINTERVALPROC)(int);
+	PFNWGLSWAPINTERVALPROC wglSwapIntervalEXT = 0;
+
+	char *extensions = (char*)glGetString(GL_EXTENSIONS);
+
+	if (strstr(extensions, "WGL_EXT_swap_control") == 0)
+	{
+		return;
+	}
+	else
+	{
+		wglSwapIntervalEXT = (PFNWGLSWAPINTERVALPROC)wglGetProcAddress("wglSwapIntervalEXT");
+
+		if (wglSwapIntervalEXT)
+			wglSwapIntervalEXT(sync);
+	}
+}
+
 bool	Application::startup()
 {
 	if (glfwInit() == false)
@@ -25,6 +47,7 @@ bool	Application::startup()
 		return -2;
 	}
 	glfwMakeContextCurrent(this->m_window);
+	//setVSync(1);  // 0 disable VSync, 1 enable vsync - needs glew
 	if (ogl_LoadFunctions() == ogl_LOAD_FAILED)	//	must be after you make context current
 	{
 		glfwDestroyWindow(this->m_window);

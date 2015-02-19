@@ -27,7 +27,8 @@ void main()
 	vec3 sampled_normal = texture(normal_tex, frag_texcoord).xyz;
 	vec3 adjusted_normal = sampled_normal * 2 - 1;
 
-	vec3	colourModifier = vec3(abs(sin(timer)), abs(sin(timer)), abs(cos(timer)));
+	//vec3	colourModifier = vec3(abs(sin(timer)), abs(sin(timer)), abs(cos(timer)));
+	vec3	colourModifier = vec3(1);
 	vec3	ambient = material_colour * ambient_light * colourModifier;
 
 	vec3	N = normalize(TBN * adjusted_normal);

@@ -19,6 +19,9 @@
     <Filter Include="Texturing">
       <UniqueIdentifier>{49b4069a-b323-4d99-81ad-3e2dce8764ca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Quaternions">
+      <UniqueIdentifier>{aaf155c8-94b2-42b4-810e-7582bc72f95d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -69,6 +72,12 @@
     <ClInclude Include="src\AdvancedTexturing.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="deps\AntTweakBar\include\AntTweakBar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Quaternions.h">
+      <Filter>Quaternions</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\gl_core_4_4.c">
@@ -108,6 +117,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\AdvancedTexturing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Quaternions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

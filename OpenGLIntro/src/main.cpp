@@ -11,6 +11,7 @@
 #include "Texturing.h"
 #include "Lighting.h"
 #include "AdvancedTexturing.h"
+#include "Quaternions.h"
 
 int main()
 {
@@ -19,7 +20,8 @@ int main()
 //	RenderingGeometry	app;
 //	Texturing app;
 //	Lighting app;
-	AdvancedTexturing app;
+//	AdvancedTexturing app;
+	Quaternions	app;
 
 	if (app.startup() == false)
 	{

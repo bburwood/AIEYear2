@@ -5,6 +5,8 @@
 #include "Camera.h"
 #include "Vertex.h"
 
+#include "AntTweakBar.h"
+
 class AdvancedTexturing : public Application
 {
 public:
@@ -18,6 +20,7 @@ public:
 	void	LoadTextures();
 	void	GenerateQuad(float a_fSize);
 	void	ReloadShader();
+	void	GenerateCircle(float radius, int rows, int cols);
 
 	mat4	m_view;
 	mat4	m_projection;
@@ -35,6 +38,12 @@ public:
 	vec3 m_light_colour;
 	vec3 m_material_colour;
 	float	m_fSpecular_power;
+	vec4	m_BackgroundColour;
+	float	m_fFPS;
+
+	TwBar*	m_bar;
+
+	bool	m_bDrawGizmos;
 };
 
 #endif	//	_ADVANCED_TEXTURING_H_
