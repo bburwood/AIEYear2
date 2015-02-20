@@ -6,7 +6,8 @@
 #include <thread>
 #include <mutex>
 
-#define GLM_SWIZZLE	
+#define GLM_SWIZZLE
+#define GLM_FORCE_PURE
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtc/epsilon.hpp"

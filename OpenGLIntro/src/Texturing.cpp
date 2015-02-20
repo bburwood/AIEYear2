@@ -6,7 +6,7 @@
 #include "Utility.h"
 #include "Vertex.h"
 
-#define	STB_IMAGE_IMPLEMENTATION
+//#define	STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 Texturing::Texturing()

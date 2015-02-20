@@ -1,0 +1,92 @@
+#include "BLANK.h"
+#include "gl_core_4_4.h"
+#include <GLFW\glfw3.h>
+#include "Gizmos.h"
+#include "Utility.h"
+
+using glm::vec2;
+using glm::vec3;
+using glm::vec4;
+using glm::mat4;
+
+BLANK::BLANK()
+{
+}
+BLANK::~BLANK()
+{
+}
+
+bool	BLANK::startup()
+{
+	if (Application::startup() == false)
+	{
+		return false;
+	}
+	glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
+	glEnable(GL_DEPTH_TEST);
+	glfwSetTime(0.0f);
+
+	Gizmos::create();
+	m_bDrawGizmos = true;
+
+	//	now initialise the FlyCamera
+	m_FlyCamera = FlyCamera(vec3(10, 10, 10), vec3(0, 0, 0), glm::radians(50.0f), 1280.0f / 720.0f, 0.1f, 1000.0f);
+	m_BackgroundColour = vec4(0.3f, 0.3f, 0.3f, 1.0f);
+	return true;
+}
+
+void	BLANK::shutdown()
+{
+	//	now clean up
+	Gizmos::destroy();
+}
+
+bool	BLANK::update()
+{
+	if (Application::update() == false)
+	{
+		return false;
+	}
+
+	float	dT = (float)glfwGetTime();
+	glfwSetTime(0.0f);
+	//	now we get to the fun stuff
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	Gizmos::clear();
+	Gizmos::addTransform(mat4(1));
+
+	m_timer += dT;
+	m_FlyCamera.update(dT);
+
+	vec4	white(1);
+	vec4	black(0, 0, 0, 1);
+	vec4	blue(0, 0, 1, 1);
+	vec4	yellow(1, 1, 0, 1);
+	vec4	green(0, 1, 0, 1);
+	vec4	red(1, 0, 0, 1);
+	for (int i = 0; i <= 20; ++i)
+	{
+		Gizmos::addLine(vec3(-10 + i, 0, -10), vec3(-10 + i, 0, 10),
+			i == 10 ? white : black);
+		Gizmos::addLine(vec3(-10, 0, -10 + i), vec3(10, 0, -10 + i),
+			i == 10 ? white : black);
+	}
+
+
+
+
+	glClearColor(m_BackgroundColour.x, m_BackgroundColour.y, m_BackgroundColour.z, m_BackgroundColour.w);
+	return true;
+}
+
+void	BLANK::draw()
+{
+	Application::draw();
+	if (m_bDrawGizmos)
+	{
+		Gizmos::draw(m_FlyCamera.GetProjectionView());
+	}
+	glfwSwapBuffers(m_window);
+	glfwPollEvents();
+}
+

@@ -78,6 +78,15 @@
     <ClInclude Include="src\Quaternions.h">
       <Filter>Quaternions</Filter>
     </ClInclude>
+    <ClInclude Include="src\BLANK.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Animation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="deps\FBXLoader\FBXFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\gl_core_4_4.c">
@@ -122,6 +131,12 @@
     <ClCompile Include="src\Quaternions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\BLANK.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Animation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\basic_fragment.glsl">
@@ -148,5 +163,9 @@
     <None Include="data\shaders\normal_mapped_fragment.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="data\shaders\skinned_vertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\skinned_fragment.glsl" />
   </ItemGroup>
 </Project>

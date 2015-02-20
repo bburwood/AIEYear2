@@ -12,6 +12,8 @@
 #include "Lighting.h"
 #include "AdvancedTexturing.h"
 #include "Quaternions.h"
+#include "BLANK.h"
+#include "Animation.h"
 
 int main()
 {
@@ -21,7 +23,9 @@ int main()
 //	Texturing app;
 //	Lighting app;
 //	AdvancedTexturing app;
-	Quaternions	app;
+//	Quaternions	app;
+//	BLANK	app;
+	Animation	app;
 
 	if (app.startup() == false)
 	{
