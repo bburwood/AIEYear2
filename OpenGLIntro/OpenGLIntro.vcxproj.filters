@@ -87,6 +87,12 @@
     <ClInclude Include="deps\FBXLoader\FBXFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Particles.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Emitter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\gl_core_4_4.c">
@@ -137,6 +143,12 @@
     <ClCompile Include="src\Animation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Particles.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Emitter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\basic_fragment.glsl">
@@ -167,5 +179,11 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="data\shaders\skinned_fragment.glsl" />
+    <None Include="data\shaders\particle_vertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\particle_fragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -47,7 +47,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);./deps/AntTweakBar/include;./deps/FBXLoader;.\deps\FBXLoader;$(WindowsSDK_IncludePath);./src/glm;./deps/glfw/include;;.\deps\FBXLoader;./deps/FBXLoader;.\deps\FBXLoader;./deps/FBXLoader;./deps/FBXLoader;./deps/FBXLoader;</IncludePath>
+    <IncludePath>$(VC_IncludePath);./deps/AntTweakBar/include;./deps/FBXLoader;.\deps\FBXLoader;$(WindowsSDK_IncludePath);./deps/glm;./deps/glfw/include;.\deps\FBXLoader;./deps/FBXLoader;.\deps\FBXLoader;./deps/FBXLoader;./deps/FBXLoader;./deps/FBXLoader;</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);./deps/FBXLoader;./deps/AntTweakBar/lib;.\deps\FBXLoader;./deps/glfw/lib-vc2013;;./deps/FBXLoader</LibraryPath>
     <OutDir>$(SolutionDir)build\</OutDir>
   </PropertyGroup>
@@ -56,7 +56,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;GLM_FORCE_PURE;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;GLM_FORCE_PURE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
@@ -68,11 +68,11 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;GLM_FORCE_PURE;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;GLM_FORCE_PURE;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
@@ -95,11 +95,13 @@
     <ClInclude Include="src\BLANK.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\CameraAndProjections.h" />
+    <ClInclude Include="src\Emitter.h" />
     <ClInclude Include="src\Gizmos.h" />
     <ClInclude Include="src\GLMHeader.h" />
     <ClInclude Include="src\gl_core_4_4.h" />
     <ClInclude Include="src\IntroToOpenGL.h" />
     <ClInclude Include="src\Lighting.h" />
+    <ClInclude Include="src\Particles.h" />
     <ClInclude Include="src\Quaternions.h" />
     <ClInclude Include="src\RenderingGeometry.h" />
     <ClInclude Include="src\stb_image.h" />
@@ -115,11 +117,13 @@
     <ClCompile Include="src\BLANK.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\CameraAndProjections.cpp" />
+    <ClCompile Include="src\Emitter.cpp" />
     <ClCompile Include="src\Gizmos.cpp" />
     <ClCompile Include="src\gl_core_4_4.c" />
     <ClCompile Include="src\IntroToOpenGL.cpp" />
     <ClCompile Include="src\Lighting.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Particles.cpp" />
     <ClCompile Include="src\Quaternions.cpp" />
     <ClCompile Include="src\RenderingGeometry.cpp" />
     <ClCompile Include="src\Texturing.cpp" />
@@ -133,6 +137,8 @@
     <None Include="data\shaders\lighting_vertex.glsl" />
     <None Include="data\shaders\normal_mapped_fragment.glsl" />
     <None Include="data\shaders\normal_mapped_vertex.glsl" />
+    <None Include="data\shaders\particle_fragment.glsl" />
+    <None Include="data\shaders\particle_vertex.glsl" />
     <None Include="data\shaders\skinned_fragment.glsl" />
     <None Include="data\shaders\skinned_vertex.glsl" />
     <None Include="data\shaders\textured_fragment.glsl" />

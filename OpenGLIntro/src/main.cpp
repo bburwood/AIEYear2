@@ -14,6 +14,7 @@
 #include "Quaternions.h"
 #include "BLANK.h"
 #include "Animation.h"
+#include "Particles.h"
 
 int main()
 {
@@ -25,7 +26,8 @@ int main()
 //	AdvancedTexturing app;
 //	Quaternions	app;
 //	BLANK	app;
-	Animation	app;
+//	Animation	app;
+	Particles	app;
 
 	if (app.startup() == false)
 	{

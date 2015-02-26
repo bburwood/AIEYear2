@@ -31,4 +31,11 @@ struct OpenGLData
 	unsigned int	m_uiIndexCount;
 };
 
+struct VertexParticle
+{
+	vec4	position;
+	vec4	colour;
+};
+
+
 #endif	//	_VERTEX_H_
