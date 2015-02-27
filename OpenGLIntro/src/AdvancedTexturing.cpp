@@ -72,7 +72,7 @@ bool	AdvancedTexturing::startup()
 	Gizmos::create();
 	m_bDrawGizmos = true;
 
-	LoadShader("./shaders/normal_mapped_vertex.glsl", "./shaders/normal_mapped_fragment.glsl", &m_uiProgramID);
+	LoadShader("./shaders/normal_mapped_vertex.glsl", nullptr, "./shaders/normal_mapped_fragment.glsl", &m_uiProgramID);
 	GenerateQuad(5.0f);
 	//GenerateCircle(2.0f, 10, 10);	//	not working yet ...
 	m_ambient_light = vec3(0.1f, 0.1f, 0.1f);
@@ -309,7 +309,7 @@ void	AdvancedTexturing::GenerateQuad(float a_fSize)
 void	AdvancedTexturing::ReloadShader()
 {
 	glDeleteProgram(m_uiProgramID);
-	LoadShader("./shaders/normal_mapped_vertex.glsl", "./shaders/normal_mapped_fragment.glsl", &m_uiProgramID);
+	LoadShader("./shaders/normal_mapped_vertex.glsl", nullptr, "./shaders/normal_mapped_fragment.glsl", &m_uiProgramID);
 }
 
 void	AdvancedTexturing::GenerateCircle(float radius, int rows, int cols)

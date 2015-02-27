@@ -123,7 +123,7 @@ void	Emitter::Update(float a_fDt)
 	m_fPrintTimer += a_fDt;
 	if (m_fPrintTimer > 1.0f)
 	{
-		printf("FPS: %f.  Particles: %d.\n", 1/a_fDt, m_uiAliveCount);
+		printf("FPS: %f.  Particles: %d.  Emit Rate: %.3f.\n", 1/a_fDt, m_uiAliveCount, m_fEmitRate);
 		m_fPrintTimer = 0.0f;
 	}
 

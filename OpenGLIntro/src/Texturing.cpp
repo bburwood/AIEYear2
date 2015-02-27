@@ -30,7 +30,7 @@ bool	Texturing::startup()
 
 	LoadTexture("./textures/crate.png");
 	GenerateQuad(5.0f);
-	LoadShader("shaders/textured_vertex.glsl", "shaders/textured_fragment.glsl", &m_uiProgramID);
+	LoadShader("shaders/textured_vertex.glsl", nullptr, "shaders/textured_fragment.glsl", &m_uiProgramID);
 
 	m_FlyCamera = FlyCamera(vec3(10, 10, 10), vec3(0, 0, 0), glm::radians(60.0f), 1280.0f / 720.0f, 0.1f, 1000.0f);
 	return true;

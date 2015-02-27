@@ -37,7 +37,7 @@ bool	Animation::startup()
 	m_file->load("./models/characters/Pyro/pyro.fbx");
 	m_file->initialiseOpenGLTextures();
 	GenerateGLMeshes(m_file);
-	LoadShader("./shaders/skinned_vertex.glsl", "./shaders/skinned_fragment.glsl", &m_uiProgramID);
+	LoadShader("./shaders/skinned_vertex.glsl", nullptr, "./shaders/skinned_fragment.glsl", &m_uiProgramID);
 
 	return true;
 }

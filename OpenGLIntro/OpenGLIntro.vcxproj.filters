@@ -22,6 +22,9 @@
     <Filter Include="Quaternions">
       <UniqueIdentifier>{aaf155c8-94b2-42b4-810e-7582bc72f95d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GPUParticles">
+      <UniqueIdentifier>{0953757f-7383-428a-81c4-babaa5e7401b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -93,6 +96,12 @@
     <ClInclude Include="src\Emitter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\GPUParticles.h">
+      <Filter>GPUParticles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GPUEmitter.h">
+      <Filter>GPUParticles</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\gl_core_4_4.c">
@@ -149,6 +158,12 @@
     <ClCompile Include="src\Emitter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\GPUParticles.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GPUEmitter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\basic_fragment.glsl">
@@ -183,6 +198,18 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="data\shaders\particle_fragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\gpu_particle_vertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\gpu_particle_geometry.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\gpu_particle_fragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\gpu_particle_update_vert.glsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

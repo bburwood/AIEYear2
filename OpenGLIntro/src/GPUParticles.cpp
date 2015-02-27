@@ -1,4 +1,4 @@
-#include "Particles.h"
+#include "GPUParticles.h"
 #include "gl_core_4_4.h"
 #include <GLFW\glfw3.h>
 #include "Gizmos.h"
@@ -9,14 +9,14 @@ using glm::vec3;
 using glm::vec4;
 using glm::mat4;
 
-Particles::Particles()
+GPUParticles::GPUParticles()
 {
 }
-Particles::~Particles()
+GPUParticles::~GPUParticles()
 {
 }
 
-bool	Particles::startup()
+bool	GPUParticles::startup()
 {
 	if (Application::startup() == false)
 	{
@@ -30,21 +30,20 @@ bool	Particles::startup()
 	m_bDrawGizmos = true;
 
 	//	now initialise the FlyCamera
-	m_FlyCamera = FlyCamera(vec3(15, 15, 15), vec3(0, 6, 0), glm::radians(50.0f), 1280.0f / 720.0f, 0.1f, 1000.0f);
+	m_FlyCamera = FlyCamera(vec3(10, 10, 10), vec3(0, 0, 0), glm::radians(50.0f), 1280.0f / 720.0f, 0.1f, 1000.0f);
 	m_BackgroundColour = vec4(0.3f, 0.3f, 0.3f, 1.0f);
-
-	LoadShader("./shaders/particle_vertex.glsl", nullptr, "./shaders/particle_fragment.glsl", &m_uiProgramID);
-	m_emitter.Init(50000, vec3(0, 15, 0), 15000.0f, 0.35f, 1.05f, 2.4f, 10.0f, 2.0f, 0.01f, 0.025f, vec4(0.8, 1.0, 0.25, 1), vec4(1, 1, 0.8f, 1));
+	m_emitter.Init(5000, vec3(0, 5, 0), 15000.0f, 0.35f, 1.05f, 2.4f, 10.0f, 2.0f, 0.01f, 0.025f, vec4(0.8, 1.0, 0.25, 1), vec4(1, 1, 0.8f, 1));
+	m_timer = 0.0f;
 	return true;
 }
 
-void	Particles::shutdown()
+void	GPUParticles::shutdown()
 {
 	//	now clean up
 	Gizmos::destroy();
 }
 
-bool	Particles::update()
+bool	GPUParticles::update()
 {
 	if (Application::update() == false)
 	{
@@ -75,34 +74,21 @@ bool	Particles::update()
 			i == 10 ? white : black);
 	}
 
-	if (glfwGetKey(m_window, GLFW_KEY_PAGE_UP) == GLFW_PRESS)
-	{
-		m_emitter.IncreaseEmitRate();
-	}
-	if (glfwGetKey(m_window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
-	{
-		m_emitter.DecreaseEmitRate();
-	}
 
-	m_emitter.Update(dT);
-	m_emitter.UpdateVertexData(m_FlyCamera.m_worldTransform[3].xyz, m_FlyCamera.m_worldTransform[1].xyz);
+
 
 	glClearColor(m_BackgroundColour.x, m_BackgroundColour.y, m_BackgroundColour.z, m_BackgroundColour.w);
 	return true;
 }
 
-void	Particles::draw()
+void	GPUParticles::draw()
 {
 	Application::draw();
 	if (m_bDrawGizmos)
 	{
 		Gizmos::draw(m_FlyCamera.GetProjectionView());
 	}
-
-	glUseProgram(m_uiProgramID);
-	int	iViewProjUniform = glGetUniformLocation(m_uiProgramID, "projection_view");
-	glUniformMatrix4fv(iViewProjUniform, 1, GL_FALSE, (float*)&m_FlyCamera.GetProjectionView());
-	m_emitter.Render();
+	m_emitter.Draw(m_timer, m_FlyCamera.m_worldTransform, m_FlyCamera.GetProjectionView());
 	glfwSwapBuffers(m_window);
 	glfwPollEvents();
 }

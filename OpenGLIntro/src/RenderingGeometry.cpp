@@ -26,7 +26,7 @@ bool	RenderingGeometry::startup()
 	glfwSetTime(0.0f);
 	Gizmos::create();
 
-	LoadShader("./shaders/basic_vertex.glsl", "./shaders/basic_fragment.glsl", &m_uiProgramID);
+	LoadShader("./shaders/basic_vertex.glsl", nullptr, "./shaders/basic_fragment.glsl", &m_uiProgramID);
 	GenerateGrid(10, 10);
 
 

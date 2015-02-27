@@ -29,7 +29,7 @@ bool	Lighting::startup()
 	glfwSetTime(0.0f);
 	Gizmos::create();
 
-	LoadShader("./shaders/lighting_vertex.glsl", "./shaders/lighting_fragment.glsl", &m_uiProgramID);
+	LoadShader("./shaders/lighting_vertex.glsl", nullptr, "./shaders/lighting_fragment.glsl", &m_uiProgramID);
 	//GenerateGrid(10, 10);
 	
 
@@ -256,6 +256,6 @@ void	Lighting::CleanUpOpenGLBuffers()
 void	Lighting::ReloadShader()
 {
 	glDeleteProgram(m_uiProgramID);
-	LoadShader("./shaders/lighting_vertex.glsl", "./shaders/lighting_fragment.glsl", &m_uiProgramID);
+	LoadShader("./shaders/lighting_vertex.glsl", nullptr, "./shaders/lighting_fragment.glsl", &m_uiProgramID);
 }
 

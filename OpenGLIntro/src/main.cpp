@@ -15,6 +15,7 @@
 #include "BLANK.h"
 #include "Animation.h"
 #include "Particles.h"
+#include "GPUParticles.h"
 
 int main()
 {
@@ -27,7 +28,8 @@ int main()
 //	Quaternions	app;
 //	BLANK	app;
 //	Animation	app;
-	Particles	app;
+//	Particles	app;
+	GPUParticles	app;
 
 	if (app.startup() == false)
 	{
