@@ -89,6 +89,8 @@ void	GPUPointEmitter::Draw(float a_currTime, mat4 a_cameraTransform, mat4 a_proj
 	int	minLifespanUniform = glGetUniformLocation(m_uiUpdateShader, "min_lifespan");
 	int	maxLifespanUniform = glGetUniformLocation(m_uiUpdateShader, "max_lifespan");
 	int	timeUniform = glGetUniformLocation(m_uiUpdateShader, "time");
+	int	gravityUniform = glGetUniformLocation(m_uiUpdateShader, "gravity_strength");
+
 
 	glUniform1f(deltaUniform, fDt);
 	glUniform3fv(emitterPosUniform, 1, (float*)&m_position);
@@ -97,6 +99,7 @@ void	GPUPointEmitter::Draw(float a_currTime, mat4 a_cameraTransform, mat4 a_proj
 	glUniform1f(minLifespanUniform, m_fLifespanMin);
 	glUniform1f(maxLifespanUniform, m_fLifespanMax);
 	glUniform1f(timeUniform, a_currTime);
+	glUniform1f(gravityUniform, m_fGravityStrength);
 
 	glEnable(GL_RASTERIZER_DISCARD);
 
@@ -124,8 +127,8 @@ void	GPUPointEmitter::Draw(float a_currTime, mat4 a_cameraTransform, mat4 a_proj
 	int	cameraWorldUniform = glGetUniformLocation(m_uiDrawShader, "camera_world");
 	int	startSizeUniform = glGetUniformLocation(m_uiDrawShader, "start_size");
 	int	endSizeUniform = glGetUniformLocation(m_uiDrawShader, "end_size");
-	int	startColourUniform = glGetUniformLocation(m_uiDrawShader, "start_color");
-	int	endColourUniform = glGetUniformLocation(m_uiDrawShader, "end_color");
+	int	startColourUniform = glGetUniformLocation(m_uiDrawShader, "start_colour");
+	int	endColourUniform = glGetUniformLocation(m_uiDrawShader, "end_colour");
 
 	glUniformMatrix4fv(projViewUniform, 1, GL_FALSE, (float*)&a_projectionView);
 	glUniformMatrix4fv(cameraWorldUniform, 1, GL_FALSE, (float*)&a_cameraTransform);
@@ -133,6 +136,9 @@ void	GPUPointEmitter::Draw(float a_currTime, mat4 a_cameraTransform, mat4 a_proj
 	glUniform1f(endSizeUniform, m_fEndSize);
 	glUniform4fv(startColourUniform, 1, (float*)&m_startColour);
 	glUniform4fv(endColourUniform, 1, (float*)&m_endColour);
+
+//	glEnable(GL_BLEND);
+//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glBindVertexArray(m_VAO[uiOtherBuffer]);
 	glDrawArrays(GL_POINTS, 0, m_uiMaxParticles);

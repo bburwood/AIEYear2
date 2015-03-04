@@ -32,7 +32,7 @@ bool	GPUParticles::startup()
 	//	now initialise the FlyCamera
 	m_FlyCamera = FlyCamera(vec3(10, 10, 10), vec3(0, 0, 0), glm::radians(50.0f), 1280.0f / 720.0f, 0.1f, 1000.0f);
 	m_BackgroundColour = vec4(0.3f, 0.3f, 0.3f, 1.0f);
-	m_emitter.Init(5000, vec3(0, 5, 0), 15000.0f, 0.35f, 1.05f, 2.4f, 10.0f, 2.0f, 0.01f, 0.025f, vec4(0.8, 1.0, 0.25, 1), vec4(1, 1, 0.8f, 1));
+	m_emitter.Init(700000, vec3(0, 5, 0), 15000.0f, 0.35f, 4.5f, 0.7f, 2.0f, 1.0f, 0.01f, 0.02f, vec4(0.2f, 0.4f, 1.0f, 1), vec4(1, 1, 0.5f, 1));
 	m_timer = 0.0f;
 	return true;
 }
@@ -74,9 +74,7 @@ bool	GPUParticles::update()
 			i == 10 ? white : black);
 	}
 
-
-
-
+	
 	glClearColor(m_BackgroundColour.x, m_BackgroundColour.y, m_BackgroundColour.z, m_BackgroundColour.w);
 	return true;
 }

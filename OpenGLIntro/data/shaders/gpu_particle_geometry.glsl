@@ -34,7 +34,7 @@ void	main()
 	corners[3] = vec3(-half_size, half_size, 0);
 	
 	//	build the 3 axes of the rotation matrix
-	vec3 forward = (camera_world[3].xyz - geo_position[0]);
+	vec3 forward = normalize(camera_world[3].xyz - geo_position[0]);
 	vec3 right = cross(camera_world[1].xyz, forward);
 	vec3 up = cross(forward, right);
 
@@ -47,12 +47,12 @@ void	main()
 	corners[3] = billboard_rot * corners[3];
 
 	//	
-	gl_Position = projection_view * vec4(corners[0], 1);
+	gl_Position = projection_view * vec4(corners[0] + geo_position[0], 1);
 	EmitVertex();
-	gl_Position = projection_view * vec4(corners[1], 1);
+	gl_Position = projection_view * vec4(corners[1] + geo_position[0], 1);
 	EmitVertex();
-	gl_Position = projection_view * vec4(corners[2], 1);
+	gl_Position = projection_view * vec4(corners[2] + geo_position[0], 1);
 	EmitVertex();
-	gl_Position = projection_view * vec4(corners[3], 1);
+	gl_Position = projection_view * vec4(corners[3] + geo_position[0], 1);
 	EmitVertex();
 }

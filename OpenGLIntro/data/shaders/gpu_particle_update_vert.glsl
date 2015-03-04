@@ -10,13 +10,14 @@ out vec3 updated_velocity;
 out float updated_lifetime;
 out float updated_lifespan;
 
+uniform float time;
 uniform float delta_time;
 uniform vec3 emitter_position;
 uniform float min_velocity;
 uniform float max_velocity;
 uniform float min_lifespan;
 uniform float max_lifespan;
-uniform float time;
+uniform float gravity_strength;
 
 const float INVERSE_MAX_UINT = 1.0f / 4294967295.0f;
 
@@ -33,7 +34,7 @@ void	main()
 {
 	//	move particles based on velocity
 	updated_position = position + velocity * delta_time;
-	updated_velocity = velocity;
+	updated_velocity = velocity + (vec3(0, -gravity_strength * delta_time, 0));
 	updated_lifespan = lifespan;
 
 	//	update the lifetime based on delta_time

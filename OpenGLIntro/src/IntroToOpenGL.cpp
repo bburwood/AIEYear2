@@ -87,7 +87,7 @@ bool	IntroToOpenGL::update()
 	Gizmos::addAABBFilled(vec3(-2.5f, 5, 0), vec3(1, 1, 1), green);
 
 	//mat4	sun_transform = glm::rotate(timer * 0.25f, vec3(0, 1, 0));	//	rotation matrix
-	mat4	sun_transform = BuildOrbitMatrix(m_timer * 0.25f, 1, m_timer * 10.10f);
+	mat4	sun_transform = BuildOrbitMatrix(m_timer * 0.25f, 1, m_timer * 1.10f);
 	mat4	planet1 = sun_transform * BuildOrbitMatrix(m_timer * 0.5f, 7, m_timer * 2.5f);
 	mat4	moon1 = planet1 * BuildOrbitMatrix(m_timer * 2.0f, 2, m_timer * 3.0f);
 	mat4	moon1moon1 = moon1 * BuildOrbitMatrix(m_timer * 1.5f, 0.35f, m_timer * 2.5f);
