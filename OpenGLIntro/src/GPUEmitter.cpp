@@ -137,8 +137,8 @@ void	GPUPointEmitter::Draw(float a_currTime, mat4 a_cameraTransform, mat4 a_proj
 	glUniform4fv(startColourUniform, 1, (float*)&m_startColour);
 	glUniform4fv(endColourUniform, 1, (float*)&m_endColour);
 
-//	glEnable(GL_BLEND);
-//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glBindVertexArray(m_VAO[uiOtherBuffer]);
 	glDrawArrays(GL_POINTS, 0, m_uiMaxParticles);

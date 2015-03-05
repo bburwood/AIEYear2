@@ -53,7 +53,7 @@ void	main()
 		updated_velocity.x = rand(seed++, 2) - 1;
 		updated_velocity.y = rand(seed++, 2) - 1;
 		updated_velocity.z = rand(seed++, 2) - 1;
-		updated_velocity = normalize(updated_velocity) * vel_range;
+		updated_velocity = normalize(updated_velocity) * vel_len;
 
 		//	set its new lifespan
 		updated_lifetime = 0;

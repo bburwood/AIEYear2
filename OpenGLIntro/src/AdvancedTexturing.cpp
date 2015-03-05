@@ -15,38 +15,6 @@ AdvancedTexturing::~AdvancedTexturing()
 {
 }
 
-void	OnMouseButton(GLFWwindow* window, int button, int pressed, int mod_keys)
-{
-	TwEventMouseButtonGLFW(button, pressed);
-}
-
-void	OnMousePosition(GLFWwindow* window, double x, double y)
-{
-	TwEventMousePosGLFW((int)x, (int)y);
-}
-
-void	OnMouseScroll(GLFWwindow* window, double x, double y)
-{
-	TwEventMouseWheelGLFW(y);
-}
-
-void	OnKey(GLFWwindow* window, int key, int scancode, int pressed, int mod_keys)
-{
-	TwEventKeyGLFW(key, pressed);
-}
-
-void	OnChar(GLFWwindow* window, unsigned int c)
-{
-	TwEventCharGLFW(c, GLFW_PRESS);
-}
-
-void	OnWindowResize(GLFWwindow* window, int width, int height)
-{
-	TwWindowSize(width, height);
-	glViewport(0, 0, width, height);
-}
-
-
 bool	AdvancedTexturing::startup()
 {
 	if (Application::startup() == false)
@@ -86,9 +54,9 @@ bool	AdvancedTexturing::startup()
 
 	m_bar = TwNewBar("Amazing new AntTweakBar!!");
 	TwAddSeparator(m_bar, "Light Data", "");
-	TwAddVarRW(m_bar, "Light Direction", TW_TYPE_DIR3F, &m_light_dir, "Group Light");
-	TwAddVarRW(m_bar, "Light Colour", TW_TYPE_COLOR3F, &m_light_colour, "Group Light");
-	TwAddVarRW(m_bar, "Spec Power", TW_TYPE_FLOAT, &m_fSpecular_power, "Group Light min=0.05 max=100 step=0.05");
+	TwAddVarRW(m_bar, "Light Direction", TW_TYPE_DIR3F, &m_light_dir, "label='Group Light'");
+	TwAddVarRW(m_bar, "Light Colour", TW_TYPE_COLOR3F, &m_light_colour, "label='Group Light'");
+	TwAddVarRW(m_bar, "Spec Power", TW_TYPE_FLOAT, &m_fSpecular_power, "label='Group Light' min=0.05 max=100 step=0.05");
 	TwAddSeparator(m_bar, "Misc Data", "");
 	TwAddVarRW(m_bar, "Clear Colour", TW_TYPE_COLOR4F, &m_BackgroundColour, "");
 	TwAddVarRW(m_bar, "Draw Gizmos", TW_TYPE_BOOL8, &m_bDrawGizmos, "");

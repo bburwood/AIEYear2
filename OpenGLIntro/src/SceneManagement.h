@@ -1,21 +1,23 @@
-#ifndef _BLANK_H_
-#define _BLANK_H_
+#ifndef _SCENEMANAGEMENT_H_
+#define _SCENEMANAGEMENT_H_
 
 #include "Application.h"
 #include "Camera.h"
 
 #include "AntTweakBar.h"
 
-class BLANK : public Application
+class SceneManagement : public Application
 {
 public:
-	BLANK();
-	virtual	~BLANK();
+	SceneManagement();
+	virtual	~SceneManagement();
 
 	virtual	bool	startup();
 	virtual	void	shutdown();
 	virtual	bool	update();
 	virtual	void	draw();
+
+	void	getFrustumPlanes(const glm::mat4& transform, glm::vec4* planes);
 
 	mat4	m_view;
 	mat4	m_projection;
@@ -32,4 +34,4 @@ public:
 	bool	m_bDrawGizmos;
 };
 
-#endif	//	_BLANK_H_
+#endif	//	_SCENEMANAGEMENT_H_
