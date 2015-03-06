@@ -119,6 +119,7 @@ bool	SceneManagement::update()
 	float d = glm::dot(vec3(plane), sphere.centre) + plane.w;
 
 	vec4 planeColour(1, 1, 0, 1);
+	bool	bSphereVisible = true;
 
 	if (d > sphere.radius)
 	{
@@ -127,6 +128,7 @@ bool	SceneManagement::update()
 	}
 	else if (d < -sphere.radius)
 	{
+		bSphereVisible = false;
 		planeColour = vec4(1, 0, 0, 1);
 		printf("Back\n");
 	}
@@ -139,13 +141,12 @@ bool	SceneManagement::update()
 
 	vec4 planes[6];
 	getFrustumPlanes(m_FlyCamera.GetProjectionView(), planes);
-	bool	bSphereVisible = true;
 	for (int i = 0; i < 6; i++)
 	{
 		float d = glm::dot(vec3(planes[i]), sphere.centre) + planes[i].w;
 		if (d < -sphere.radius)
 		{
-			bSphereVisible = false;
+			//bSphereVisible = false;
 			printf("Behind, don't render it!\n");
 			break;
 		}
