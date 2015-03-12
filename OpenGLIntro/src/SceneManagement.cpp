@@ -5,6 +5,7 @@
 #include "Utility.h"
 #include "AABB.h"
 #include "BoundingSphere.h"
+#include "tiny_obj_loader.h"
 
 using glm::vec2;
 using glm::vec3;
@@ -18,6 +19,74 @@ SceneManagement::~SceneManagement()
 {
 }
 
+void	RenderPlane(vec4 a_plane)
+{
+	vec3	up(0, 1, 0);
+	if (a_plane.xyz() == vec3(0, 1, 0))
+	{
+		up = vec3(1, 0, 0);
+	}
+	vec3	tangent = glm::normalize(glm::cross(a_plane.xyz(), vec3(0, 1, 0)));
+	vec3	bitangent = glm::normalize(glm::cross(a_plane.xyz(), tangent));
+
+	vec3	p = a_plane.xyz * a_plane.w;
+
+	vec3	v0 = p + tangent + bitangent;
+	vec3	v1 = p + tangent - bitangent;
+	vec3	v2 = p - tangent - bitangent;
+	vec3	v3 = p - tangent + bitangent;
+
+	Gizmos::addTri(v0, v1, v2, vec4(1, 1, 0, 1));
+	Gizmos::addTri(v0, v2, v3, vec4(1, 1, 0, 1));
+
+	Gizmos::addLine(p, p + a_plane.xyz, vec4(0, 1, 1, 1));
+}
+
+void	RenderAABB(AABB aabb, mat4 transform)
+{
+	vec3	centre = ((aabb.min * transform[3].xyz) - (aabb.max * transform[3].xyz)) * 0.5f;
+	vec3	extents = ((aabb.max * transform[3].xyz) - (aabb.min * transform[3].xyz)) * 0.5f;
+
+	Gizmos::addAABB(centre, extents, vec4(1));
+}
+bool	OnPositivePlaneSide(vec4 a_plane, AABB aabb)
+{
+	vec3	planeTestA, planeTestB;
+
+	if (a_plane.x >= 0)
+	{
+		planeTestA.x = aabb.min.x;
+		planeTestB.x = aabb.max.x;
+	}
+	else
+	{
+		planeTestA.x = aabb.max.x;
+		planeTestB.x = aabb.min.x;
+	}
+	if (a_plane.y >= 0)
+	{
+		planeTestA.y = aabb.min.y;
+		planeTestB.y = aabb.max.y;
+	}
+	else
+	{
+		planeTestA.y = aabb.max.y;
+		planeTestB.y = aabb.min.y;
+	}
+	if (a_plane.z >= 0)
+	{
+		planeTestA.z = aabb.min.z;
+		planeTestB.z = aabb.max.z;
+	}
+	else
+	{
+		planeTestA.z = aabb.max.z;
+		planeTestB.z = aabb.min.z;
+	}
+	float dA = glm::dot(vec3(a_plane), planeTestA) + a_plane.w;
+	float dB = glm::dot(vec3(a_plane), planeTestB) + a_plane.w;
+	return ();
+}
 bool	SceneManagement::startup()
 {
 	if (Application::startup() == false)
@@ -57,6 +126,14 @@ bool	SceneManagement::startup()
 	TwAddVarRW(m_bar, "Clear Colour", TW_TYPE_COLOR4F, &m_BackgroundColour, "");
 	TwAddVarRW(m_bar, "Draw Gizmos", TW_TYPE_BOOL8, &m_bDrawGizmos, "");
 	TwAddVarRO(m_bar, "FPS", TW_TYPE_FLOAT, &m_fFPS, "");
+
+	//	load meshes here
+	//m_meshes.push_back(LoadMesh(...));
+	//	then go through them and generate the AABB's for them
+	for (unsigned int iMeshIndex = 0; iMeshIndex < m_meshes.size(); ++iMeshIndex)
+	{
+
+	}
 
 	return true;
 }
@@ -113,7 +190,7 @@ bool	SceneManagement::update()
 	// 0 + 1 + 0 + -1 = 0
 
 	BoundingSphere sphere;
-	sphere.centre = vec3(0, 2 * cosf(m_timer * 5) + 1, 0);
+	sphere.centre = vec3(0, 2 * cosf(m_timer * 1.5f) + 1, 0);
 	sphere.radius = 0.5f;
 
 	float d = glm::dot(vec3(plane), sphere.centre) + plane.w;
@@ -172,12 +249,52 @@ bool	SceneManagement::update()
 void	SceneManagement::draw()
 {
 	Application::draw();
+
+	vec4	planes[6];
+	getFrustumPlanes(m_FlyCamera.GetProjectionView, planes);
+	for (unsigned int iMeshIndex = 0; iMeshIndex < m_meshes.size(); ++iMeshIndex)
+	{
+		bool	bIsInFrustum = true;
+		for (unsigned int iPlaneIndex = 0; iPlaneIndex < 6; ++iPlaneIndex)
+		{
+			vec4	transformedPlanes[6];
+			mat4	invTransform = glm::inverse(m_meshes[iMeshIndex].transform);
+
+			vec4	n = planes[iPlaneIndex];
+			n.w = 0;
+			vec4	p = planes[iPlaneIndex] * planes[iPlaneIndex].w;
+			p.w = 1;
+
+			n = invTransform * n;
+			p = invTransform * p;
+
+			transformedPlanes[iPlaneIndex] = n;
+			transformedPlanes[iPlaneIndex].w = glm::dot(n.xyz, p.xyz);
+			RenderPlane(transformedPlanes[iPlaneIndex]);
+		}
+
+		for (unsigned int iPlaneIndex = 0; iPlaneIndex < 6; ++iPlaneIndex)
+		{
+			if (OnPositivePlaneSide(planes[iPlaneIndex], m_meshes[iMeshIndex].m_aabb))
+			{
+				bIsInFrustum = false;
+				break;
+			}
+		}
+		if (bIsInFrustum)
+		{
+
+			DrawMesh(m_meshes[iMeshIndex]);
+		}
+		else
+		{
+
+		}
+	}
 	if (m_bDrawGizmos)
 	{
 		Gizmos::draw(m_FlyCamera.GetProjectionView());
 	}
-
-
 
 
 	TwDraw();
@@ -221,3 +338,18 @@ void SceneManagement::getFrustumPlanes(const glm::mat4& transform, glm::vec4* pl
 	for (int i = 0; i < 6; i++)
 		planes[i] = glm::normalize(planes[i]);
 }
+
+void	SceneManagement::LoadMesh(char* objFilename)
+{
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+
+	tinyobj::LoadObj();
+}
+
+void	SceneManagement::DrawMesh(MeshObject a_mesh)
+{
+
+}
+
+

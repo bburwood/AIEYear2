@@ -30,8 +30,8 @@ int main()
 //	BLANK	app;
 //	Animation	app;
 //	Particles	app;
-	GPUParticles	app;
-//	SceneManagement	app;
+//	GPUParticles	app;
+	SceneManagement	app;
 
 	if (app.startup() == false)
 	{

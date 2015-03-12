@@ -79,6 +79,7 @@ void main()
 	for (unsigned int i = 0; i < numThreads; ++i)
 	{
 		//	wait until the thread has ended
+		//	the main thread needs to wait until any spawned threads have completed, otherwise a crash will happen
 		threads2[i].join();
 	}
 
