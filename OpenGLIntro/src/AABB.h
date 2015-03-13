@@ -53,7 +53,7 @@ public:
 			if (a_positions->y > max.y)	max.y = a_positions->y;
 			if (a_positions->z > max.z)	max.z = a_positions->z;
 
-			a_positions = (vec3)((char*)a_positions + a_stride);
+//			a_positions = (vec3)((char*)a_positions + a_stride);
 		}
 	}
 	glm::vec3 min, max;

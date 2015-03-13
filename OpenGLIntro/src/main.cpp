@@ -17,6 +17,8 @@
 #include "Particles.h"
 #include "GPUParticles.h"
 #include "SceneManagement.h"
+#include "RenderTargets.h"
+#include "PostProcess.h"
 
 int main()
 {
@@ -31,7 +33,9 @@ int main()
 //	Animation	app;
 //	Particles	app;
 //	GPUParticles	app;
-	SceneManagement	app;
+//	SceneManagement	app;
+	RenderTargets	app;
+//	PostProcess	app;
 
 	if (app.startup() == false)
 	{

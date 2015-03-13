@@ -16,8 +16,8 @@ struct MeshObject
 	unsigned int	m_vbo;
 	unsigned int	m_vao;
 	unsigned int	m_ibo;
-	unsigned int	m_vbo;
-	unsigned int	m_vbo;
+//	unsigned int	m_vbo;
+//	unsigned int	m_vbo;
 	AABB	m_aabb;
 	mat4	m_transform;	//	init to identity when loading mesh
 };
@@ -49,7 +49,7 @@ public:
 
 	TwBar*	m_bar;
 
-	std::vector<OpenGLData>	m_meshes;
+//	std::vector<OpenGLData>	m_meshes;
 	bool	m_bDrawGizmos;
 };
 

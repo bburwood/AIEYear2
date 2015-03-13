@@ -109,8 +109,10 @@
     <ClInclude Include="src\IntroToOpenGL.h" />
     <ClInclude Include="src\Lighting.h" />
     <ClInclude Include="src\Particles.h" />
+    <ClInclude Include="src\PostProcess.h" />
     <ClInclude Include="src\Quaternions.h" />
     <ClInclude Include="src\RenderingGeometry.h" />
+    <ClInclude Include="src\RenderTargets.h" />
     <ClInclude Include="src\SceneManagement.h" />
     <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\Texturing.h" />
@@ -134,8 +136,10 @@
     <ClCompile Include="src\Lighting.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Particles.cpp" />
+    <ClCompile Include="src\PostProcess.cpp" />
     <ClCompile Include="src\Quaternions.cpp" />
     <ClCompile Include="src\RenderingGeometry.cpp" />
+    <ClCompile Include="src\RenderTargets.cpp" />
     <ClCompile Include="src\SceneManagement.cpp" />
     <ClCompile Include="src\Texturing.cpp" />
     <ClCompile Include="src\tiny_obj_loader.cc" />

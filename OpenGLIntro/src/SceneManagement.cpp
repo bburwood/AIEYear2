@@ -85,7 +85,7 @@ bool	OnPositivePlaneSide(vec4 a_plane, AABB aabb)
 	}
 	float dA = glm::dot(vec3(a_plane), planeTestA) + a_plane.w;
 	float dB = glm::dot(vec3(a_plane), planeTestB) + a_plane.w;
-	return ();
+	return (true);	//	fix this
 }
 bool	SceneManagement::startup()
 {
@@ -130,10 +130,10 @@ bool	SceneManagement::startup()
 	//	load meshes here
 	//m_meshes.push_back(LoadMesh(...));
 	//	then go through them and generate the AABB's for them
-	for (unsigned int iMeshIndex = 0; iMeshIndex < m_meshes.size(); ++iMeshIndex)
-	{
-
-	}
+//	for (unsigned int iMeshIndex = 0; iMeshIndex < m_meshes.size(); ++iMeshIndex)
+//	{
+//
+//	}
 
 	return true;
 }
@@ -251,8 +251,8 @@ void	SceneManagement::draw()
 	Application::draw();
 
 	vec4	planes[6];
-	getFrustumPlanes(m_FlyCamera.GetProjectionView, planes);
-	for (unsigned int iMeshIndex = 0; iMeshIndex < m_meshes.size(); ++iMeshIndex)
+	getFrustumPlanes(m_FlyCamera.GetProjectionView(), planes);
+	/*for (unsigned int iMeshIndex = 0; iMeshIndex < m_meshes.size(); ++iMeshIndex)
 	{
 		bool	bIsInFrustum = true;
 		for (unsigned int iPlaneIndex = 0; iPlaneIndex < 6; ++iPlaneIndex)
@@ -290,7 +290,7 @@ void	SceneManagement::draw()
 		{
 
 		}
-	}
+	}*/
 	if (m_bDrawGizmos)
 	{
 		Gizmos::draw(m_FlyCamera.GetProjectionView());
@@ -344,7 +344,7 @@ void	SceneManagement::LoadMesh(char* objFilename)
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
 
-	tinyobj::LoadObj();
+//	tinyobj::LoadObj();
 }
 
 void	SceneManagement::DrawMesh(MeshObject a_mesh)
