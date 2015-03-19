@@ -232,7 +232,6 @@
     <None Include="data\shaders\skinned_vertex.glsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="data\shaders\skinned_fragment.glsl" />
     <None Include="data\shaders\particle_vertex.glsl">
       <Filter>Resource Files</Filter>
     </None>
@@ -260,10 +259,17 @@
     <None Include="data\shaders\diffuse_shadow_vertex.glsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="data\shaders\diffuse_shadowed_fragment.glsl" />
     <None Include="data\shaders\shadowmap_vertex.glsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="data\shaders\shadowmap_fragment.glsl" />
+    <None Include="data\shaders\shadowmap_fragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\skinned_fragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\diffuse_shadowed_fragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

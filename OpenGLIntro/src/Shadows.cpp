@@ -93,11 +93,11 @@ bool	Shadows::update()
 
 	float	dT = (float)glfwGetTime();
 	glfwSetTime(0.0f);
-	m_fFPS = (float)(1.0 / dT);
+	m_fFPS = (float)(1.0f / dT);
 	//	now we get to the fun stuff
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	Gizmos::clear();
-	Gizmos::addTransform(mat4(1));
+	Gizmos::addTransform(mat4(1.0f));
 
 	m_timer += dT;
 	m_FlyCamera.update(dT);
@@ -134,10 +134,10 @@ void	Shadows::draw()
 	glUseProgram(m_uiShadowMapProgramID);
 	int	iLightMatrixLocation = glGetUniformLocation(m_uiShadowMapProgramID, "light_matrix");
 
-	vec3	lightDir = glm::normalize(vec3(-1, -2.5f, -1));
+	vec3	lightDir = glm::normalize(vec3(-1.0f, -2.5f, -1.0f));
 
-	mat4	lightProj = glm::ortho(-10, 10, -10, 10, -10, 100);
-	mat4	lightView = glm::lookAt(-lightDir, vec3(0), vec3(0, 1, 0));
+	mat4	lightProj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 100.0f);
+	mat4	lightView = glm::lookAt(-lightDir, vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
 
 	mat4	lightMatrix = lightProj * lightView;
 
@@ -156,10 +156,10 @@ void	Shadows::draw()
 	glUseProgram(m_uiDiffuseProgramID);	//	check this program id
 
 	mat4	offsetScale = mat4(
-		0.5f,	0,	0,	0,
-		0,	0.5f,	0,	0,
-		0,	0,	0.5f,	0,
-		0.5f,	0.5f,	0.5f,	1 );
+		0.5f,	0.0f,	0.0f,	0.0f,
+		0.0f,	0.5f,	0.0f,	0.0f,
+		0.0f,	0.0f,	0.5f,	0.0f,
+		0.5f,	0.5f,	0.5f,	1.0f );
 
 
 	if (m_bDrawGizmos)
@@ -239,10 +239,10 @@ void	Shadows::BuildMeshes()
 
 	float	planeVertexData[] =
 	{
-		-10, 0, -10, 1,	0, 1, 0, 0,
-		10, 0, -10, 1,	0, 1, 0, 0,
-		10, 0, 10, 1,	0, 1, 0, 0,
-		-10, 0, 10, 1,	0, 1, 0, 0,
+		-10.0f,	0.0f,	 -10.0f,	1.0f,		0.0f, 1.0f, 0.0f, 0.0f,
+		10.0f,	0.0f,	 -10.0f,	1.0f,		0.0f, 1.0f, 0.0f, 0.0f,
+		10.0f,	0.0f,	 10.0f,		1.0f,		0.0f, 1.0f, 0.0f, 0.0f,
+		-10.0f,	0.0f,	 10.0f,		1.0f,		0.0f, 1.0f, 0.0f, 0.0f,
 	};
 	unsigned int	planeIndexData[] =
 	{
