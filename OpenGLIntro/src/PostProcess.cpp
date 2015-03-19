@@ -25,6 +25,7 @@ bool	PostProcess::startup()
 	{
 		return false;
 	}
+	m_fTotTime = 0.0f;
 
 	TwInit(TW_OPENGL_CORE, nullptr);
 	TwWindowSize(1280, 720);
@@ -59,6 +60,13 @@ bool	PostProcess::startup()
 	TwAddVarRW(m_bar, "Draw Gizmos", TW_TYPE_BOOL8, &m_bDrawGizmos, "");
 	TwAddVarRO(m_bar, "FPS", TW_TYPE_FLOAT, &m_fFPS, "");
 
+	//	create the frame buffer
+	GenerateFrameBuffer();
+	//	create the quad mesh
+	GenerateScreenSpaceQuad();
+	//	load the post effect shader
+	LoadShader("shaders/post_vertex.glsl", 0, "shaders/post_fragment.glsl", &m_uiPostProgramID);
+
 	return true;
 }
 
@@ -79,12 +87,14 @@ bool	PostProcess::update()
 	//	check if we need to reload the shaders
 	if (glfwGetKey(m_window, GLFW_KEY_R) == GLFW_PRESS)
 	{
-		//ReloadShader();
+		ReloadShader();
 	}
 
 	float	dT = (float)glfwGetTime();
 	glfwSetTime(0.0f);
 	m_fFPS = (float)(1.0 / dT);
+	m_fTotTime += dT;
+
 	//	now we get to the fun stuff
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	Gizmos::clear();
@@ -107,6 +117,8 @@ bool	PostProcess::update()
 			i == 10 ? white : black);
 	}
 
+	Gizmos::addSphere(vec3(0, 5, 0), 0.5f, 12, 12, vec4(1, 1, 0, 1));
+	Gizmos::addSphere(vec3(2, 7, 3), 0.5f, 12, 12, blue);
 
 
 
@@ -117,13 +129,41 @@ bool	PostProcess::update()
 void	PostProcess::draw()
 {
 	Application::draw();
+
+	//	bind frame buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, m_uifbo);
+	glViewport(0, 0, BUFFER_WIDTH, BUFFER_HEIGHT);
+
+	//	clear the screen
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//	render everything as normal, but to the frame buffer
 	if (m_bDrawGizmos)
 	{
 		Gizmos::draw(m_FlyCamera.GetProjectionView());
 	}
 
+	//	bind the back buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, BUFFER_WIDTH, BUFFER_HEIGHT);
 
+	//	just clear the back buffer depth as each pixel will be filled
+	glClear(GL_DEPTH_BUFFER_BIT);
 
+	//	bind post effect shader
+	glUseProgram(m_uiPostProgramID);
+
+	//	bind the fbo_texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_uifboTexture);
+	int	iTexLocation = glGetUniformLocation(m_uiPostProgramID, "input_texture");
+	glUniform1i(iTexLocation, 0);
+	int iTimeLocation = glGetUniformLocation(m_uiPostProgramID, "fTime");
+	glUniform1f(iTimeLocation, m_fTotTime);
+
+	//	render our quad with the texture on it
+	glBindVertexArray(m_quad.m_uiVAO);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 	TwDraw();
 	glfwSwapBuffers(m_window);
@@ -137,9 +177,13 @@ void	PostProcess::GenerateFrameBuffer()
 
 	glGenTextures(1, &m_uifboTexture);
 	glBindTexture(GL_TEXTURE_2D, m_uifboTexture);
-	glTexStorage2D(GL_TEXTURE_2D, 5, GL_RGB8, BUFFER_WIDTH, BUFFER_HEIGHT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, BUFFER_WIDTH, BUFFER_HEIGHT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	//	clamping the texture to the edge
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_uifboTexture, 0);
 
@@ -151,7 +195,6 @@ void	PostProcess::GenerateFrameBuffer()
 	glDrawBuffers(1, drawBuffers);
 
 	GLenum	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-
 	if (status != GL_FRAMEBUFFER_COMPLETE)
 	{
 		printf("Frame Buffer did not generate properly!\n");
@@ -161,13 +204,15 @@ void	PostProcess::GenerateFrameBuffer()
 
 void	PostProcess::GenerateScreenSpaceQuad()
 {
-	vec2	halfTexel = 1.0f / vec2((float)BUFFER_WIDTH / (float)BUFFER_HEIGHT);
+	vec2	halfTexel = 1.0f / (vec2((float)BUFFER_WIDTH, (float)BUFFER_HEIGHT) * 0.5f);
+//	vec2	halfTexel = 1.0f / vec2(1280.0f / 720.0f);
+	//	this is so that the UV's are sampled from teh correct texel.
 	float	vertexData[]
 	{
-		-1, -1, 0, 1, halfTexel.x, halfTexel.y,
-			1, -1, 0, 1, 1.0f - halfTexel.x, halfTexel.y,
-			1, 1, 0, 1, 1.0f - halfTexel.x, 1.0f - halfTexel.y,
-			-1, 1, 0, 1, halfTexel.x, 1.0f - halfTexel.y,
+		-1, -1, 0, 1,		halfTexel.x, halfTexel.y,
+		-1, 1, 0, 1,		halfTexel.x, 1.0f - halfTexel.y,
+		1, 1, 0, 1,			1.0f - halfTexel.x, 1.0f - halfTexel.y,
+		1, -1, 0, 1,		1.0f - halfTexel.x, halfTexel.y,
 	};
 
 	unsigned int	indexData[]
@@ -176,17 +221,32 @@ void	PostProcess::GenerateScreenSpaceQuad()
 	};
 
 	glGenVertexArrays(1, &m_quad.m_uiVAO);
+	glBindVertexArray(m_quad.m_uiVAO);
 
 	glGenBuffers(1, &m_quad.m_uiVBO);
 	glGenBuffers(1, &m_quad.m_uiIBO);
 
-	glBindVertexArray(m_quad.m_uiVAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_quad.m_uiVBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_quad.m_uiIBO);
 
-//	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData);
-//	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexData), indexData, GL_STATIC_DRAW);
 
+	glEnableVertexAttribArray(0);	//	position
+	glEnableVertexAttribArray(1);	//	tex coord
 
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)(sizeof(float) * 4));
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void	PostProcess::ReloadShader()
+{
+	m_fTotTime = 0.0f;
+	glDeleteProgram(m_uiPostProgramID);
+	LoadShader("shaders/post_vertex.glsl", 0, "shaders/post_fragment.glsl", &m_uiPostProgramID);
 }

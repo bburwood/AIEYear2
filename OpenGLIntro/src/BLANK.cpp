@@ -22,6 +22,11 @@ bool	BLANK::startup()
 	{
 		return false;
 	}
+	//	check if we need to reload the shaders
+	if (glfwGetKey(m_window, GLFW_KEY_R) == GLFW_PRESS)
+	{
+		ReloadShader();
+	}
 
 	TwInit(TW_OPENGL_CORE, nullptr);
 	TwWindowSize(1280, 720);
@@ -127,3 +132,9 @@ void	BLANK::draw()
 	glfwPollEvents();
 }
 
+
+void	BLANK::ReloadShader()
+{
+	glDeleteProgram(m_uiProgramID);
+	LoadShader("./shaders/lighting_vertex.glsl", nullptr, "./shaders/lighting_fragment.glsl", &m_uiProgramID);
+}

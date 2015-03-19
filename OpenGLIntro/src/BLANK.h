@@ -17,6 +17,8 @@ public:
 	virtual	bool	update();
 	virtual	void	draw();
 
+	void	ReloadShader();
+
 	mat4	m_view;
 	mat4	m_projection;
 	float	m_camera_x;
