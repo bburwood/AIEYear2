@@ -136,8 +136,8 @@ void	Shadows::draw()
 
 	vec3	lightDir = glm::normalize(vec3(-1.0f, -2.5f, -1.0f));
 
-	mat4	lightProj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 100.0f);
-	mat4	lightView = glm::lookAt(-lightDir, vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
+	mat4	lightProj = glm::ortho<float>(-15.0f, 15.0f, -15.0f, 15.0f, -15.0f, 100.0f);
+	mat4	lightView = glm::lookAt(-lightDir * 20, vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
 
 	mat4	lightMatrix = lightProj * lightView;
 
@@ -161,6 +161,7 @@ void	Shadows::draw()
 		0.0f,	0.0f,	0.5f,	0.0f,
 		0.5f,	0.5f,	0.5f,	1.0f );
 
+	lightMatrix = offsetScale * lightMatrix;
 
 	if (m_bDrawGizmos)
 	{

@@ -20,6 +20,7 @@
 #include "RenderTargets.h"
 #include "PostProcess.h"
 #include "Shadows.h"
+#include "Deferred.h"
 
 int main()
 {
@@ -37,7 +38,8 @@ int main()
 //	SceneManagement	app;
 //	RenderTargets	app;
 //	PostProcess	app;
-	Shadows	app;
+//	Shadows	app;
+	Deferred	app;
 
 	if (app.startup() == false)
 	{

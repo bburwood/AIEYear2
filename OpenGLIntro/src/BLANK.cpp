@@ -81,7 +81,7 @@ bool	BLANK::update()
 	//	check if we need to reload the shaders
 	if (glfwGetKey(m_window, GLFW_KEY_R) == GLFW_PRESS)
 	{
-		//ReloadShader();
+		ReloadShader();
 	}
 
 	float	dT = (float)glfwGetTime();
