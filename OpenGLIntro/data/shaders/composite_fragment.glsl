@@ -19,6 +19,10 @@ void main()
 //	vec2	temp = normalize(tempColour.xy + tempColour.zw);
 //	out_colour = texture(normals_tex, temp);
 //	out_colour = texture(normals_tex, frag_texcoord);
-	out_colour = albedo_sample * light_sample;
 //	out_colour = vec4(0, frag_texcoord, 1);
+
+	out_colour = albedo_sample * light_sample;
+//	out_colour = albedo_sample;
+//	out_colour = light_sample;
+//	out_colour = vec4(1, 1, 1, 1);
 }

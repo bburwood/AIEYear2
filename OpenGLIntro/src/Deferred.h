@@ -24,11 +24,14 @@ public:
 	void	BuildGBuffer();
 	void	BuildLightBuffer();
 	void	BuildQuad();
+	void	BuildCube();
 	void	RenderDirectionalLight(vec3 light_dir, vec3 light_colour);
+	void	RenderPointLight(vec3 a_position, float a_radius, vec3 a_diffuse);
 
 	//	load up a mesh
 	OpenGLData	m_Bunny;
 	OpenGLData	m_ScreenSpaceQuad;
+	OpenGLData	m_LightCube;
 
 	//	generate a g-buffer
 	unsigned int	m_uiGBufferFBO;

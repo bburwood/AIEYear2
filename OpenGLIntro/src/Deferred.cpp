@@ -26,11 +26,6 @@ bool	Deferred::startup()
 	{
 		return false;
 	}
-	//	check if we need to reload the shaders
-	if (glfwGetKey(m_window, GLFW_KEY_R) == GLFW_PRESS)
-	{
-		ReloadShader();
-	}
 
 	TwInit(TW_OPENGL_CORE, nullptr);
 	TwWindowSize(1280, 720);
@@ -69,11 +64,14 @@ bool	Deferred::startup()
 	BuildGBuffer();
 	BuildLightBuffer();
 	BuildQuad();
+	BuildCube();
 
 	LoadShader("shaders/gbuffer_vertex.glsl", 0, "shaders/gbuffer_fragment.glsl", &m_uiGBufferProgram);
 	LoadShader("shaders/composite_vertex.glsl", 0, "shaders/composite_fragment.glsl", &m_uiCompositeProgram);
 	LoadShader("shaders/composite_vertex.glsl", 0, "shaders/directional_light_fragment.glsl", &m_uiDirectionalLightProgram);
+	LoadShader("shaders/point_light_vertex.glsl", 0, "shaders/point_light_fragment.glsl", &m_uiPointLightProgram);
 
+	glEnable(GL_CULL_FACE);
 	return true;
 }
 
@@ -92,6 +90,7 @@ bool	Deferred::update()
 		return false;
 	}
 	//	check if we need to reload the shaders
+
 	if (glfwGetKey(m_window, GLFW_KEY_R) == GLFW_PRESS)
 	{
 		ReloadShader();
@@ -159,6 +158,7 @@ void	Deferred::draw()
 	glBindVertexArray(m_Bunny.m_uiVAO);
 	glDrawElements(GL_TRIANGLES, m_Bunny.m_uiIndexCount, GL_UNSIGNED_INT, 0);
 
+
 	////////////////////////
 	//	Light accumulation
 	////////////////////////
@@ -181,15 +181,53 @@ void	Deferred::draw()
 	glBindTexture(GL_TEXTURE_2D, m_uiNormalsTexture);
 
 	vec3	light_dir = vec3(0, -1, 0);
-	vec3	light_colour = vec3(0.2f, 0.4f, 0.8f);
+//	vec3	light_colour = vec3(0.2f, 0.4f, 0.8f);
+	vec3	light_colour = vec3(0.1f, 0.1f, 0.1f);
 	RenderDirectionalLight(light_dir, light_colour);
-	RenderDirectionalLight(vec3(0, 1, 0), vec3(0.5f, 0.25f, 0.0f));
-	RenderDirectionalLight(vec3(1, 1, 0), vec3(0.6f, 0.0f, 0.0f));
-	RenderDirectionalLight(vec3(1, 0, 0), vec3(0.0f, 0.6f, 0.0f));
-	RenderDirectionalLight(vec3(0, 0, 1), vec3(0.0f, 0.0f, 0.75f));
-	RenderDirectionalLight(vec3(0.0f, 1.0f, 1.0f), vec3(0.4f, 0.4f, 0.4f));
-	RenderDirectionalLight(vec3(-1.0f, -0.10f, -1.0f), vec3(0.5f, 0.5f, 0.0f));
+//	RenderDirectionalLight(vec3(0, 1, 0), vec3(0.5f, 0.25f, 0.0f));
+//	RenderDirectionalLight(vec3(1, 1, 0), vec3(0.6f, 0.0f, 0.0f));
+//	RenderDirectionalLight(vec3(1, 0, 0), vec3(0.0f, 0.6f, 0.0f));
+//	RenderDirectionalLight(vec3(0, 0, 1), vec3(0.0f, 0.0f, 0.75f));
+//	RenderDirectionalLight(vec3(0.0f, 1.0f, 1.0f), vec3(0.4f, 0.4f, 0.4f));
+//	RenderDirectionalLight(vec3(-1.0f, -0.10f, -1.0f), vec3(0.5f, 0.5f, 0.0f));
 
+	//	now render the point lights
+	glUseProgram(m_uiPointLightProgram);
+	iViewProjUniform = glGetUniformLocation(m_uiPointLightProgram, "proj_view");
+	iPositionTexUniform = glGetUniformLocation(m_uiPointLightProgram, "position_texture");
+	iNormalsTexUniform = glGetUniformLocation(m_uiPointLightProgram, "normal_texture");
+
+	glUniformMatrix4fv(iViewProjUniform, 1, GL_FALSE, (float*)&m_FlyCamera.m_projectionViewTransform);
+	glUniform1i(iPositionTexUniform, 0);
+	glUniform1i(iNormalsTexUniform, 1);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_uiPositionsTexture);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_uiNormalsTexture);
+
+	//	draw the point lights
+	RenderPointLight(vec3(0, 10, 0), 3.0f, vec3(0, 0, 1.0f));
+	RenderPointLight(vec3(0, 5, 5), 3.0f, vec3(1, 1, 0));
+	RenderPointLight(vec3(-3, 3, -3), 3.0f, vec3(1, 0, 0));
+	RenderPointLight(vec3(0, -1.5f, 0), 3.0f, vec3(0, 1, 0));
+	for (unsigned int i = 0; i < 32; ++i)
+	{
+		for (unsigned int j = 0; j < 32; ++j)
+		{
+			for (unsigned int k = 0; k < 32; ++k)
+			{
+				RenderPointLight(vec3(sin(m_timer * i * 0.01) * 5.0f, 3.1f + cos(m_timer * j * 0.01) * 6.5f, sin(m_timer * k * 0.01) * 5.0f),
+						0.3f, vec3(sin(i * 0.15f), cos(j * 0.1), sin(k * 0.05f)));
+			}
+		}
+	}
+
+
+
+
+//		RenderPointLight();
 	glDisable(GL_BLEND);
 
 	////////////////////////
@@ -202,7 +240,7 @@ void	Deferred::draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glUseProgram(m_uiCompositeProgram);
-
+	
 	int	iAlbedoTexUniform = glGetUniformLocation(m_uiCompositeProgram, "albedo_tex");
 	int	iLightTexUniform = glGetUniformLocation(m_uiCompositeProgram, "light_tex");
 
@@ -223,8 +261,6 @@ void	Deferred::draw()
 
 	glBindVertexArray(m_ScreenSpaceQuad.m_uiVAO);
 	glDrawElements(GL_TRIANGLES, m_ScreenSpaceQuad.m_uiIndexCount, GL_UNSIGNED_INT, 0);
-
-
 
 	if (m_bDrawGizmos)
 	{
@@ -327,7 +363,7 @@ void	Deferred::BuildGBuffer()
 
 	glGenTextures(1, &m_uiPositionsTexture);
 	glBindTexture(GL_TEXTURE_2D, m_uiPositionsTexture);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, 1280, 720);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, 1280, 720);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -404,7 +440,8 @@ void	Deferred::BuildQuad()
 
 	unsigned int	indexData[]
 	{
-		0, 1, 2, 0, 2, 3
+		2, 1, 0,
+		3, 2, 0
 	};
 
 	m_ScreenSpaceQuad.m_uiIndexCount = 6;
@@ -433,6 +470,66 @@ void	Deferred::BuildQuad()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
+void	Deferred::BuildCube()
+{
+	//	this will build a unit cube with REVERSE winding order so that the back face automatically renders for the light
+	//	instead of the front faces, without disabling backface culling
+	//	it is a copy / paste from the build cube
+	//	no UV's are required
+	float	vertexData[]
+	{
+		-1, -1, 1, 1,
+		1, -1, 1, 1,
+		1, -1, -1, 1,
+		-1, -1, -1, 1,
+
+		-1, 1, 1, 1,
+		1, 1, 1, 1,
+		1, 1, -1, 1,
+		-1, 1, -1, 1,
+	};
+
+	//	the index data is in REVERSE winding order so the back face is rendered rather than the front face
+	unsigned int	indexData[]
+	{
+		4, 5, 0,
+		5, 1, 0,
+		5, 6, 1,
+		6, 2, 1,
+		6, 7, 2,
+		7, 3, 2,
+
+		7, 4, 3,
+		4, 0, 3,
+		7, 6, 4,
+		6, 5, 4,
+		0, 1, 3,
+		1, 2, 3,
+	};
+
+	m_ScreenSpaceQuad.m_uiIndexCount = 6;
+
+	glGenVertexArrays(1, &m_LightCube.m_uiVAO);
+	glBindVertexArray(m_LightCube.m_uiVAO);
+
+	glGenBuffers(1, &m_LightCube.m_uiVBO);
+	glGenBuffers(1, &m_LightCube.m_uiIBO);
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_LightCube.m_uiVBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_LightCube.m_uiIBO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexData), indexData, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);	//	position
+
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float)* 4, 0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
 
 void	Deferred::RenderDirectionalLight(vec3 light_dir, vec3 light_colour)
 {
@@ -447,12 +544,37 @@ void	Deferred::RenderDirectionalLight(vec3 light_dir, vec3 light_colour)
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
+void	Deferred::RenderPointLight(vec3 a_position, float a_radius, vec3 a_diffuse)
+{
+	vec4	viewspacePos = m_FlyCamera.m_viewTransform * vec4(a_position, 1);
+	int	iPosUniform = glGetUniformLocation(m_uiPointLightProgram, "light_position");
+	int	iViewPosUniform = glGetUniformLocation(m_uiPointLightProgram, "light_view_position");
+	int	iLightDiffuseUniform = glGetUniformLocation(m_uiPointLightProgram, "light_diffuse");
+	int	iLightRadiusUniform = glGetUniformLocation(m_uiPointLightProgram, "light_radius");
+
+	glUniform3fv(iPosUniform, 1, (float*)&a_position);
+	glUniform3fv(iViewPosUniform, 1, (float*)&viewspacePos);
+	glUniform3fv(iLightDiffuseUniform, 1, (float*)&a_diffuse);
+	glUniform1f(iLightRadiusUniform, a_radius);
+
+	glBindVertexArray(m_LightCube.m_uiVAO);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+}
+
 void	Deferred::ReloadShader()
 {
 	glDeleteProgram(m_uiGBufferProgram);
-	glDeleteProgram(m_uiCompositeProgram);
+	//glDeleteProgram(m_uiCompositeProgram);
 	glDeleteProgram(m_uiDirectionalLightProgram);
+	glDeleteProgram(m_uiPointLightProgram);
+
+	m_uiGBufferProgram = 0;
+	//m_uiCompositeProgram = 0;
+	m_uiDirectionalLightProgram = 0;
+	m_uiPointLightProgram = 0;
+
 	LoadShader("shaders/gbuffer_vertex.glsl", 0, "shaders/gbuffer_fragment.glsl", &m_uiGBufferProgram);
-	LoadShader("shaders/composite_vertex.glsl", 0, "shaders/composite_fragment.glsl", &m_uiCompositeProgram);
+	//LoadShader("shaders/composite_vertex.glsl", 0, "shaders/composite_fragment.glsl", &m_uiCompositeProgram);
 	LoadShader("shaders/composite_vertex.glsl", 0, "shaders/directional_light_fragment.glsl", &m_uiDirectionalLightProgram);
+	LoadShader("shaders/point_light_vertex.glsl", 0, "shaders/point_light_fragment.glsl", &m_uiPointLightProgram);
 }
