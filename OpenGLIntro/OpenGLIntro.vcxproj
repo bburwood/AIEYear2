@@ -111,6 +111,7 @@
     <ClInclude Include="src\Lighting.h" />
     <ClInclude Include="src\Particles.h" />
     <ClInclude Include="src\PostProcess.h" />
+    <ClInclude Include="src\ProceduralGeneration.h" />
     <ClInclude Include="src\Quaternions.h" />
     <ClInclude Include="src\RenderingGeometry.h" />
     <ClInclude Include="src\RenderTargets.h" />
@@ -140,6 +141,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Particles.cpp" />
     <ClCompile Include="src\PostProcess.cpp" />
+    <ClCompile Include="src\ProceduralGeneration.cpp" />
     <ClCompile Include="src\Quaternions.cpp" />
     <ClCompile Include="src\RenderingGeometry.cpp" />
     <ClCompile Include="src\RenderTargets.cpp" />
@@ -169,6 +171,8 @@
     <None Include="data\shaders\gpu_particle_update_vert.glsl" />
     <None Include="data\shaders\gpu_particle_vertex.glsl" />
     <None Include="data\shaders\particle_vertex.glsl" />
+    <None Include="data\shaders\perlin_fragment.glsl" />
+    <None Include="data\shaders\perlin_vertex.glsl" />
     <None Include="data\shaders\point_light_fragment.glsl" />
     <None Include="data\shaders\point_light_vertex.glsl" />
     <None Include="data\shaders\post_fragment.glsl" />

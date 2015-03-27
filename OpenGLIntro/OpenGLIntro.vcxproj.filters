@@ -135,6 +135,9 @@
     <ClInclude Include="src\Deferred.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ProceduralGeneration.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\gl_core_4_4.c">
@@ -211,6 +214,9 @@
     </ClCompile>
     <ClCompile Include="src\Deferred.cpp">
       <Filter>Deferred</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ProceduralGeneration.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -299,6 +305,12 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="data\shaders\point_light_fragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\perlin_vertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\perlin_fragment.glsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

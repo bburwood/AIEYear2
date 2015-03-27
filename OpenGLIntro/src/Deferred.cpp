@@ -564,17 +564,17 @@ void	Deferred::RenderPointLight(vec3 a_position, float a_radius, vec3 a_diffuse)
 void	Deferred::ReloadShader()
 {
 	glDeleteProgram(m_uiGBufferProgram);
-	//glDeleteProgram(m_uiCompositeProgram);
+	glDeleteProgram(m_uiCompositeProgram);
 	glDeleteProgram(m_uiDirectionalLightProgram);
 	glDeleteProgram(m_uiPointLightProgram);
 
 	m_uiGBufferProgram = 0;
-	//m_uiCompositeProgram = 0;
+	m_uiCompositeProgram = 0;
 	m_uiDirectionalLightProgram = 0;
 	m_uiPointLightProgram = 0;
 
 	LoadShader("shaders/gbuffer_vertex.glsl", 0, "shaders/gbuffer_fragment.glsl", &m_uiGBufferProgram);
-	//LoadShader("shaders/composite_vertex.glsl", 0, "shaders/composite_fragment.glsl", &m_uiCompositeProgram);
+	LoadShader("shaders/composite_vertex.glsl", 0, "shaders/composite_fragment.glsl", &m_uiCompositeProgram);
 	LoadShader("shaders/composite_vertex.glsl", 0, "shaders/directional_light_fragment.glsl", &m_uiDirectionalLightProgram);
 	LoadShader("shaders/point_light_vertex.glsl", 0, "shaders/point_light_fragment.glsl", &m_uiPointLightProgram);
 }

@@ -21,6 +21,7 @@
 #include "PostProcess.h"
 #include "Shadows.h"
 #include "Deferred.h"
+#include "ProceduralGeneration.h"
 
 int main()
 {
@@ -39,7 +40,8 @@ int main()
 //	RenderTargets	app;
 //	PostProcess	app;
 //	Shadows	app;
-	Deferred	app;
+//	Deferred	app;
+	ProceduralGeneration	app;
 
 	if (app.startup() == false)
 	{
