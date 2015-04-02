@@ -4,6 +4,7 @@
 #include "GLMHeader.h"
 #include "gl_core_4_4.h"
 #include <GLFW\glfw3.h>
+#include "Vertex.h"
 
 #include "AntTweakBar.h"
 
@@ -19,6 +20,9 @@ void	OnMouseScroll(GLFWwindow* window, double x, double y);
 void	OnKey(GLFWwindow* window, int key, int scancode, int pressed, int mod_keys);
 void	OnChar(GLFWwindow* window, unsigned int c);
 void	OnWindowResize(GLFWwindow* window, int width, int height);
+
+//	other functions
+OpenGLData LoadOBJ(char* a_szFileName);
 
 //	to remove fpoen error, define
 //	_CRT_SECURE_NO_WARNINGS

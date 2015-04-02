@@ -22,6 +22,7 @@
 #include "Shadows.h"
 #include "Deferred.h"
 #include "ProceduralGeneration.h"
+#include "AdvancedNavigation.h"
 
 int main()
 {
@@ -41,7 +42,8 @@ int main()
 //	PostProcess	app;
 //	Shadows	app;
 //	Deferred	app;
-	ProceduralGeneration	app;
+//	ProceduralGeneration	app;
+	AdvancedNavigation	app;
 
 	if (app.startup() == false)
 	{

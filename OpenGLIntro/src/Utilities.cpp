@@ -1,6 +1,8 @@
 #include "Utility.h"
+#include "Vertex.h"
+#include "tiny_obj_loader.h"
 #include <cstdio>
-
+#include <iostream>
 
 bool	LoadShaderType(char* fileName, GLenum shaderType, unsigned int* output)
 {
@@ -115,6 +117,54 @@ bool	LoadShader(char* vertex_filename, char* geometry_filename, char* fragment_f
 	}
 
 	return succeeded;
+}
+
+OpenGLData LoadOBJ(char* a_szFileName)
+{
+	OpenGLData	result = {};
+
+	std::vector<tinyobj::shape_t>	shapes;
+	std::vector<tinyobj::material_t>	materials;
+
+	std::string err = tinyobj::LoadObj(shapes, materials, a_szFileName);
+
+	if (err.size() != 0)
+	{
+		std::cout << err << '\n';
+	}
+
+	result.m_uiIndexCount = shapes[0].mesh.indices.size();
+
+	tinyobj::mesh_t*	mesh = &shapes[0].mesh;
+
+	std::vector<float>	vertexData;
+	vertexData.reserve(mesh->positions.size() + mesh->normals.size());
+
+	vertexData.insert(vertexData.end(), mesh->positions.begin(), mesh->positions.end());
+	vertexData.insert(vertexData.end(), mesh->normals.begin(), mesh->normals.end());
+
+	glGenVertexArrays(1, &result.m_uiVAO);
+	glBindVertexArray(result.m_uiVAO);
+
+	glGenBuffers(1, &result.m_uiVBO);
+	glGenBuffers(1, &result.m_uiIBO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, result.m_uiVBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, result.m_uiIBO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float)* vertexData.size(), vertexData.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)* mesh->indices.size(), mesh->indices.data(), GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);	//	position
+	glEnableVertexAttribArray(1);	//	normal
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(float)* mesh->positions.size()));
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	return result;
 }
 
 /*

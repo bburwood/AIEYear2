@@ -37,6 +37,9 @@
     <Filter Include="Deferred">
       <UniqueIdentifier>{ae1e56a7-2586-4a41-81da-5ba5b457278f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="AdvancedNavigation">
+      <UniqueIdentifier>{8c487670-b003-4122-975d-744086cab287}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -138,6 +141,9 @@
     <ClInclude Include="src\ProceduralGeneration.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\AdvancedNavigation.h">
+      <Filter>AdvancedNavigation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\gl_core_4_4.c">
@@ -216,6 +222,9 @@
       <Filter>Deferred</Filter>
     </ClCompile>
     <ClCompile Include="src\ProceduralGeneration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AdvancedNavigation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -311,6 +320,12 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="data\shaders\perlin_fragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\sponza_frag.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\sponza_vert.glsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

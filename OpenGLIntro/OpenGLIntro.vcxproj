@@ -93,6 +93,7 @@
     <ClInclude Include="deps\AntTweakBar\include\AntTweakBar.h" />
     <ClInclude Include="deps\FBXLoader\FBXFile.h" />
     <ClInclude Include="src\AABB.h" />
+    <ClInclude Include="src\AdvancedNavigation.h" />
     <ClInclude Include="src\AdvancedTexturing.h" />
     <ClInclude Include="src\Animation.h" />
     <ClInclude Include="src\Application.h" />
@@ -124,6 +125,7 @@
     <ClInclude Include="src\Vertex.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\AdvancedNavigation.cpp" />
     <ClCompile Include="src\AdvancedTexturing.cpp" />
     <ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\Application.cpp" />
@@ -181,6 +183,8 @@
     <None Include="data\shaders\shadowmap_vertex.glsl" />
     <None Include="data\shaders\skinned_fragment.glsl" />
     <None Include="data\shaders\skinned_vertex.glsl" />
+    <None Include="data\shaders\navmesh_frag.glsl" />
+    <None Include="data\shaders\navmesh_vert.glsl" />
     <None Include="data\shaders\textured_fragment.glsl" />
     <None Include="data\shaders\textured_vertex.glsl" />
   </ItemGroup>
