@@ -40,6 +40,9 @@
     <Filter Include="AdvancedNavigation">
       <UniqueIdentifier>{8c487670-b003-4122-975d-744086cab287}</UniqueIdentifier>
     </Filter>
+    <Filter Include="PhysicallyBasedRendering">
+      <UniqueIdentifier>{8caca109-270e-4f0c-9d8e-72a2d3468121}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -144,6 +147,9 @@
     <ClInclude Include="src\AdvancedNavigation.h">
       <Filter>AdvancedNavigation</Filter>
     </ClInclude>
+    <ClInclude Include="src\PhysicallyBasedRendering.h">
+      <Filter>PhysicallyBasedRendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\gl_core_4_4.c">
@@ -225,6 +231,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\AdvancedNavigation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PhysicallyBasedRendering.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -322,10 +331,12 @@
     <None Include="data\shaders\perlin_fragment.glsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="data\shaders\sponza_frag.glsl">
+    <None Include="data\shaders\navmesh_frag.glsl" />
+    <None Include="data\shaders\navmesh_vert.glsl" />
+    <None Include="data\shaders\BRDF_vertex.glsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="data\shaders\sponza_vert.glsl">
+    <None Include="data\shaders\BRDF_fragment.glsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

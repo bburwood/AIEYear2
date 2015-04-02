@@ -23,6 +23,7 @@
 #include "Deferred.h"
 #include "ProceduralGeneration.h"
 #include "AdvancedNavigation.h"
+#include "PhysicallyBasedRendering.h"
 
 int main()
 {
@@ -43,7 +44,8 @@ int main()
 //	Shadows	app;
 //	Deferred	app;
 //	ProceduralGeneration	app;
-	AdvancedNavigation	app;
+//	AdvancedNavigation	app;
+	PhysicallyBasedRendering	app;
 
 	if (app.startup() == false)
 	{

@@ -23,6 +23,13 @@ struct VertexNormal
 	vec2	tex_coord;
 };
 
+struct VertexNormalTexCoord
+{
+	vec4	position;
+	vec4	normal;
+	vec2	tex_coord;
+};
+
 struct OpenGLData
 {
 	unsigned int	m_uiVAO;

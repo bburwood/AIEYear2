@@ -111,6 +111,7 @@
     <ClInclude Include="src\IntroToOpenGL.h" />
     <ClInclude Include="src\Lighting.h" />
     <ClInclude Include="src\Particles.h" />
+    <ClInclude Include="src\PhysicallyBasedRendering.h" />
     <ClInclude Include="src\PostProcess.h" />
     <ClInclude Include="src\ProceduralGeneration.h" />
     <ClInclude Include="src\Quaternions.h" />
@@ -142,6 +143,7 @@
     <ClCompile Include="src\Lighting.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Particles.cpp" />
+    <ClCompile Include="src\PhysicallyBasedRendering.cpp" />
     <ClCompile Include="src\PostProcess.cpp" />
     <ClCompile Include="src\ProceduralGeneration.cpp" />
     <ClCompile Include="src\Quaternions.cpp" />
@@ -156,6 +158,8 @@
   <ItemGroup>
     <None Include="data\shaders\basic_fragment.glsl" />
     <None Include="data\shaders\basic_vertex.glsl" />
+    <None Include="data\shaders\BRDF_fragment.glsl" />
+    <None Include="data\shaders\BRDF_vertex.glsl" />
     <None Include="data\shaders\composite_fragment.glsl" />
     <None Include="data\shaders\composite_vertex.glsl" />
     <None Include="data\shaders\diffuse_shadowed_fragment.glsl" />
