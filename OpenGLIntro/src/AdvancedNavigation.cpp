@@ -64,7 +64,7 @@ bool	AdvancedNavigation::startup()
 	TwAddVarRO(m_bar, "FPS", TW_TYPE_FLOAT, &m_fFPS, "");
 
 	m_SponzaMesh = LoadOBJ("./models/SponzaSimple.obj");
-	BuildNavMesh();
+	//BuildNavMesh();
 	LoadShader("shaders/navmesh_vert.glsl", 0, "shaders/navmesh_frag.glsl", &m_uiProgramID);
 	return true;
 }
@@ -115,27 +115,27 @@ bool	AdvancedNavigation::update()
 	}
 
 	//	debug draw the nav mesh
-	vec3 vRaise = vec3(0.0f, 0.05f, 0.0f);
-	for (unsigned int iNodeIndex = 0; iNodeIndex < m_aNavNodes.size(); ++iNodeIndex)
-	{
-		Gizmos::addAABB(m_aNavNodes[iNodeIndex].corners[0], vec3(0.1f), vec4(1, 0, 0, 1));
-		Gizmos::addAABB(m_aNavNodes[iNodeIndex].corners[1], vec3(0.1f), vec4(1, 0, 0, 1));
-		Gizmos::addAABB(m_aNavNodes[iNodeIndex].corners[2], vec3(0.1f), vec4(1, 0, 0, 1));
-
-		Gizmos::addAABB(m_aNavNodes[iNodeIndex].position, vec3(0.1f), vec4(0, 1, 0, 1));
-
-		Gizmos::addLine(m_aNavNodes[iNodeIndex].corners[0], m_aNavNodes[iNodeIndex].corners[1], vec4(1, 1, 0, 1));
-		Gizmos::addLine(m_aNavNodes[iNodeIndex].corners[1], m_aNavNodes[iNodeIndex].corners[2], vec4(1, 1, 0, 1));
-		Gizmos::addLine(m_aNavNodes[iNodeIndex].corners[2], m_aNavNodes[iNodeIndex].corners[0], vec4(1, 1, 0, 1));
-
-		for (unsigned int i = 0; i < 3; ++i)
-		{
-			if (m_aNavNodes[iNodeIndex].edges[i] != 0)
-			{
-				Gizmos::addLine(m_aNavNodes[iNodeIndex].position + vRaise, m_aNavNodes[iNodeIndex].edges[i]->position + vRaise, vec4(0, 0, 1, 1));
-			}
-		}
-	}
+//	vec3 vRaise = vec3(0.0f, 0.05f, 0.0f);
+//	for (unsigned int iNodeIndex = 0; iNodeIndex < m_aNavNodes.size(); ++iNodeIndex)
+//	{
+//		Gizmos::addAABB(m_aNavNodes[iNodeIndex].corners[0], vec3(0.1f), vec4(1, 0, 0, 1));
+//		Gizmos::addAABB(m_aNavNodes[iNodeIndex].corners[1], vec3(0.1f), vec4(1, 0, 0, 1));
+//		Gizmos::addAABB(m_aNavNodes[iNodeIndex].corners[2], vec3(0.1f), vec4(1, 0, 0, 1));
+//
+//		Gizmos::addAABB(m_aNavNodes[iNodeIndex].position, vec3(0.1f), vec4(0, 1, 0, 1));
+//
+//		Gizmos::addLine(m_aNavNodes[iNodeIndex].corners[0], m_aNavNodes[iNodeIndex].corners[1], vec4(1, 1, 0, 1));
+//		Gizmos::addLine(m_aNavNodes[iNodeIndex].corners[1], m_aNavNodes[iNodeIndex].corners[2], vec4(1, 1, 0, 1));
+//		Gizmos::addLine(m_aNavNodes[iNodeIndex].corners[2], m_aNavNodes[iNodeIndex].corners[0], vec4(1, 1, 0, 1));
+//
+//		for (unsigned int i = 0; i < 3; ++i)
+//		{
+//			if (m_aNavNodes[iNodeIndex].edges[i] != 0)
+//			{
+//				Gizmos::addLine(m_aNavNodes[iNodeIndex].position + vRaise, m_aNavNodes[iNodeIndex].edges[i]->position + vRaise, vec4(0, 0, 1, 1));
+//			}
+//		}
+//	}
 
 
 	glClearColor(m_BackgroundColour.x, m_BackgroundColour.y, m_BackgroundColour.z, m_BackgroundColour.w);

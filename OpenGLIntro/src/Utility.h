@@ -24,7 +24,7 @@ void	OnWindowResize(GLFWwindow* window, int width, int height);
 //	other functions
 OpenGLData LoadOBJ(char* a_szFileName);
 
-//	to remove fpoen error, define
+//	to remove fopen error, define
 //	_CRT_SECURE_NO_WARNINGS
 
 #endif // !_UTILITY_H_

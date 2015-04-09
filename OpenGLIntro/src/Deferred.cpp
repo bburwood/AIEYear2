@@ -277,7 +277,8 @@ void	Deferred::BuildMeshes()
 	std::vector<tinyobj::shape_t>	shapes;
 	std::vector<tinyobj::material_t>	materials;
 
-	tinyobj::LoadObj(shapes, materials, "./models/stanford/bunny.obj");
+//	tinyobj::LoadObj(shapes, materials, "./models/stanford/bunny.obj");
+	tinyobj::LoadObj(shapes, materials, "./models/f16/f16.obj");
 
 	m_Bunny.m_uiIndexCount = shapes[0].mesh.indices.size();
 

@@ -3,11 +3,13 @@
 #include <GLFW\glfw3.h>
 #include "Gizmos.h"
 #include "Utility.h"
+#include <iostream>
 
 using glm::vec2;
 using glm::vec3;
 using glm::vec4;
 using glm::mat4;
+using namespace std;
 
 ProceduralGeneration::ProceduralGeneration()
 {
@@ -78,8 +80,8 @@ bool	ProceduralGeneration::startup()
 	m_MeshDimensions = glm::ivec2(m_iMeshWidth, m_iMeshHeight);
 
 	BuildGrid(m_GridDimensions, m_MeshDimensions);
-	m_fScale = 0.5f;
-	m_uiOctaves = 4;
+	m_fScale = 0.7f;
+	m_uiOctaves = 6;
 	BuildPerlinTexture(m_MeshDimensions, m_uiOctaves, m_fScale);
 
 	LoadShader("shaders/perlin_vertex.glsl", 0, "shaders/perlin_fragment.glsl", &m_uiProgramID);
@@ -136,11 +138,14 @@ bool	ProceduralGeneration::update()
 	static unsigned int s_uiLastMeshHeight = m_iMeshHeight;
 	static float	s_fLastRealWidth = m_fRealWidth;
 	static float	s_fLastRealHeight = m_fRealHeight;
+	static float	s_fLastPerlinScale = m_fScale;
 
-	if (s_uiLastOctave != m_uiOctaves)
+	if ((s_uiLastOctave != m_uiOctaves) || (s_fLastPerlinScale != m_fScale))
 	{
 		BuildPerlinTexture(m_MeshDimensions, m_uiOctaves, m_fScale);
 		s_uiLastOctave = m_uiOctaves;
+		s_fLastPerlinScale = m_fScale;
+		cout << "Perlin Parameters changed: Octaves: " << m_uiOctaves << "  Scale: " << m_fScale << '\n';
 	}
 	else if ((s_uiLastMeshWidth != m_iMeshWidth) || (s_uiLastMeshHeight != m_iMeshHeight)
 		|| (s_fLastRealWidth != m_fRealWidth) || (s_fLastRealHeight != m_fRealHeight))
@@ -156,6 +161,7 @@ bool	ProceduralGeneration::update()
 		s_uiLastMeshHeight = m_iMeshHeight;
 		s_fLastRealWidth = m_fRealWidth;
 		s_fLastRealHeight = m_fRealHeight;
+		cout << "Mesh Parameters changed: MeshWidth: " << m_iMeshWidth << " MeshHeight: " << m_iMeshHeight << "  RealWidth: " << m_fRealWidth <<" RealHeight: " << m_fRealHeight << '\n';
 	}
 
 
@@ -180,14 +186,24 @@ void	ProceduralGeneration::draw()
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_uiPerlinTexture);
 
-	int iScaleUniform = glGetUniformLocation(m_uiProgramID, "scale");
+	static unsigned int s_uiFrameCounter = 0;
+	++s_uiFrameCounter;
+
+	if ((glfwGetKey(m_window, GLFW_KEY_T) == GLFW_PRESS) && (s_uiFrameCounter > 200))
+	{
+		//	it's next to the R key so ...
+		cout << "Perlin details (draw): Highest: " << m_fHighest << " Lowest: " << m_fLowest << " Scale: " << m_fScale << '\n';
+		s_uiFrameCounter = 0;
+	}
+
+	int iScaleUniform = glGetUniformLocation(m_uiProgramID, "fPerlinScale");
 	glUniform1f(iScaleUniform, m_fScale);
 
 	int iHighestUniform = glGetUniformLocation(m_uiProgramID, "fHighest");
-	glUniform1f(iScaleUniform, m_fHighest);
+	glUniform1f(iHighestUniform, m_fHighest);
 
 	int iLowestUniform = glGetUniformLocation(m_uiProgramID, "fLowest");
-	glUniform1f(iScaleUniform, m_fLowest);
+	glUniform1f(iLowestUniform, m_fLowest);
 
 	glBindVertexArray(m_PlaneMesh.m_uiVAO);
 	glDrawElements(GL_LINES, m_PlaneMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
@@ -330,6 +346,27 @@ void	ProceduralGeneration::BuildPerlinTexture(glm::ivec2 a_Dims, unsigned int a_
 			}
 		}
 	}
+
+	cout << "Perlin details (pre-zero): Highest: " << m_fHighest << " Lowest: " << m_fLowest << '\n';
+	//	now subtract the lowest noise value from every value so that zero should always the lowest value in the texture
+	float	fTempLowest = 999999999999.0f;
+	for (unsigned int y = 0; y < a_Dims.y; ++y)
+	{
+		for (unsigned int x = 0; x < a_Dims.x; ++x)
+		{
+			unsigned int uiCurrentIndex = y * a_Dims.x + x;
+			m_fPerlinData[uiCurrentIndex] -= m_fLowest;
+			if (m_fPerlinData[uiCurrentIndex] < fTempLowest)
+			{
+				fTempLowest = m_fPerlinData[uiCurrentIndex];	//	get the actual lowest value stored after the subtraction
+			}
+		}
+	}
+	m_fHighest -= m_fLowest;
+	m_fLowest = fTempLowest;
+	cout << "Perlin details (post-zero): Highest: " << m_fHighest << " Lowest: " << m_fLowest << '\n';
+	//	hmm, given I am already taking care of these in the shader then I don't need to rescale on the cpu here
+
 	//	generate OpenGL texture handles
 	glGenTextures(1, &m_uiPerlinTexture);
 	glBindTexture(GL_TEXTURE_2D, m_uiPerlinTexture);
