@@ -182,3 +182,7 @@ UpgradeLog*.htm
 FakesAssemblies/
 OpenGLIntro/deps/FBXLoader/FBXLoader.lib
 OpenGLIntro/deps/FBXLoader/FBXLoader_d.lib
+OpenGLIntro/data/models/f16/F16s.bmp
+OpenGLIntro/data/models/f16/F16t.bmp
+OpenGLIntro/data/models/f16/f16.mtl
+OpenGLIntro/data/models/f16/f16.txt
