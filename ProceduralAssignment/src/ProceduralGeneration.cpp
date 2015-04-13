@@ -51,7 +51,8 @@ bool	ProceduralGeneration::startup()
 	m_bDrawGizmos = true;
 
 	//	now initialise the FlyCamera
-	m_FlyCamera = FlyCamera(vec3(10, 10, 10), vec3(0, 0, 0), glm::radians(50.0f), 1280.0f / 720.0f, 0.1f, 1000.0f);
+	m_FlyCamera = FlyCamera(vec3(10, 10, 10), vec3(0, 0, 0), glm::radians(50.0f), 1280.0f / 720.0f, 0.1f, 3000.0f);
+	m_FlyCamera.SetSpeed(150.0f);
 
 	//	initialise basic AntTweakBar info
 	m_bar = TwNewBar("Amazing new AntTweakBar!!");
@@ -63,26 +64,39 @@ bool	ProceduralGeneration::startup()
 	TwAddVarRW(m_bar, "Clear Colour", TW_TYPE_COLOR4F, &m_BackgroundColour, "");
 	TwAddVarRW(m_bar, "Draw Gizmos", TW_TYPE_BOOL8, &m_bDrawGizmos, "");
 	TwAddVarRO(m_bar, "FPS", TW_TYPE_FLOAT, &m_fFPS, "");
+	TwAddVarRW(m_bar, "Terrain Height", TW_TYPE_FLOAT, &m_fTerrainHeight, "min=1 max=250 step=0.5");
+	TwAddVarRW(m_bar, "Flying Speed", TW_TYPE_FLOAT, &m_FlyCamera.m_fSpeed, "min=1 max=250 step=0.5");
 	TwAddSeparator(m_bar, "Perlin Data", "");
-	TwAddVarRW(m_bar, "Perlin Scale", TW_TYPE_FLOAT, &m_fScale, "min=0.02 max=15 step=0.02");
+	TwAddVarRW(m_bar, "Perlin Scale", TW_TYPE_FLOAT, &m_fPerlinScale, "min=0.02 max=15 step=0.02");
 	TwAddVarRW(m_bar, "Perlin Octaves", TW_TYPE_UINT32, &m_uiOctaves, "min=1 max=50 step=1");
-	TwAddVarRW(m_bar, "Perlin Real Width", TW_TYPE_FLOAT, &m_fRealWidth, "min=1 step=0.5");
-	TwAddVarRW(m_bar, "Perlin Real Height", TW_TYPE_FLOAT, &m_fRealHeight, "min=1 step=0.5");
+	TwAddVarRW(m_bar, "Perlin Real Width", TW_TYPE_FLOAT, &m_fRealWidth, "min=1 max=1500 step=0.5");
+	TwAddVarRW(m_bar, "Perlin Real Height", TW_TYPE_FLOAT, &m_fRealHeight, "min=1 max=1500 step=0.5");
 	TwAddVarRW(m_bar, "Perlin Mesh Width", TW_TYPE_UINT32, &m_iMeshWidth, "min=4 max=200 step=1");
 	TwAddVarRW(m_bar, "Perlin Mesh Height", TW_TYPE_UINT32, &m_iMeshHeight, "min=4 max=200 step=1");
 
-	m_fRealWidth = 150.0f;
-	m_fRealHeight = 150.0f;
+	m_fRealWidth = 1000.0f;
+	m_fRealHeight = 1000.0f;
 	m_iMeshWidth = 150;
 	m_iMeshHeight = 150;
+	m_fTerrainHeight = 150.0f;
 
 	m_GridDimensions = vec2(m_fRealWidth, m_fRealHeight);
 	m_MeshDimensions = glm::ivec2(m_iMeshWidth, m_iMeshHeight);
 
 	BuildGrid(m_GridDimensions, m_MeshDimensions);
-	m_fScale = 0.7f;
+	m_fPerlinScale = 0.5f;
 	m_uiOctaves = 6;
-	BuildPerlinTexture(m_MeshDimensions, m_uiOctaves, m_fScale);
+	BuildPerlinTexture(m_MeshDimensions, m_uiOctaves, m_fPerlinScale);
+	//	the following line sets the initial camera position to be above the highest point on the terrain
+	//m_FlyCamera.SetLookAt(vec3(m_fHighestX, m_fTerrainHeight * 1.1f, m_fHighestZ), vec3(0, m_fTerrainHeight * 1.1f, 0), vec3(0, 1, 0));
+	//	the following line sets the initial camera position to be above the lowest point on the terrain
+	m_FlyCamera.SetLookAt(vec3(m_fLowestX, m_fTerrainHeight * 1.1f, m_fLowestZ), vec3(0, m_fTerrainHeight * 1.1f, 0), vec3(0, 1, 0));
+
+	//	Load the terrain textures
+	LoadTexture("./textures/water_01_512.jpg", m_uiWaterTexture);
+	LoadTexture("./textures/SnowTexture_512.png", m_uiSnowTexture);
+	LoadTexture("./textures/grass_texture_512.jpg", m_uiGrassTexture);
+	cout << "PerlinTexture: " << m_uiPerlinTexture << " WaterTexture: " << m_uiWaterTexture << " SnowTexture: " << m_uiSnowTexture << " GrassTexture: " << m_uiGrassTexture << '\n';
 
 	LoadShader("shaders/perlin_vertex.glsl", 0, "shaders/perlin_fragment.glsl", &m_uiProgramID);
 
@@ -138,14 +152,14 @@ bool	ProceduralGeneration::update()
 	static unsigned int s_uiLastMeshHeight = m_iMeshHeight;
 	static float	s_fLastRealWidth = m_fRealWidth;
 	static float	s_fLastRealHeight = m_fRealHeight;
-	static float	s_fLastPerlinScale = m_fScale;
+	static float	s_fLastPerlinScale = m_fPerlinScale;
 
-	if ((s_uiLastOctave != m_uiOctaves) || (s_fLastPerlinScale != m_fScale))
+	if ((s_uiLastOctave != m_uiOctaves) || (s_fLastPerlinScale != m_fPerlinScale))
 	{
-		BuildPerlinTexture(m_MeshDimensions, m_uiOctaves, m_fScale);
+		BuildPerlinTexture(m_MeshDimensions, m_uiOctaves, m_fPerlinScale);
 		s_uiLastOctave = m_uiOctaves;
-		s_fLastPerlinScale = m_fScale;
-		cout << "Perlin Parameters changed: Octaves: " << m_uiOctaves << "  Scale: " << m_fScale << '\n';
+		s_fLastPerlinScale = m_fPerlinScale;
+		cout << "Perlin Parameters changed: Octaves: " << m_uiOctaves << "  Scale: " << m_fPerlinScale << '\n';
 	}
 	else if ((s_uiLastMeshWidth != m_iMeshWidth) || (s_uiLastMeshHeight != m_iMeshHeight)
 		|| (s_fLastRealWidth != m_fRealWidth) || (s_fLastRealHeight != m_fRealHeight))
@@ -154,7 +168,7 @@ bool	ProceduralGeneration::update()
 		m_GridDimensions = vec2(m_fRealWidth, m_fRealHeight);
 		m_MeshDimensions = glm::ivec2(m_iMeshWidth, m_iMeshHeight);
 
-		BuildPerlinTexture(m_MeshDimensions, m_uiOctaves, m_fScale);
+		//BuildPerlinTexture(m_MeshDimensions, m_uiOctaves, m_fPerlinScale);
 		BuildGrid(m_GridDimensions, m_MeshDimensions);
 
 		s_uiLastMeshWidth = m_iMeshWidth;
@@ -162,6 +176,7 @@ bool	ProceduralGeneration::update()
 		s_fLastRealWidth = m_fRealWidth;
 		s_fLastRealHeight = m_fRealHeight;
 		cout << "Mesh Parameters changed: MeshWidth: " << m_iMeshWidth << " MeshHeight: " << m_iMeshHeight << "  RealWidth: " << m_fRealWidth << " RealHeight: " << m_fRealHeight << '\n';
+		cout << "Terrain Height: " << m_fTerrainHeight << '\n';
 	}
 
 
@@ -178,26 +193,43 @@ void	ProceduralGeneration::draw()
 	int	iViewProjUniform = glGetUniformLocation(m_uiProgramID, "view_proj");
 	glUniformMatrix4fv(iViewProjUniform, 1, GL_FALSE, (float*)&m_FlyCamera.m_projectionViewTransform);
 
-	glBindVertexArray(m_PlaneMesh.m_uiVAO);
-	glDrawElements(GL_TRIANGLES, m_PlaneMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
-
-	int iTexUniform = glGetUniformLocation(m_uiProgramID, "perlin_texture");
-	glUniform1i(iTexUniform, 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_uiPerlinTexture);
-
 	static unsigned int s_uiFrameCounter = 0;
 	++s_uiFrameCounter;
 
 	if ((glfwGetKey(m_window, GLFW_KEY_T) == GLFW_PRESS) && (s_uiFrameCounter > 200))
 	{
 		//	it's next to the R key so ...
-		cout << "Perlin details (draw): Highest: " << m_fHighest << " Lowest: " << m_fLowest << " Scale: " << m_fScale << '\n';
+		cout << "Perlin details (draw): Highest: " << m_fHighest << " Lowest: " << m_fLowest << " Scale: " << m_fPerlinScale << '\n';
 		s_uiFrameCounter = 0;
 	}
 
+	int iTexUniform = glGetUniformLocation(m_uiProgramID, "perlin_texture");
+	glUniform1i(iTexUniform, 0);
+
+	int iWaterTexUniform = glGetUniformLocation(m_uiProgramID, "water_texture");
+	glUniform1i(iWaterTexUniform, 1);
+
+	int iSnowTexUniform = glGetUniformLocation(m_uiProgramID, "snow_texture");
+	glUniform1i(iSnowTexUniform, 2);
+
+	int iGrassTexUniform = glGetUniformLocation(m_uiProgramID, "grass_texture");
+	glUniform1i(iGrassTexUniform, 3);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_uiPerlinTexture);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_uiWaterTexture);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, m_uiSnowTexture);
+
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, m_uiGrassTexture);
+
+
 	int iScaleUniform = glGetUniformLocation(m_uiProgramID, "fPerlinScale");
-	glUniform1f(iScaleUniform, m_fScale);
+	glUniform1f(iScaleUniform, m_fPerlinScale);
 
 	int iHighestUniform = glGetUniformLocation(m_uiProgramID, "fHighest");
 	glUniform1f(iHighestUniform, m_fHighest);
@@ -205,8 +237,16 @@ void	ProceduralGeneration::draw()
 	int iLowestUniform = glGetUniformLocation(m_uiProgramID, "fLowest");
 	glUniform1f(iLowestUniform, m_fLowest);
 
+	int iTerrainHeightUniform = glGetUniformLocation(m_uiProgramID, "fTerrainHeight");
+	glUniform1f(iTerrainHeightUniform, m_fTerrainHeight);
+
+
 	glBindVertexArray(m_PlaneMesh.m_uiVAO);
-	glDrawElements(GL_LINES, m_PlaneMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, m_PlaneMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
+
+	//	just draws the terrain mesh ... delete this!!
+//	glBindVertexArray(m_PlaneMesh.m_uiVAO);
+//	glDrawElements(GL_LINES, m_PlaneMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
 
 	if (m_bDrawGizmos)
 	{
@@ -339,10 +379,17 @@ void	ProceduralGeneration::BuildPerlinTexture(glm::ivec2 a_Dims, unsigned int a_
 			if (m_fPerlinData[uiCurrentIndex] > m_fHighest)
 			{
 				m_fHighest = m_fPerlinData[uiCurrentIndex];
+				//	remember the highest point x and z coordinates
+				m_fHighestX = (((float)x - (0.5f * (float)a_Dims.x)) / (float)a_Dims.x) * m_fRealWidth;
+				m_fHighestZ = (((float)y - (0.5f * (float)a_Dims.y)) / (float)a_Dims.y) * m_fRealHeight;
+				//cout << "Perlin: HighestX: " << m_fHighestX << " X: " << (int)x - (a_Dims.x / 2) << " HighestZ: " << m_fHighestZ << " Z: " << (int)y - (a_Dims.y / 2) << '\n';
 			}
 			if (m_fPerlinData[uiCurrentIndex] < m_fLowest)
 			{
 				m_fLowest = m_fPerlinData[uiCurrentIndex];
+				//	remember the lowest point x and z coordinates
+				m_fLowestX = (((float)x - (0.5f * (float)a_Dims.x)) / (float)a_Dims.x) * m_fRealWidth;
+				m_fLowestZ = (((float)y - (0.5f * (float)a_Dims.y)) / (float)a_Dims.y) * m_fRealHeight;
 			}
 		}
 	}

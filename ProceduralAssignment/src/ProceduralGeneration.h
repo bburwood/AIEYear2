@@ -23,14 +23,16 @@ public:
 
 	OpenGLData	m_PlaneMesh;
 	unsigned int	m_uiPerlinTexture;
+	unsigned int	m_uiWaterTexture;
+	unsigned int	m_uiGrassTexture;
+	unsigned int	m_uiSnowTexture;
 	float*	m_fPerlinData;
-	float	m_fScale;
+	float	m_fPerlinScale;
+	float	m_fTerrainHeight;
 	int		m_uiOctaves;
 	vec2	m_GridDimensions;
 	float	m_fRealWidth;
 	float	m_fRealHeight;
-	float	m_fHighest;	//	used to store the current highest Perlin value
-	float	m_fLowest;	//	used to store the current lowest Perlin value
 	glm::ivec2	m_MeshDimensions;
 	unsigned int		m_iMeshWidth;
 	unsigned int		m_iMeshHeight;
@@ -53,6 +55,14 @@ public:
 	TwBar*	m_bar;
 
 	bool	m_bDrawGizmos;
+private:
+	float	m_fHighest;	//	used to store the current highest Perlin value
+	float	m_fLowest;	//	used to store the current lowest Perlin value
+	float	m_fHighestX;
+	float	m_fHighestZ;
+	float	m_fLowestX;
+	float	m_fLowestZ;
+
 };
 
 #endif	//	_PROCEDURAL_GENERATION_H_

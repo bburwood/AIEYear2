@@ -32,7 +32,7 @@ int main()
 //	RenderingGeometry	app;
 //	Texturing app;
 //	Lighting app;
-//	AdvancedTexturing app;
+	AdvancedTexturing app;
 //	Quaternions	app;
 //	BLANK	app;
 //	Animation	app;
@@ -42,7 +42,7 @@ int main()
 //	RenderTargets	app;
 //	PostProcess	app;
 //	Shadows	app;
-	Deferred	app;
+//	Deferred	app;
 //	ProceduralGeneration	app;
 //	AdvancedNavigation	app;
 //	PhysicallyBasedRendering	app;

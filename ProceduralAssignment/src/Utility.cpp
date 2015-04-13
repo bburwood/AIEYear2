@@ -4,6 +4,9 @@
 #include <cstdio>
 #include <iostream>
 
+#define	STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 bool	LoadShaderType(char* fileName, GLenum shaderType, unsigned int* output)
 {
 	bool	succeeded = false;
@@ -166,6 +169,25 @@ OpenGLData LoadOBJ(char* a_szFileName)
 
 	return result;
 }
+
+
+void	LoadTexture(const char* a_szFileName, unsigned int &a_uiTextureID)
+{
+	int	iWidth;
+	int	iHeight;
+	int	iChannels;
+
+	unsigned char*	data = stbi_load(a_szFileName, &iWidth, &iHeight, &iChannels, STBI_default);
+	glGenTextures(1, &a_uiTextureID);
+	glBindTexture(GL_TEXTURE_2D, a_uiTextureID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, iWidth, iHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	stbi_image_free(data);
+}
+
 
 //	AntTweakBar helper functions
 void	OnMouseButton(GLFWwindow* window, int button, int pressed, int mod_keys)

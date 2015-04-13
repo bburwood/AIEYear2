@@ -102,6 +102,7 @@
     <ClInclude Include="src\GPUEmitter.h" />
     <ClInclude Include="src\GPUParticles.h" />
     <ClInclude Include="src\ProceduralGeneration.h" />
+    <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\tiny_obj_loader.h" />
     <ClInclude Include="src\Utility.h" />
     <ClInclude Include="src\Vertex.h" />

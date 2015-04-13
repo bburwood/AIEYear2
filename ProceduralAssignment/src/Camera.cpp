@@ -53,6 +53,11 @@ void	Camera::UpdateProjectionViewTransform()
 	m_projectionViewTransform = m_projectionTransform * m_viewTransform;
 }
 
+vec4	Camera::GetForwardDirection()
+{
+	return m_worldTransform[2];
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -135,5 +140,3 @@ void	FlyCamera::SetSpeed(float a_fSpeed)
 {
 	m_fSpeed = a_fSpeed;
 }
-
-

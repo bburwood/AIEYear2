@@ -23,6 +23,7 @@ public:
 	mat4	GetProjection();
 	mat4	GetProjectionView();
 	void	UpdateProjectionViewTransform();
+	vec4	GetForwardDirection();	//	may need to change this to vec3 ...
 
 
 	mat4	m_worldTransform;
@@ -41,7 +42,7 @@ public:
 	bool	update(float dT);
 	void	SetSpeed(float a_fSpeed);
 
+	float	m_fSpeed;	//	need to put this back into private and handle speed changes from AntTweakBar properly
 private:
-	float	m_fSpeed;
 };
 #endif
