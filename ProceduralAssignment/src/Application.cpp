@@ -41,7 +41,7 @@ bool	Application::startup()
 		return -1;
 	}
 
-	this->m_window = glfwCreateWindow(1280, 720, "Computer Graphics", nullptr, nullptr);
+	this->m_window = glfwCreateWindow(1280, 720, "Procedural Terrain Generation and Lighting Assignment", nullptr, nullptr);
 	if (m_window == nullptr)
 	{
 		return -2;

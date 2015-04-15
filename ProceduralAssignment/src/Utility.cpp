@@ -170,6 +170,122 @@ OpenGLData LoadOBJ(char* a_szFileName)
 	return result;
 }
 
+OpenGLData LoadTexturedOBJ(char* a_szFileName)
+{
+	OpenGLData	result = {};
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+
+	std::string err = tinyobj::LoadObj(shapes, materials, a_szFileName);
+
+	if (err.size() != 0)
+	{
+		std::cout << err << '\n';
+	}
+
+	result.m_uiIndexCount = shapes[0].mesh.indices.size();
+
+	tinyobj::mesh_t*	mesh = &shapes[0].mesh;
+
+	std::vector<float>	vertexData;
+	vertexData.reserve(mesh->positions.size() + mesh->normals.size());
+
+	vertexData.insert(vertexData.end(), mesh->positions.begin(), mesh->positions.end());
+	vertexData.insert(vertexData.end(), mesh->normals.begin(), mesh->normals.end());
+	vertexData.insert(vertexData.end(), mesh->texcoords.begin(), mesh->texcoords.end());
+
+	glGenVertexArrays(1, &result.m_uiVAO);
+	glBindVertexArray(result.m_uiVAO);
+
+	glGenBuffers(1, &result.m_uiVBO);
+	glGenBuffers(1, &result.m_uiIBO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, result.m_uiVBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, result.m_uiIBO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexData.size(), vertexData.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * mesh->indices.size(), mesh->indices.data(), GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);	//	position
+	glEnableVertexAttribArray(1);	//	normal
+	glEnableVertexAttribArray(2);	//	texCoord
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(float) * mesh->positions.size()));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(float) * (mesh->positions.size() +  mesh->normals.size()) ) );
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	bool	bDebugInfo = true;
+	bool	bExtraDebugInfo = false;
+	if (bExtraDebugInfo)
+	{
+		std::cout << "mesh->texcoords.size(): " << mesh->texcoords.size() << '\n';
+		for (unsigned int i = 0; i < mesh->texcoords.size(); ++i)
+		{
+			std::cout << mesh->texcoords[i] << "  ";
+		}
+		std::cout << '\n';
+	}
+
+
+	if (bDebugInfo)
+	{
+		//	extra debug output code from loading OBJ from the Tiny OBJ website: https://github.com/syoyo/tinyobjloader
+		std::cout << "# of shapes    : " << shapes.size() << std::endl;
+		std::cout << "# of materials : " << materials.size() << std::endl;
+		for (size_t i = 0; i < shapes.size(); i++)
+		{
+			printf("shape[%ld].name = %s\n", i, shapes[i].name.c_str());
+			printf("Size of shape[%ld].indices: %ld\n", i, shapes[i].mesh.indices.size());
+			printf("Size of shape[%ld].material_ids: %ld\n", i, shapes[i].mesh.material_ids.size());
+			assert((shapes[i].mesh.indices.size() % 3) == 0);
+			if (bExtraDebugInfo)
+			{
+				for (size_t f = 0; f < shapes[i].mesh.indices.size() / 3; f++)
+				{
+					printf("  idx[%ld] = %d, %d, %d. mat_id = %d\n", f, shapes[i].mesh.indices[3 * f + 0], shapes[i].mesh.indices[3 * f + 1], shapes[i].mesh.indices[3 * f + 2], shapes[i].mesh.material_ids[f]);
+				}
+			}
+			printf("shape[%ld].vertices: %ld\n", i, shapes[i].mesh.positions.size());
+			assert((shapes[i].mesh.positions.size() % 3) == 0);
+			if (bExtraDebugInfo)
+			{
+				for (size_t v = 0; v < shapes[i].mesh.positions.size() / 3; v++)
+				{
+					printf("  v[%ld] = (%f, %f, %f)\n", v,
+						shapes[i].mesh.positions[3 * v + 0],
+						shapes[i].mesh.positions[3 * v + 1],
+						shapes[i].mesh.positions[3 * v + 2]);
+				}
+			}
+		}
+		for (size_t i = 0; i < materials.size(); i++) {
+			printf("material[%ld].name = %s\n", i, materials[i].name.c_str());
+			printf("  material.Ka = (%f, %f ,%f)\n", materials[i].ambient[0], materials[i].ambient[1], materials[i].ambient[2]);
+			printf("  material.Kd = (%f, %f ,%f)\n", materials[i].diffuse[0], materials[i].diffuse[1], materials[i].diffuse[2]);
+			printf("  material.Ks = (%f, %f ,%f)\n", materials[i].specular[0], materials[i].specular[1], materials[i].specular[2]);
+			printf("  material.Tr = (%f, %f ,%f)\n", materials[i].transmittance[0], materials[i].transmittance[1], materials[i].transmittance[2]);
+			printf("  material.Ke = (%f, %f ,%f)\n", materials[i].emission[0], materials[i].emission[1], materials[i].emission[2]);
+			printf("  material.Ns = %f\n", materials[i].shininess);
+			printf("  material.Ni = %f\n", materials[i].ior);
+			printf("  material.dissolve = %f\n", materials[i].dissolve);
+			printf("  material.illum = %d\n", materials[i].illum);
+			printf("  material.map_Ka = %s\n", materials[i].ambient_texname.c_str());
+			printf("  material.map_Kd = %s\n", materials[i].diffuse_texname.c_str());
+			printf("  material.map_Ks = %s\n", materials[i].specular_texname.c_str());
+			printf("  material.map_Ns = %s\n", materials[i].normal_texname.c_str());
+			std::map<std::string, std::string>::const_iterator it(materials[i].unknown_parameter.begin());
+			std::map<std::string, std::string>::const_iterator itEnd(materials[i].unknown_parameter.end());
+			for (; it != itEnd; it++) {
+				printf("  material.%s = %s\n", it->first.c_str(), it->second.c_str());
+			}
+			printf("\n");
+		}
+	}
+	return result;
+}
 
 void	LoadTexture(const char* a_szFileName, unsigned int &a_uiTextureID)
 {
@@ -181,6 +297,23 @@ void	LoadTexture(const char* a_szFileName, unsigned int &a_uiTextureID)
 	glGenTextures(1, &a_uiTextureID);
 	glBindTexture(GL_TEXTURE_2D, a_uiTextureID);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, iWidth, iHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	stbi_image_free(data);
+}
+
+void	LoadAlphaTexture(const char* a_szFileName, unsigned int &a_uiTextureID)
+{
+	int	iWidth;
+	int	iHeight;
+	int	iChannels;
+
+	unsigned char*	data = stbi_load(a_szFileName, &iWidth, &iHeight, &iChannels, STBI_default);
+	glGenTextures(1, &a_uiTextureID);
+	glBindTexture(GL_TEXTURE_2D, a_uiTextureID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, iWidth, iHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

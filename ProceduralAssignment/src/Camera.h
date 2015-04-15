@@ -23,7 +23,10 @@ public:
 	mat4	GetProjection();
 	mat4	GetProjectionView();
 	void	UpdateProjectionViewTransform();
-	vec4	GetForwardDirection();	//	may need to change this to vec3 ...
+	vec3	GetForwardDirection();
+	vec3	GetUpDirection();
+	vec3	GetRightDirection();
+	vec3	GetPosition();
 
 
 	mat4	m_worldTransform;
@@ -43,6 +46,8 @@ public:
 	void	SetSpeed(float a_fSpeed);
 
 	float	m_fSpeed;	//	need to put this back into private and handle speed changes from AntTweakBar properly
+	mat4	m_LastRotation;
+	bool	m_bRotatedThisFrame;
 private:
 };
 #endif

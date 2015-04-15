@@ -4,8 +4,11 @@
 #include "Application.h"
 #include "Camera.h"
 #include "Vertex.h"
+#include "GPUEmitter.h"
 
 #include "AntTweakBar.h"
+
+const	int	c_iNUM_EMITTERS = 4;
 
 class ProceduralGeneration : public Application
 {
@@ -20,12 +23,18 @@ public:
 
 	void	BuildGrid(vec2 a_RealDims, glm::ivec2 a_Dims);
 	void	BuildPerlinTexture(glm::ivec2 a_Dims, unsigned int a_uiOctaves, float a_fPersistence);
+	void	DrawModels();
+	//void	LoadPlaneMesh();
 
 	OpenGLData	m_PlaneMesh;
+	OpenGLData	m_F16Mesh;
+	OpenGLData	m_F16CopyMesh;
 	unsigned int	m_uiPerlinTexture;
 	unsigned int	m_uiWaterTexture;
 	unsigned int	m_uiGrassTexture;
 	unsigned int	m_uiSnowTexture;
+	unsigned int	m_uiParticleTexture;
+	unsigned int	m_uiF16Texture;
 	float*	m_fPerlinData;
 	float	m_fPerlinScale;
 	float	m_fTerrainHeight;
@@ -47,9 +56,12 @@ public:
 	float	m_camera_x;
 	float	m_camera_z;
 	float	m_timer;
+	float	m_fTotalTime;
 	unsigned int	m_uiProgramID;
+	unsigned int	m_uiModelProgramID;
 	FlyCamera	m_FlyCamera;
 	vec4	m_BackgroundColour;
+	vec3	m_vLightDir;
 	float	m_fFPS;
 
 	TwBar*	m_bar;
@@ -62,7 +74,17 @@ private:
 	float	m_fHighestZ;
 	float	m_fLowestX;
 	float	m_fLowestZ;
-
+	GPUPointEmitter	m_emitters[c_iNUM_EMITTERS];	//	have 4 gpu particle emitters.  The idea is to eventually have them spaced along
+	//	the F16's wings and fire them one by one.
+	float	m_fFiringTimer;
+	float	m_fFiringInterval;
+	float	m_fEmitterLifespan;
+	float	m_fEmitterParticleLifespan;
+	unsigned int		m_uiEmitterMaxParticles;
+	float	m_fEmitRate;
+	int		m_iNextEmitterToFire;
+	mat4	m_F16Transform;
+	mat4	m_F16CopyTransform;
 };
 
 #endif	//	_PROCEDURAL_GENERATION_H_

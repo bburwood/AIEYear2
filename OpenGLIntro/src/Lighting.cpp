@@ -51,7 +51,7 @@ bool	Lighting::startup()
 	ambient_light = vec3(0.1f, 0.1f, 0.1f);
 	light_dir = vec3(0, -1, 0);
 	light_colour = vec3(0.1f, 0.50f, 0.7f);
-	material_colour = vec3(1.0f);
+	material_colour = vec3(1.0f, 1.0f, 1.0f);
 	specular_power = 15.0f;
 
 	return true;

@@ -23,7 +23,9 @@ void	OnWindowResize(GLFWwindow* window, int width, int height);
 
 //	other functions
 OpenGLData LoadOBJ(char* a_szFileName);
+OpenGLData LoadTexturedOBJ(char* a_szFileName);
 void	LoadTexture(const char* a_szFileName, unsigned int &a_uiTextureID);
+void	LoadAlphaTexture(const char* a_szFileName, unsigned int &a_uiTextureID);
 
 //	to remove fpoen error, define
 //	_CRT_SECURE_NO_WARNINGS

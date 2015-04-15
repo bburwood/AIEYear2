@@ -32,7 +32,7 @@ bool	GPUParticles::startup()
 	//	now initialise the FlyCamera
 	m_FlyCamera = FlyCamera(vec3(10, 10, 10), vec3(0, 0, 0), glm::radians(50.0f), 1280.0f / 720.0f, 0.1f, 1000.0f);
 	m_BackgroundColour = vec4(0.3f, 0.3f, 0.3f, 1.0f);
-	m_emitter.Init(100000, vec3(0, 5, 0), 15000.0f, 0.35f, 4.5f, 0.7f, 2.0f, 0.5f, 0.01f, 0.02f, vec4(0.2f, 0.4f, 1.0f, 1), vec4(1, 1, 0.5f, 0.3));
+	//m_emitter.Init(100000, vec3(0, 5, 0), 15000.0f, 0.35f, 4.5f, 0.7f, 2.0f, 0.5f, 0.01f, 0.02f, vec4(0.2f, 0.4f, 1.0f, 1), vec4(1, 1, 0.5f, 0.3));
 	m_timer = 0.0f;
 	return true;
 }

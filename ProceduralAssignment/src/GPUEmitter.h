@@ -26,16 +26,18 @@ public:
 	GPUPointEmitter();
 	~GPUPointEmitter();
 
-	void	Init(unsigned int a_MaxParticles, vec3 a_position, float a_fEmitRate,
+	void	Init(unsigned int a_MaxParticles, vec3 a_position, vec3 a_velocity,
+		float a_fEmitRate, float a_fEmitterLifespan,
 		float a_fMinLifespan, float a_fMaxLifespan,
 		float a_fMinVelocity, float a_fMaxVelocity,
 		float a_fGravityStrength,
 		float a_fStartSize, float a_fEndSize,
-		vec4 a_StartColour, vec4 a_EndColour);
+		vec4 a_StartColour, vec4 a_EndColour, int a_iEmitterID);
 	void	Draw(float a_currTime, mat4 a_cameraTransform, mat4 a_projectionView);
 	void	CreateBuffers();
 	void	CreateUpdateShader();
 	void	CreateDrawShader();
+	void	SetParticleTexture(unsigned int a_uiParticleTexture);
 
 
 
@@ -82,7 +84,7 @@ public:
 	unsigned int	m_VBO[2];
 	unsigned int	m_uiUpdateShader;
 	unsigned int	m_uiDrawShader;
-	float	m_fLastDrawTime;
+	//float	m_fLastDrawTime;
 
 
 	//	General data
@@ -90,7 +92,15 @@ public:
 	float	m_fEmitRateMultiplier;
 
 private:
-
+	vec3	m_vVelocity;
+	vec3	m_vCamLastForward;
+	float	m_fEmitterLifespan;
+	float	m_fCurrentAge;
+	int		m_iEmitterID;
+	//	the simple particle texture was obtained from: http://buildnewgames.com/particle-systems/
+	//	it is a 32bit ARGB png texture, 128x128
+	unsigned int	m_uiParticleTexture;
+	bool	m_bDeleteBuffers = false;
 };
 
 #endif	//	_GPUEMITTER_H_

@@ -53,9 +53,27 @@ void	Camera::UpdateProjectionViewTransform()
 	m_projectionViewTransform = m_projectionTransform * m_viewTransform;
 }
 
-vec4	Camera::GetForwardDirection()
+vec3	Camera::GetForwardDirection()
 {
-	return m_worldTransform[2];
+	vec3	vForward = (m_worldTransform[2].xyz) * (-1.0f);
+	return vForward;
+}
+
+vec3	Camera::GetUpDirection()
+{
+	vec3	vForward = (m_worldTransform[1].xyz);
+	return vForward;
+}
+
+vec3	Camera::GetRightDirection()
+{
+	vec3	vForward = (m_worldTransform[0].xyz);
+	return vForward;
+}
+
+vec3	Camera::GetPosition()
+{
+	return m_worldTransform[3].xyz;
 }
 
 
@@ -99,11 +117,12 @@ bool	FlyCamera::update(float dT)
 	}
 	if (glfwGetKey(pCurrentWindow, GLFW_KEY_Q) == GLFW_PRESS)
 	{
-		//	camera's position -= x axis direction * speed * dT
+		//	Down: camera's position -= x axis direction * speed * dT
 		m_worldTransform[3] -= m_worldTransform[1] * m_fSpeed * dT;
 	}
 	if (glfwGetKey(pCurrentWindow, GLFW_KEY_E) == GLFW_PRESS)
 	{
+		//	Up
 		m_worldTransform[3] += m_worldTransform[1] * m_fSpeed * dT;
 	}
 
@@ -124,10 +143,15 @@ bool	FlyCamera::update(float dT)
 		vec3	cameraRight = (vec3)m_worldTransform[0];
 		mat4	cameraYaw = glm::rotate((float)dXDelta, vec3(0, 1, 0));
 		mat4	cameraPitch = glm::rotate((float)dYDelta, cameraRight);
-		mat4	cameraRotation = cameraYaw * cameraPitch;
-		m_worldTransform[0] = cameraRotation * m_worldTransform[0];
-		m_worldTransform[1] = cameraRotation * m_worldTransform[1];
-		m_worldTransform[2] = cameraRotation * m_worldTransform[2];
+		m_LastRotation = cameraYaw * cameraPitch;	//	store this along with a bool that flags when a rotation has happened this frame.  This can then be used to rotate the F16.
+		m_worldTransform[0] = m_LastRotation * m_worldTransform[0];
+		m_worldTransform[1] = m_LastRotation * m_worldTransform[1];
+		m_worldTransform[2] = m_LastRotation * m_worldTransform[2];
+		m_bRotatedThisFrame = true;
+	}
+	else
+	{
+		m_bRotatedThisFrame = false;
 	}
 	m_worldTransform[3][3] = 1;
 	m_viewTransform = glm::inverse(m_worldTransform);

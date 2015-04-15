@@ -91,5 +91,29 @@
     <None Include="data\shaders\perlin_vertex.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="data\shaders\gpu_particle_fragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\gpu_particle_geometry.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\gpu_particle_update_vert.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\gpu_particle_vertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\normal_mapped_fragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\normal_mapped_vertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\lighting_fragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\lighting_vertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

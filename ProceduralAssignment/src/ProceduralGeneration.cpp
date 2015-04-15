@@ -25,11 +25,7 @@ bool	ProceduralGeneration::startup()
 	{
 		return false;
 	}
-	//	check if we need to reload the shaders
-	if (glfwGetKey(m_window, GLFW_KEY_R) == GLFW_PRESS)
-	{
-		ReloadShader();
-	}
+	m_fTotalTime = 0.0f;
 
 	TwInit(TW_OPENGL_CORE, nullptr);
 	TwWindowSize(1280, 720);
@@ -41,7 +37,7 @@ bool	ProceduralGeneration::startup()
 	glfwSetCharCallback(m_window, OnChar);
 	glfwSetWindowSizeCallback(m_window, OnWindowResize);
 
-	m_BackgroundColour = vec4(0.3f, 0.3f, 0.3f, 1.0f);
+	m_BackgroundColour = vec4(0.3f, 0.3f, 0.8f, 1.0f);
 	glClearColor(m_BackgroundColour.x, m_BackgroundColour.y, m_BackgroundColour.z, m_BackgroundColour.w);
 	//	glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
@@ -52,15 +48,16 @@ bool	ProceduralGeneration::startup()
 
 	//	now initialise the FlyCamera
 	m_FlyCamera = FlyCamera(vec3(10, 10, 10), vec3(0, 0, 0), glm::radians(50.0f), 1280.0f / 720.0f, 0.1f, 3000.0f);
-	m_FlyCamera.SetSpeed(150.0f);
+	m_FlyCamera.SetSpeed(250.0f);
 
 	//	initialise basic AntTweakBar info
-	m_bar = TwNewBar("Amazing new AntTweakBar!!");
-	TwAddSeparator(m_bar, "Light Data", "");
+	m_bar = TwNewBar("Stuff you can mess with!!");
+	//TwAddSeparator(m_bar, "Light Data", "");
 	//	TwAddVarRW(m_bar, "Light Direction", TW_TYPE_DIR3F, &m_light_dir, "label='Group Light'");
 	//	TwAddVarRW(m_bar, "Light Colour", TW_TYPE_COLOR3F, &m_light_colour, "label='Group Light'");
 	//	TwAddVarRW(m_bar, "Spec Power", TW_TYPE_FLOAT, &m_fSpecular_power, "label='Group Light' min=0.05 max=100 step=0.05");
 	TwAddSeparator(m_bar, "Misc Data", "");
+	TwAddVarRW(m_bar, "Light Direction", TW_TYPE_DIR3F, &m_vLightDir, "label='Light Direction'");
 	TwAddVarRW(m_bar, "Clear Colour", TW_TYPE_COLOR4F, &m_BackgroundColour, "");
 	TwAddVarRW(m_bar, "Draw Gizmos", TW_TYPE_BOOL8, &m_bDrawGizmos, "");
 	TwAddVarRO(m_bar, "FPS", TW_TYPE_FLOAT, &m_fFPS, "");
@@ -73,6 +70,10 @@ bool	ProceduralGeneration::startup()
 	TwAddVarRW(m_bar, "Perlin Real Height", TW_TYPE_FLOAT, &m_fRealHeight, "min=1 max=1500 step=0.5");
 	TwAddVarRW(m_bar, "Perlin Mesh Width", TW_TYPE_UINT32, &m_iMeshWidth, "min=4 max=200 step=1");
 	TwAddVarRW(m_bar, "Perlin Mesh Height", TW_TYPE_UINT32, &m_iMeshHeight, "min=4 max=200 step=1");
+	TwAddSeparator(m_bar, "Other Data", "");
+	TwAddVarRW(m_bar, "Emitter Lifespan", TW_TYPE_FLOAT, &m_fEmitterLifespan, "min=0.25 max=25 step=0.25");
+	TwAddVarRW(m_bar, "Emitter MaxParticles", TW_TYPE_UINT32, &m_uiEmitterMaxParticles, "min=1000 max=25000 step=100");
+	TwAddVarRW(m_bar, "Emitter Emit Rate", TW_TYPE_FLOAT, &m_fEmitRate, "min=100 max=10000 step=100");
 
 	m_fRealWidth = 1000.0f;
 	m_fRealHeight = 1000.0f;
@@ -91,14 +92,45 @@ bool	ProceduralGeneration::startup()
 	//m_FlyCamera.SetLookAt(vec3(m_fHighestX, m_fTerrainHeight * 1.1f, m_fHighestZ), vec3(0, m_fTerrainHeight * 1.1f, 0), vec3(0, 1, 0));
 	//	the following line sets the initial camera position to be above the lowest point on the terrain
 	m_FlyCamera.SetLookAt(vec3(m_fLowestX, m_fTerrainHeight * 1.1f, m_fLowestZ), vec3(0, m_fTerrainHeight * 1.1f, 0), vec3(0, 1, 0));
+	m_F16CopyTransform = glm::scale(glm::translate(vec3(m_fHighestX, m_fHighest * m_fTerrainHeight, m_fHighestZ)), vec3(4.0f, 4.0f, 4.0f));
 
 	//	Load the terrain textures
 	LoadTexture("./textures/water_01_512.jpg", m_uiWaterTexture);
 	LoadTexture("./textures/SnowTexture_512.png", m_uiSnowTexture);
 	LoadTexture("./textures/grass_texture_512.jpg", m_uiGrassTexture);
-	cout << "PerlinTexture: " << m_uiPerlinTexture << " WaterTexture: " << m_uiWaterTexture << " SnowTexture: " << m_uiSnowTexture << " GrassTexture: " << m_uiGrassTexture << '\n';
+	//	Load the particle texture
+	LoadAlphaTexture("./textures/particleTexture.png", m_uiParticleTexture);
+	//	Load the F16 texture
+	LoadTexture("./models/f16/f16s.bmp", m_uiF16Texture);
+	//	and pass the particle texture to all particle emitters
+	for (unsigned int i = 0; i < c_iNUM_EMITTERS; ++i)
+	{
+		m_emitters[i].SetParticleTexture(m_uiParticleTexture);
+	}
+
+	cout << "PerlinTexture: " << m_uiPerlinTexture << " WaterTexture: " << m_uiWaterTexture << " SnowTexture: " << m_uiSnowTexture
+		<< " GrassTexture: " << m_uiGrassTexture << " ParticleTexture: " << m_uiParticleTexture << '\n';
 
 	LoadShader("shaders/perlin_vertex.glsl", 0, "shaders/perlin_fragment.glsl", &m_uiProgramID);
+
+	//	initialise the GPU Particle emitter variables
+	m_fFiringTimer = 0.0f;
+	m_fFiringInterval = 1.0f;
+	m_fEmitterLifespan = 10.0f;
+	m_fEmitterParticleLifespan = 4.0f;
+	m_uiEmitterMaxParticles = 12000;
+	m_fEmitRate = 4000.0f;
+	m_iNextEmitterToFire = 0;
+	m_vLightDir = glm::normalize(vec3(-0.50f, -0.5f, -0.50f));
+
+	//	now load the meshes
+	m_F16Mesh = LoadTexturedOBJ("./models/f16/f16.obj");
+	m_F16CopyMesh = LoadTexturedOBJ("./models/f16/f16.obj");
+	//OpenGLData	testMesh = LoadTexturedOBJ("./models/f16/f16.obj");
+	//m_F16Mesh = LoadOBJ("./models/stanford/bunny.obj");
+
+//	LoadShader("./shaders/normal_mapped_vertex.glsl", nullptr, "./shaders/normal_mapped_fragment.glsl", &m_uiModelProgramID);
+	LoadShader("./shaders/lighting_vertex.glsl", nullptr, "./shaders/lighting_fragment.glsl", &m_uiModelProgramID);
 
 	return true;
 }
@@ -125,21 +157,58 @@ bool	ProceduralGeneration::update()
 
 	float	dT = (float)glfwGetTime();
 	glfwSetTime(0.0f);
-	m_fFPS = (float)(1.0 / dT);
+	m_fFPS = (float)(1.0f / dT);
 	//	now we get to the fun stuff
+	m_FlyCamera.update(dT);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	Gizmos::clear();
-	Gizmos::addTransform(mat4(1));
-
-	m_timer += dT;
-	m_FlyCamera.update(dT);
-
+	Gizmos::addTransform(mat4(1));	//	adds the red green blue unit vectors to the drawn grid of lines
 	vec4	white(1);
 	vec4	black(0, 0, 0, 1);
 	vec4	blue(0, 0, 1, 1);
 	vec4	yellow(1, 1, 0, 1);
 	vec4	green(0, 1, 0, 1);
 	vec4	red(1, 0, 0, 1);
+
+	m_timer += dT;
+	m_fTotalTime += dT;
+	m_fFiringTimer += dT;
+	vec3	vCamForward = m_FlyCamera.GetForwardDirection();
+	vCamForward = glm::normalize(vCamForward);
+	vec3	vCamUp = m_FlyCamera.GetUpDirection();
+	vCamUp = glm::normalize(vCamUp);
+	vec3	vCamRight = m_FlyCamera.GetRightDirection();
+	vCamRight = glm::normalize(vCamRight);
+//	if (m_FlyCamera.m_bRotatedThisFrame)
+//	{
+//		m_F16Transform = m_FlyCamera.m_LastRotation * glm::translate(m_FlyCamera.GetPosition() + (vCamForward * 6.0f));
+//	}
+//	else
+//	{
+//		m_F16Transform = glm::translate(m_FlyCamera.GetPosition() + (vCamForward * 6.0f));
+//	}
+//	m_F16Transform = glm::inverse(m_FlyCamera.m_LastRotation) * m_F16Transform;
+	//m_F16Transform[0] = m_FlyCamera.m_LastRotation * m_F16Transform[0];
+	//m_F16Transform[1] = m_FlyCamera.m_LastRotation * m_F16Transform[1];
+	//m_F16Transform[2] = m_FlyCamera.m_LastRotation * m_F16Transform[2];
+
+	m_F16Transform = glm::translate(m_FlyCamera.GetPosition() + (vCamForward * 6.0f) - (vCamUp * 1.5f));
+
+	if ((glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS) && (m_fFiringTimer > m_fFiringInterval))
+	{
+		//	fire another particle effect
+		cout << "Firing emitter: " << m_iNextEmitterToFire << " m_fFiringTimer:" << m_fFiringTimer << '\n';
+		m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles,
+			m_FlyCamera.GetPosition() + (vCamForward * 0.15f * m_FlyCamera.m_fSpeed) - (vCamUp * 0.15f * m_FlyCamera.m_fSpeed) + (vCamRight * ((float)m_iNextEmitterToFire - (0.5f * c_iNUM_EMITTERS) + 0.5f) * 10.0f),
+			vCamForward * m_FlyCamera.m_fSpeed * 0.75f,
+			m_fEmitRate, m_fEmitterLifespan, 0.1f * m_fEmitterParticleLifespan, m_fEmitterParticleLifespan,
+			0.02f * m_FlyCamera.m_fSpeed, 0.04f * m_FlyCamera.m_fSpeed, 2.5f,
+			0.003f * m_fTerrainHeight, 0.01f * m_fTerrainHeight,
+			vec4(0.2f, 0.4f, 1.0f, 1), vec4(1, 1, 0.5f, 0.3), m_iNextEmitterToFire);
+		m_iNextEmitterToFire = (m_iNextEmitterToFire + 1) % c_iNUM_EMITTERS;
+		m_fFiringTimer = 0.0f;
+	}
+
 	for (int i = 0; i <= 20; ++i)
 	{
 		Gizmos::addLine(vec3(-10 + i, 0, -10), vec3(-10 + i, 0, 10),
@@ -230,16 +299,19 @@ void	ProceduralGeneration::draw()
 
 	int iScaleUniform = glGetUniformLocation(m_uiProgramID, "fPerlinScale");
 	glUniform1f(iScaleUniform, m_fPerlinScale);
-
 	int iHighestUniform = glGetUniformLocation(m_uiProgramID, "fHighest");
 	glUniform1f(iHighestUniform, m_fHighest);
-
 	int iLowestUniform = glGetUniformLocation(m_uiProgramID, "fLowest");
 	glUniform1f(iLowestUniform, m_fLowest);
-
 	int iTerrainHeightUniform = glGetUniformLocation(m_uiProgramID, "fTerrainHeight");
 	glUniform1f(iTerrainHeightUniform, m_fTerrainHeight);
+	int iTerrainGridDimensionsUniform = glGetUniformLocation(m_uiProgramID, "vMeshDims");
+	glUniform2iv(iTerrainGridDimensionsUniform, 1, (int*)&m_MeshDimensions);
 
+	int	eye_pos_uniform = glGetUniformLocation(m_uiProgramID, "eye_pos");
+	glUniform3fv(eye_pos_uniform, 1, (float*)&m_FlyCamera.GetPosition());
+	int	iLightDirUniform = glGetUniformLocation(m_uiProgramID, "light_dir");
+	glUniform3fv(iLightDirUniform, 1, (float*)&m_vLightDir);
 
 	glBindVertexArray(m_PlaneMesh.m_uiVAO);
 	glDrawElements(GL_TRIANGLES, m_PlaneMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
@@ -247,6 +319,15 @@ void	ProceduralGeneration::draw()
 	//	just draws the terrain mesh ... delete this!!
 //	glBindVertexArray(m_PlaneMesh.m_uiVAO);
 //	glDrawElements(GL_LINES, m_PlaneMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
+
+	//	now draw the loaded meshes
+	DrawModels();
+
+	//	now draw any particle emitters
+	for (unsigned int i = 0; i < c_iNUM_EMITTERS; ++i)
+	{
+		m_emitters[i].Draw(1.0f / m_fFPS, m_FlyCamera.m_worldTransform, m_FlyCamera.GetProjectionView());
+	}
 
 	if (m_bDrawGizmos)
 	{
@@ -397,19 +478,23 @@ void	ProceduralGeneration::BuildPerlinTexture(glm::ivec2 a_Dims, unsigned int a_
 	cout << "Perlin details (pre-zero): Highest: " << m_fHighest << " Lowest: " << m_fLowest << '\n';
 	//	now subtract the lowest noise value from every value so that zero should always the lowest value in the texture
 	float	fTempLowest = 999999999999.0f;
+	m_fHighest = 0.0f;
 	for (unsigned int y = 0; y < a_Dims.y; ++y)
 	{
 		for (unsigned int x = 0; x < a_Dims.x; ++x)
 		{
 			unsigned int uiCurrentIndex = y * a_Dims.x + x;
 			m_fPerlinData[uiCurrentIndex] -= m_fLowest;
+			if (m_fPerlinData[uiCurrentIndex] > m_fHighest)
+			{
+				m_fHighest = m_fPerlinData[uiCurrentIndex];
+			}
 			if (m_fPerlinData[uiCurrentIndex] < fTempLowest)
 			{
 				fTempLowest = m_fPerlinData[uiCurrentIndex];	//	get the actual lowest value stored after the subtraction
 			}
 		}
 	}
-	m_fHighest -= m_fLowest;
 	m_fLowest = fTempLowest;
 	cout << "Perlin details (post-zero): Highest: " << m_fHighest << " Lowest: " << m_fLowest << '\n';
 	//	hmm, given I am already taking care of these in the shader then I don't need to rescale on the cpu here
@@ -432,5 +517,64 @@ void	ProceduralGeneration::BuildPerlinTexture(glm::ivec2 a_Dims, unsigned int a_
 void	ProceduralGeneration::ReloadShader()
 {
 	glDeleteProgram(m_uiProgramID);
+	glDeleteProgram(m_uiModelProgramID);
 	LoadShader("shaders/perlin_vertex.glsl", 0, "shaders/perlin_fragment.glsl", &m_uiProgramID);
+//	LoadShader("./shaders/normal_mapped_vertex.glsl", nullptr, "./shaders/normal_mapped_fragment.glsl", &m_uiModelProgramID);
+	LoadShader("./shaders/lighting_vertex.glsl", nullptr, "./shaders/lighting_fragment.glsl", &m_uiModelProgramID);
+}
+
+void	ProceduralGeneration::DrawModels()
+{
+	glUseProgram(m_uiModelProgramID);
+
+	int	iViewProjUniform = glGetUniformLocation(m_uiModelProgramID, "projection_view");
+	glUniformMatrix4fv(iViewProjUniform, 1, GL_FALSE, (float*)&m_FlyCamera.GetProjectionView());
+	int	iWordPosUniform = glGetUniformLocation(m_uiModelProgramID, "worldTransform");
+	glUniformMatrix4fv(iWordPosUniform, 1, GL_FALSE, (float*)&m_F16Transform);
+
+	int	ambient_uniform = glGetUniformLocation(m_uiModelProgramID, "ambient_light");
+	int	light_colour_uniform = glGetUniformLocation(m_uiModelProgramID, "light_colour");
+	int	light_dir_uniform = glGetUniformLocation(m_uiModelProgramID, "light_dir");
+	//int	material_colour_uniform = glGetUniformLocation(m_uiModelProgramID, "material_colour");
+	int	eye_pos_uniform = glGetUniformLocation(m_uiModelProgramID, "eye_pos");
+	int	specular_uniform = glGetUniformLocation(m_uiModelProgramID, "specular_power");
+	//int	timer_uniform = glGetUniformLocation(m_uiModelProgramID, "timer");
+
+	int iTexUniform = glGetUniformLocation(m_uiModelProgramID, "albedoTexture");
+	glUniform1i(iTexUniform, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_uiF16Texture);
+
+	glUniform3fv(ambient_uniform, 1, (float*)&vec3(0.1f, 0.1f, 0.1f));
+	glUniform3fv(light_colour_uniform, 1, (float*)&vec3(1.0f, 1.0f, 1.0f));
+	glUniform3fv(light_dir_uniform, 1, (float*)&m_vLightDir);
+	//glUniform3fv(light_dir_uniform, 1, (float*)&vec3(0.9f, 1.5f, 0.8f));
+	//glUniform3fv(material_colour_uniform, 1, (float*)&vec3(0.1f, 0.2f, 0.5f));
+
+	vec3	camera_pos = m_FlyCamera.GetPosition();
+	glUniform3fv(eye_pos_uniform, 1, (float*)&camera_pos);
+	glUniform1f(specular_uniform, 12.0f);
+	//glUniform1f(timer_uniform, m_timer);
+
+	glBindVertexArray(m_F16Mesh.m_uiVAO);
+
+	if (glfwGetKey(m_window, GLFW_KEY_M) == GLFW_PRESS)
+	{
+		//	just draw the mesh if the M key is pressed
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+	else
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+
+	glDrawElements(GL_TRIANGLES, m_F16Mesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
+
+	//	now draw the second plane
+	iWordPosUniform = glGetUniformLocation(m_uiModelProgramID, "worldTransform");
+	glUniformMatrix4fv(iWordPosUniform, 1, GL_FALSE, (float*)&m_F16CopyTransform);
+	glBindVertexArray(m_F16CopyMesh.m_uiVAO);
+	glDrawElements(GL_TRIANGLES, m_F16CopyMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
+
+
 }
