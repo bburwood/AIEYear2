@@ -38,13 +38,13 @@ bool	Application::startup()
 {
 	if (glfwInit() == false)
 	{
-		return -1;
+		return false;
 	}
 
 	this->m_window = glfwCreateWindow(1280, 720, "Procedural Terrain Generation and Lighting Assignment", nullptr, nullptr);
 	if (m_window == nullptr)
 	{
-		return -2;
+		return false;
 	}
 	glfwMakeContextCurrent(this->m_window);
 	//setVSync(1);  // 0 disable VSync, 1 enable vsync - needs glew
@@ -52,7 +52,7 @@ bool	Application::startup()
 	{
 		glfwDestroyWindow(this->m_window);
 		glfwTerminate();
-		return -3;
+		return false;
 	}
 	int	major_version = ogl_GetMajorVersion();
 	int	minor_version = ogl_GetMinorVersion();
@@ -69,7 +69,7 @@ void	Application::shutdown()
 
 bool	Application::update()
 {
-	if (glfwWindowShouldClose(this->m_window) == true)
+	if (glfwWindowShouldClose(this->m_window))
 	{
 		return false;
 	}

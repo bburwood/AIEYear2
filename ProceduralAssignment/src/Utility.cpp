@@ -335,7 +335,7 @@ void	OnMousePosition(GLFWwindow* window, double x, double y)
 
 void	OnMouseScroll(GLFWwindow* window, double x, double y)
 {
-	TwEventMouseWheelGLFW(y);
+	TwEventMouseWheelGLFW((int)y);
 }
 
 void	OnKey(GLFWwindow* window, int key, int scancode, int pressed, int mod_keys)

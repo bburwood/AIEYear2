@@ -25,7 +25,7 @@ void main()
 
 	int iTextureNum = int(fIntensity * 3.0f);	//	should give 0, 1, or 2 as the result
 	//iTextureNum = 1;
-	vec2 newTexCoord = frag_texcoord * 8.0f;
+	vec2 newTexCoord = frag_texcoord * 64.0f;
 	vec3 material_colour;
 	switch (iTextureNum)
 	{
@@ -56,7 +56,7 @@ void main()
 	//	add uniforms for these later ...
 	vec3 ambient_light = vec3(0.1f, 0.1f, 0.1f);
 	vec3 light_colour = vec3(1.0f, 1.0f, 1.0f);
-	float specular_power = 20.0f;
+	float specular_power = 25.0f;
 
 	vec3	ambient = material_colour * ambient_light;
 	//material_colour = vec3(1.0f, 1.0f, 1.0f);
@@ -70,7 +70,7 @@ void main()
 	//vec3	E = normalize(eye_pos - frag_position.xyz);
 	vec3	R = reflect(-L, N);
 
-	float	s = max(0.0f, dot(R, E));
+	float	s = max(0.0f, dot(-R, E));
 	//s = 0.5f;
 	s = pow(s, specular_power);
 	vec3	specular = vec3(s) * light_colour * material_colour;

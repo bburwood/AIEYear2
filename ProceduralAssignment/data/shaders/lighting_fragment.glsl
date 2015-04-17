@@ -36,7 +36,7 @@ void main()
 	vec3	lE = normalize(eye_pos - lfrag_position.xyz);
 	vec3	lR = reflect(-lL, -lN);
 
-	float	ls = max(0.0, dot(lR, lE));
+	float	ls = max(0.0, dot(-lR, lE));
 	ls = pow(ls, specular_power);
 	//ls = pow(ls, 5.0f);
 	vec3	lspecular = vec3(ls) * light_colour * lmaterial_colour;

@@ -47,7 +47,7 @@ bool	ProceduralGeneration::startup()
 	m_bDrawGizmos = true;
 
 	//	now initialise the FlyCamera
-	m_FlyCamera = FlyCamera(vec3(10, 10, 10), vec3(0, 0, 0), glm::radians(50.0f), 1280.0f / 720.0f, 0.1f, 3000.0f);
+	m_FlyCamera = FlyCamera(vec3(10, 10, 10), vec3(0, 0, 0), glm::radians(50.0f), 1280.0f / 720.0f, 0.1f, 30000.0f);
 	m_FlyCamera.SetSpeed(250.0f);
 
 	//	initialise basic AntTweakBar info
@@ -61,19 +61,19 @@ bool	ProceduralGeneration::startup()
 	TwAddVarRW(m_bar, "Clear Colour", TW_TYPE_COLOR4F, &m_BackgroundColour, "");
 	TwAddVarRW(m_bar, "Draw Gizmos", TW_TYPE_BOOL8, &m_bDrawGizmos, "");
 	TwAddVarRO(m_bar, "FPS", TW_TYPE_FLOAT, &m_fFPS, "");
-	TwAddVarRW(m_bar, "Terrain Height", TW_TYPE_FLOAT, &m_fTerrainHeight, "min=1 max=250 step=0.5");
-	TwAddVarRW(m_bar, "Flying Speed", TW_TYPE_FLOAT, &m_FlyCamera.m_fSpeed, "min=1 max=250 step=0.5");
+	TwAddVarRW(m_bar, "Terrain Height", TW_TYPE_FLOAT, &m_fTerrainHeight, "min=1 max=2500 step=1");
+	TwAddVarRW(m_bar, "Flying Speed", TW_TYPE_FLOAT, &m_FlyCamera.m_fSpeed, "min=1 max=2500 step=1");
 	TwAddSeparator(m_bar, "Perlin Data", "");
-	TwAddVarRW(m_bar, "Perlin Scale", TW_TYPE_FLOAT, &m_fPerlinScale, "min=0.02 max=15 step=0.02");
+	TwAddVarRW(m_bar, "Perlin Scale", TW_TYPE_FLOAT, &m_fPerlinScale, "min=0.02 max=15 step=0.05");
 	TwAddVarRW(m_bar, "Perlin Octaves", TW_TYPE_UINT32, &m_uiOctaves, "min=1 max=50 step=1");
-	TwAddVarRW(m_bar, "Perlin Real Width", TW_TYPE_FLOAT, &m_fRealWidth, "min=1 max=1500 step=0.5");
-	TwAddVarRW(m_bar, "Perlin Real Height", TW_TYPE_FLOAT, &m_fRealHeight, "min=1 max=1500 step=0.5");
-	TwAddVarRW(m_bar, "Perlin Mesh Width", TW_TYPE_UINT32, &m_iMeshWidth, "min=4 max=200 step=1");
-	TwAddVarRW(m_bar, "Perlin Mesh Height", TW_TYPE_UINT32, &m_iMeshHeight, "min=4 max=200 step=1");
+	TwAddVarRW(m_bar, "Perlin Real Width", TW_TYPE_FLOAT, &m_fRealWidth, "min=1 max=15000 step=1.0");
+	TwAddVarRW(m_bar, "Perlin Real Height", TW_TYPE_FLOAT, &m_fRealHeight, "min=1 max=15000 step=1.0");
+	TwAddVarRW(m_bar, "Perlin Mesh Width", TW_TYPE_UINT32, &m_iMeshWidth, "min=4 max=2000 step=1");
+	TwAddVarRW(m_bar, "Perlin Mesh Height", TW_TYPE_UINT32, &m_iMeshHeight, "min=4 max=2000 step=1");
 	TwAddSeparator(m_bar, "Other Data", "");
 	TwAddVarRW(m_bar, "Emitter Lifespan", TW_TYPE_FLOAT, &m_fEmitterLifespan, "min=0.25 max=25 step=0.25");
-	TwAddVarRW(m_bar, "Emitter MaxParticles", TW_TYPE_UINT32, &m_uiEmitterMaxParticles, "min=1000 max=25000 step=100");
-	TwAddVarRW(m_bar, "Emitter Emit Rate", TW_TYPE_FLOAT, &m_fEmitRate, "min=100 max=10000 step=100");
+	TwAddVarRW(m_bar, "Emitter MaxParticles", TW_TYPE_UINT32, &m_uiEmitterMaxParticles, "min=1000 max=50000 step=100");
+	TwAddVarRW(m_bar, "Emitter Emit Rate", TW_TYPE_FLOAT, &m_fEmitRate, "min=100 max=20000 step=100");
 
 	m_fRealWidth = 1000.0f;
 	m_fRealHeight = 1000.0f;
@@ -92,7 +92,7 @@ bool	ProceduralGeneration::startup()
 	//m_FlyCamera.SetLookAt(vec3(m_fHighestX, m_fTerrainHeight * 1.1f, m_fHighestZ), vec3(0, m_fTerrainHeight * 1.1f, 0), vec3(0, 1, 0));
 	//	the following line sets the initial camera position to be above the lowest point on the terrain
 	m_FlyCamera.SetLookAt(vec3(m_fLowestX, m_fTerrainHeight * 1.1f, m_fLowestZ), vec3(0, m_fTerrainHeight * 1.1f, 0), vec3(0, 1, 0));
-	m_F16CopyTransform = glm::scale(glm::translate(vec3(m_fHighestX, m_fHighest * m_fTerrainHeight, m_fHighestZ)), vec3(4.0f, 4.0f, 4.0f));
+	m_F16CopyTransform = glm::scale(glm::translate(vec3(m_fHighestX, m_fTerrainHeight * 0.99f, m_fHighestZ)), vec3(4.0f, 4.0f, 4.0f));
 
 	//	Load the terrain textures
 	LoadTexture("./textures/water_01_512.jpg", m_uiWaterTexture);
@@ -125,9 +125,9 @@ bool	ProceduralGeneration::startup()
 
 	//	now load the meshes
 	m_F16Mesh = LoadTexturedOBJ("./models/f16/f16.obj");
-	m_F16CopyMesh = LoadTexturedOBJ("./models/f16/f16.obj");
+	//m_F16CopyMesh = LoadTexturedOBJ("./models/f16/f16.obj");
 	//OpenGLData	testMesh = LoadTexturedOBJ("./models/f16/f16.obj");
-	//m_F16Mesh = LoadOBJ("./models/stanford/bunny.obj");
+	m_F16CopyMesh = LoadOBJ("./models/stanford/bunny.obj");
 
 //	LoadShader("./shaders/normal_mapped_vertex.glsl", nullptr, "./shaders/normal_mapped_fragment.glsl", &m_uiModelProgramID);
 	LoadShader("./shaders/lighting_vertex.glsl", nullptr, "./shaders/lighting_fragment.glsl", &m_uiModelProgramID);
@@ -222,10 +222,17 @@ bool	ProceduralGeneration::update()
 	static float	s_fLastRealWidth = m_fRealWidth;
 	static float	s_fLastRealHeight = m_fRealHeight;
 	static float	s_fLastPerlinScale = m_fPerlinScale;
+	static float	s_fTerrainHeight = m_fTerrainHeight;
 
+	if (m_fTerrainHeight != s_fTerrainHeight)
+	{
+		m_F16CopyTransform = glm::scale(glm::translate(vec3(m_fHighestX, m_fTerrainHeight * 0.99f, m_fHighestZ)), vec3(4.0f, 4.0f, 4.0f));
+		s_fTerrainHeight = m_fTerrainHeight;
+	}
 	if ((s_uiLastOctave != m_uiOctaves) || (s_fLastPerlinScale != m_fPerlinScale))
 	{
 		BuildPerlinTexture(m_MeshDimensions, m_uiOctaves, m_fPerlinScale);
+		m_F16CopyTransform = glm::scale(glm::translate(vec3(m_fHighestX, m_fTerrainHeight * 0.99f, m_fHighestZ)), vec3(4.0f, 4.0f, 4.0f));
 		s_uiLastOctave = m_uiOctaves;
 		s_fLastPerlinScale = m_fPerlinScale;
 		cout << "Perlin Parameters changed: Octaves: " << m_uiOctaves << "  Scale: " << m_fPerlinScale << '\n';
@@ -239,6 +246,9 @@ bool	ProceduralGeneration::update()
 
 		//BuildPerlinTexture(m_MeshDimensions, m_uiOctaves, m_fPerlinScale);
 		BuildGrid(m_GridDimensions, m_MeshDimensions);
+		m_fHighestX *= m_fRealWidth / s_fLastRealWidth;
+		m_fHighestZ *= m_fRealHeight / s_fLastRealHeight;
+		m_F16CopyTransform = glm::scale(glm::translate(vec3(m_fHighestX, m_fTerrainHeight * 0.99f, m_fHighestZ)), vec3(4.0f, 4.0f, 4.0f));
 
 		s_uiLastMeshWidth = m_iMeshWidth;
 		s_uiLastMeshHeight = m_iMeshHeight;
@@ -306,7 +316,7 @@ void	ProceduralGeneration::draw()
 	int iTerrainHeightUniform = glGetUniformLocation(m_uiProgramID, "fTerrainHeight");
 	glUniform1f(iTerrainHeightUniform, m_fTerrainHeight);
 	int iTerrainGridDimensionsUniform = glGetUniformLocation(m_uiProgramID, "vMeshDims");
-	glUniform2iv(iTerrainGridDimensionsUniform, 1, (int*)&m_MeshDimensions);
+	glUniform2fv(iTerrainGridDimensionsUniform, 1, (float*)&m_GridDimensions);
 
 	int	eye_pos_uniform = glGetUniformLocation(m_uiProgramID, "eye_pos");
 	glUniform3fv(eye_pos_uniform, 1, (float*)&m_FlyCamera.GetPosition());
@@ -363,10 +373,10 @@ void	ProceduralGeneration::BuildGrid(vec2 a_RealDims, glm::ivec2 a_Dims)
 
 	//	two nested for loops to generate vertex data
 	float	fCurrY = -a_RealDims.y * 0.5f;
-	for (unsigned int y = 0; y < a_Dims.y + 1; ++y)
+	for (int y = 0; y < a_Dims.y + 1; ++y)
 	{
 		float	fCurrX = -a_RealDims.x * 0.5f;
-		for (unsigned int x = 0; x < a_Dims.x + 1; ++x)
+		for (int x = 0; x < a_Dims.x + 1; ++x)
 		{
 			//	inside we create our points, with the grid centred at (0, 0)
 			vertexData[y * (a_Dims.x + 1) + x].position = vec4(fCurrX, 0, fCurrY, 1);
@@ -378,9 +388,9 @@ void	ProceduralGeneration::BuildGrid(vec2 a_RealDims, glm::ivec2 a_Dims)
 
 	//	two nested for loops to generate index data
 	int	iCurrIndex = 0;
-	for (unsigned int y = 0; y < a_Dims.y; ++y)
+	for (int y = 0; y < a_Dims.y; ++y)
 	{
-		for (unsigned int x = 0; x < a_Dims.x; ++x)
+		for (int x = 0; x < a_Dims.x; ++x)
 		{
 			//	create our 6 indices here!!
 			indexData[iCurrIndex++] = y * (a_Dims.x + 1) + x;
@@ -437,9 +447,9 @@ void	ProceduralGeneration::BuildPerlinTexture(glm::ivec2 a_Dims, unsigned int a_
 	m_fHighest = 0.0f;
 	m_fLowest = 999999999999.0f;
 	//	loop through all the pixels
-	for (unsigned int y = 0; y < a_Dims.y; ++y)
+	for (int y = 0; y < a_Dims.y; ++y)
 	{
-		for (unsigned int x = 0; x < a_Dims.x; ++x)
+		for (int x = 0; x < a_Dims.x; ++x)
 		{
 			float fAmplitude = 1.0f;
 			float fFrequency = 1.0f;
@@ -479,9 +489,9 @@ void	ProceduralGeneration::BuildPerlinTexture(glm::ivec2 a_Dims, unsigned int a_
 	//	now subtract the lowest noise value from every value so that zero should always the lowest value in the texture
 	float	fTempLowest = 999999999999.0f;
 	m_fHighest = 0.0f;
-	for (unsigned int y = 0; y < a_Dims.y; ++y)
+	for (int y = 0; y < a_Dims.y; ++y)
 	{
-		for (unsigned int x = 0; x < a_Dims.x; ++x)
+		for (int x = 0; x < a_Dims.x; ++x)
 		{
 			unsigned int uiCurrentIndex = y * a_Dims.x + x;
 			m_fPerlinData[uiCurrentIndex] -= m_fLowest;
