@@ -22,6 +22,7 @@ LARGE_INTEGER timerfreq;
 LARGE_INTEGER timerstart;
 LARGE_INTEGER timerend;
 double timerdiff;
+double clTime;
 
 void CPUNormalise()
 {
@@ -136,7 +137,6 @@ void OpenCLNormalise()
 	//	for multi-dimensional data sets use this format:
 	//		size_t globalWorkSize[] = { iX_VEC_COUNT, iY_VEC_COUNT, iZ_VEC_COUNT };
 
-	QueryPerformanceCounter(&timerstart);
 	//	kick off the processing
 	result = clEnqueueNDRangeKernel(m_queue, m_kernel, 1, nullptr, globalWorkSize, nullptr, 0, nullptr, &eventID);
 	if (result != CL_SUCCESS)
@@ -146,10 +146,6 @@ void OpenCLNormalise()
 	result = clEnqueueReadBuffer(m_queue, m_buffer, CL_TRUE, 0, sizeof(vec4)* iVEC_COUNT, vectors, 1, &eventID, nullptr);
 	if (result != CL_SUCCESS)
 		printf("clEnqueueReadBuffer failed: %i\n", result);
-
-	QueryPerformanceCounter(&timerend);
-	timerdiff = (double)(timerend.QuadPart - timerstart.QuadPart) / (double)timerfreq.QuadPart;
-	std::cout << "OpenCL Normalise Timer: " << timerdiff * 1000.0f << "ms.  " << iVEC_COUNT << " vectors.\n";
 
 	// finish all opencl commands
 	clFlush(m_queue);
@@ -166,7 +162,7 @@ void OpenCLNormalise()
 	if (result != CL_SUCCESS)
 		printf("clGetEventProfilingInfo failed: %i\n", result);
 	// return time is in nanoseconds, so convert to milliseconds
-	double clTime = (clendTime - clstartTime) * 1.0e-6;
+	clTime = (clendTime - clstartTime) * 1.0e-6;
 	printf("GPU duration: %fms.\n", clTime);
 
 }
@@ -216,7 +212,7 @@ int	main()
 
 	OpenCLNormalise();
 
-
+	cout << "GPU normalise is " << timerdiff / (clTime * 1.0e-3) << " times faster than the CPU normalise!\n";
 
 
 
