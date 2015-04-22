@@ -19,9 +19,4 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="src\OpenCL_Normlise.cl">
-      <Filter>Source Files</Filter>
-    </None>
-  </ItemGroup>
 </Project>
