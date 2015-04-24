@@ -37,7 +37,7 @@ protected:
 	void rest(float a_fdeltaTime);
 	
 	void chopTree(float a_fdeltaTime);
-	void buildHouse(float a_fdeltaTime);
+	void buildHouse(unsigned int a_uiX, unsigned int a_uiZ, float a_fdeltaTime);
 
 
 	World*			m_pWorld;

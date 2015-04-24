@@ -9,6 +9,8 @@ class Camera;
 class World;
 class BaseNPC;
 
+const int cg_iNUM_NPCs = 100;
+
 class UtilitySystemApplication : public BaseApplication {
 public:
 
@@ -25,7 +27,8 @@ private:
 
 	Camera*		m_camera;
 
-
+	//float		m_fTimer;
 	World*		m_pWorld;
-	BaseNPC*	m_pNPC;
+//	BaseNPC*	m_pNPC;
+	BaseNPC*	m_aNPCs[cg_iNUM_NPCs];
 };

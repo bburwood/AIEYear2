@@ -23,6 +23,10 @@ namespace UtilitySystem
 		UtilityValue	m_logValue;
 		UtilityValue	m_restedValue;
 		std::map<std::string, UtilityScore*> m_pUtilityScoreMap;
+		float	m_fTimer;
+		bool	m_bNeedMoreLogs;
+		unsigned int uiHouseX;
+		unsigned int uiHouseZ;
 	};
 }
 

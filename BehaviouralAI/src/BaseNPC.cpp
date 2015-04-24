@@ -13,7 +13,7 @@ BaseNPC::BaseNPC(World* a_pWorld)
 	m_pWorld = a_pWorld;
 	m_vPosition = glm::vec3(0, 0, 0);
 
-	m_fMoveSpeed = 5.0f;
+	m_fMoveSpeed = 120.0f;
 
 	m_bAlive = true;
 
@@ -56,7 +56,14 @@ void BaseNPC::update(float a_fdeltaTime)
 
 void BaseNPC::render()
 {
-	Gizmos::addAABBFilled(m_vPosition + glm::vec3(0, 2, 0), glm::vec3(0.5, 2, 0.5), glm::vec4(0.4, 0.4, 0.4, 1));
+	if (m_bAlive)
+	{
+		Gizmos::addAABBFilled(m_vPosition + glm::vec3(0, 2, 0), glm::vec3(0.5, 2, 0.5), glm::vec4(0.4, 0.4, 0.4, 1));
+	}
+	else
+	{
+		Gizmos::addAABBFilled(m_vPosition + glm::vec3(0, -2, 0), glm::vec3(0.5, 2, 0.5), glm::vec4(0.1, 0.1, 0.1, 1));
+	}
 }
 
 void BaseNPC::collectWater(float a_fdeltaTime)
@@ -66,7 +73,7 @@ void BaseNPC::collectWater(float a_fdeltaTime)
 		if (m_pWorld->interactWithWater())
 		{
 			m_uiWater += 20;
-			std::cout << "Collected Water!" << std::endl;
+			//std::cout << "Collected Water!" << std::endl;
 		}
 	}
 }
@@ -78,7 +85,7 @@ void BaseNPC::collectFood(float a_fdeltaTime)
 		if (m_pWorld->interactWithFood())
 		{
 			m_uiFood += 20;
-			std::cout << "Collected Food!" << std::endl;
+			//std::cout << "Collected Food!" << std::endl;
 		}
 	}
 }
@@ -90,7 +97,7 @@ void BaseNPC::rest(float a_fdeltaTime)
 		if (m_pWorld->interactWithRested())
 		{
 			m_uiRested += 20;
-			std::cout << "Resting!" << std::endl;
+			//std::cout << "Resting!" << std::endl;
 		}
 	}
 }
@@ -102,14 +109,14 @@ void BaseNPC::chopTree(float a_fdeltaTime)
 		if (m_pWorld->interactWithTree())
 		{
 			m_uiNumberOfLogs++;
-			std::cout << "Collected Log!" << std::endl;
+			//std::cout << "Collected Log!" << std::endl;
 		}
 	}
 }
 
-void BaseNPC::buildHouse(float a_fdeltaTime)
+void BaseNPC::buildHouse(unsigned int a_uiX, unsigned int a_uiZ, float a_fdeltaTime)
 {
-	if (travelTo(m_pWorld->getHouseLocation(), a_fdeltaTime))
+	if (travelTo(m_pWorld->getHouseLocation(a_uiX, a_uiZ), a_fdeltaTime))
 	{
 		if (m_uiNumberOfLogs == 0)
 		{
@@ -117,11 +124,11 @@ void BaseNPC::buildHouse(float a_fdeltaTime)
 		}
 		else
 		{
-			if (m_pWorld->interactWithHouse())
+			if (m_pWorld->interactWithHouse(a_uiX, a_uiZ))
 			{
 				m_uiNumberOfLogs--;
-				std::cout << "Built House!" << std::endl;
-				m_pWorld->addLogToHouse();
+				//std::cout << "Built House!" << std::endl;
+				m_pWorld->addLogToHouse(a_uiX, a_uiZ);
 			}
 		}
 	}
@@ -192,9 +199,9 @@ void BaseNPC::calculateStatusChange()
 		m_fLastFoodReductionTime = fCurrentTime;
 		m_uiFood--;
 	}
-	if (fCurrentTime >= m_fWaterReductionTime + m_fWaterReductionTime)
+	if (fCurrentTime >= m_fLastWaterReductionTime + m_fWaterReductionTime)
 	{
-		m_fWaterReductionTime = fCurrentTime;
+		m_fLastWaterReductionTime = fCurrentTime;
 		m_uiWater--;
 	}
 	if (fCurrentTime >= m_fLastRestedReductionTime + m_fRestedReductionTime)
@@ -203,4 +210,3 @@ void BaseNPC::calculateStatusChange()
 		m_uiRested--;
 	}
 }
-

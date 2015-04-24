@@ -17,7 +17,8 @@ using glm::vec4;
 using glm::mat4;
 
 UtilitySystemApplication::UtilitySystemApplication()
-	: m_camera(nullptr) {
+	: m_camera(nullptr)
+{
 }
 
 UtilitySystemApplication::~UtilitySystemApplication() {
@@ -33,13 +34,17 @@ bool UtilitySystemApplication::startup() {
 	Gizmos::create();
 
 	// create a camera
-	m_camera = new Camera(glm::pi<float>() * 0.25f, 16 / 9.f, 0.1f, 1000.f);
-	m_camera->setLookAtFrom(vec3(0, 12, 22), vec3(0));
+	m_camera = new Camera(glm::pi<float>() * 0.25f, 16 / 9.f, 0.1f, 10000.f);
+	m_camera->setLookAtFrom(vec3(10, 25, 30), vec3(10, 5, 5));
 	
 	m_pWorld = new World();
 	//m_pNPC = new BaseNPC(m_pWorld);
-	m_pNPC = new UtilitySystem::UtilityNPC(m_pWorld);
-
+	//m_pNPC = new UtilitySystem::UtilityNPC(m_pWorld);
+	for (unsigned int i = 0; i < cg_iNUM_NPCs; ++i)
+	{
+		m_aNPCs[i] = new UtilitySystem::UtilityNPC(m_pWorld);
+	}
+	//m_fTimer = 0.0f;
 	return true;
 }
 
@@ -51,6 +56,11 @@ void UtilitySystemApplication::shutdown() {
 
 	// delete our camera and cleanup gizmos
 	delete m_camera;
+	for (unsigned int i = 0; i < cg_iNUM_NPCs; ++i)
+	{
+		delete m_aNPCs[i];
+	}
+
 	Gizmos::destroy();
 
 	// destroy our window properly
@@ -66,8 +76,11 @@ bool UtilitySystemApplication::update(float deltaTime) {
 
 	// update the camera's movement
 	m_camera->update(deltaTime);
-
-	m_pNPC->update(deltaTime);
+	//m_pNPC->update(deltaTime);
+	for (unsigned int i = 0; i < cg_iNUM_NPCs; ++i)
+	{
+		m_aNPCs[i]->update(deltaTime);
+	}
 
 	// clear the gizmos out for this frame
 	Gizmos::clear();
@@ -92,7 +105,11 @@ void UtilitySystemApplication::draw() {
 
 
 	m_pWorld->render();
-	m_pNPC->render();
+	//m_pNPC->render();
+	for (unsigned int i = 0; i < cg_iNUM_NPCs; ++i)
+	{
+		m_aNPCs[i]->render();
+	}
 
 
 	// display the 3D gizmos
