@@ -329,9 +329,11 @@ void	ProceduralGeneration::draw()
 	//	just draws the terrain mesh ... delete this!!
 //	glBindVertexArray(m_PlaneMesh.m_uiVAO);
 //	glDrawElements(GL_LINES, m_PlaneMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
-
+	glEnable(GL_CULL_FACE);
 	//	now draw the loaded meshes
 	DrawModels();
+
+	glDisable(GL_CULL_FACE);
 
 	//	now draw any particle emitters
 	for (unsigned int i = 0; i < c_iNUM_EMITTERS; ++i)
