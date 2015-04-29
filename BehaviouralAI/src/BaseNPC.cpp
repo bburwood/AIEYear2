@@ -13,7 +13,7 @@ BaseNPC::BaseNPC(World* a_pWorld)
 	m_pWorld = a_pWorld;
 	m_vPosition = glm::vec3(0, 0, 0);
 
-	m_fMoveSpeed = 120.0f;
+	m_fMoveSpeed = 80.0f;
 
 	m_bAlive = true;
 
@@ -54,11 +54,11 @@ void BaseNPC::update(float a_fdeltaTime)
 	}
 }
 
-void BaseNPC::render()
+void BaseNPC::render(unsigned int a_uiIndex, unsigned int a_uiNumNPCs)
 {
 	if (m_bAlive)
 	{
-		Gizmos::addAABBFilled(m_vPosition + glm::vec3(0, 2, 0), glm::vec3(0.5, 2, 0.5), glm::vec4(0.4, 0.4, 0.4, 1));
+		Gizmos::addAABBFilled(m_vPosition + glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(0.5f, 2.0f, 0.5f), glm::vec4(0.2f, 0.25f, (float)a_uiIndex / (float)(a_uiNumNPCs - 1), 1.0f));
 	}
 	else
 	{

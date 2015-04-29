@@ -108,7 +108,7 @@ void UtilitySystemApplication::draw() {
 	//m_pNPC->render();
 	for (unsigned int i = 0; i < cg_iNUM_NPCs; ++i)
 	{
-		m_aNPCs[i]->render();
+		m_aNPCs[i]->render(i, cg_iNUM_NPCs);
 	}
 
 

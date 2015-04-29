@@ -15,7 +15,7 @@ public:
 	~BaseNPC();
 
 	void update(float a_fdeltaTime);
-	void render();
+	void render(unsigned int a_uiIndex, unsigned int a_uiNumNPCs);
 
 	//This will just output the NPC's vitals and information to the console
 	void reportStatus();
