@@ -33,12 +33,12 @@ World::World()
 	m_uiHouseCurrentLogs = 1;
 	m_uiHouseLogsRequired = 500;
 
-	m_fRestedInteractTime = 0.05f;
-	m_fWaterInteractTime = 0.01f;
-	m_fFoodInteractTime =  0.01f;
+	m_fRestedInteractTime = 0.03f;
+	m_fWaterInteractTime = 0.005f;
+	m_fFoodInteractTime =  0.005f;
 
 	m_fHouseInteractTime = 0.2;
-	m_fTreeInteractTime = 0.002f;
+	m_fTreeInteractTime = 0.001f;
 
 	m_fLastFoodInteractTime = 0.0f;
 	m_fLastWaterInteractTime = 0.0f;

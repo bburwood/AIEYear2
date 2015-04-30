@@ -13,7 +13,7 @@ BaseNPC::BaseNPC(World* a_pWorld)
 	m_pWorld = a_pWorld;
 	m_vPosition = glm::vec3(0, 0, 0);
 
-	m_fMoveSpeed = 80.0f;
+	m_fMoveSpeed = 200.0f;
 
 	m_bAlive = true;
 
@@ -31,9 +31,9 @@ BaseNPC::BaseNPC(World* a_pWorld)
 	m_fLastWaterReductionTime = 0.0f;
 	m_fLastRestedReductionTime = 0.0f;
 
-	m_fFoodReductionTime = 1.0f;
-	m_fWaterReductionTime = 1.5f;
-	m_fRestedReductionTime = 2.0f;
+	m_fFoodReductionTime = 2.0f;
+	m_fWaterReductionTime = 2.5f;
+	m_fRestedReductionTime = 3.0f;
 }
 
 BaseNPC::~BaseNPC()

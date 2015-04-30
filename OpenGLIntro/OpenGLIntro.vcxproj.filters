@@ -43,6 +43,9 @@
     <Filter Include="PhysicallyBasedRendering">
       <UniqueIdentifier>{8caca109-270e-4f0c-9d8e-72a2d3468121}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GameTreeSearch">
+      <UniqueIdentifier>{eccb5790-e371-47c6-b711-5b7f15576ed4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -150,6 +153,15 @@
     <ClInclude Include="src\PhysicallyBasedRendering.h">
       <Filter>PhysicallyBasedRendering</Filter>
     </ClInclude>
+    <ClInclude Include="src\AIBase.h">
+      <Filter>GameTreeSearch</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ConnectFour.h">
+      <Filter>GameTreeSearch</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameTreeSearch.h">
+      <Filter>GameTreeSearch</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\gl_core_4_4.c">
@@ -235,6 +247,12 @@
     </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ConnectFour.cpp">
+      <Filter>GameTreeSearch</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameTreeSearch.cpp">
+      <Filter>GameTreeSearch</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

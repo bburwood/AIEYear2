@@ -24,6 +24,7 @@
 #include "ProceduralGeneration.h"
 #include "AdvancedNavigation.h"
 #include "PhysicallyBasedRendering.h"
+#include "GameTreeSearch.h"
 
 int main()
 {
@@ -32,7 +33,7 @@ int main()
 //	RenderingGeometry	app;
 //	Texturing app;
 //	Lighting app;
-	AdvancedTexturing app;
+//	AdvancedTexturing app;
 //	Quaternions	app;
 //	BLANK	app;
 //	Animation	app;
@@ -46,6 +47,7 @@ int main()
 //	ProceduralGeneration	app;
 //	AdvancedNavigation	app;
 //	PhysicallyBasedRendering	app;
+	GameTreeSearch app;
 
 	if (app.startup() == false)
 	{

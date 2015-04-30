@@ -94,7 +94,7 @@ namespace UtilitySystem
 			if (m_bNeedMoreLogs)
 			{
 				chopTree(a_fdeltaTime);
-				if (getNumberOfLogs() > 15)
+				if (getNumberOfLogs() > 25)
 				{
 					m_bNeedMoreLogs = false;
 					//	pick a new house!

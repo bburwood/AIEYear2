@@ -9,7 +9,7 @@ class Camera;
 class World;
 class BaseNPC;
 
-const unsigned int cg_iNUM_NPCs = 100;
+const unsigned int cg_iNUM_NPCs = 200;
 
 class UtilitySystemApplication : public BaseApplication {
 public:

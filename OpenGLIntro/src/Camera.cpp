@@ -53,6 +53,32 @@ void	Camera::UpdateProjectionViewTransform()
 	m_projectionViewTransform = m_projectionTransform * m_viewTransform;
 }
 
+vec3	Camera::PickAgainstPlane(float x, float y, vec4 plane)
+{
+	float nxPos = x / 1280.0f;
+	float nyPos = y / 720.0f;
+
+	float sxPos = nxPos - 0.5f;
+	float syPos = nyPos - 0.5f;
+
+	float fxPos = sxPos * 2.0f;
+	float fyPos = syPos * -2.0f;
+
+	mat4 invViewProj = glm::inverse(m_projectionViewTransform);
+	vec4 mousePos(fxPos, fyPos, 1.0f, 1.0f);
+	vec4 worldPos = invViewProj * mousePos;
+
+	worldPos /= worldPos.w;
+
+	vec3 camPos = m_worldTransform[3].xyz;
+	vec3 dir = worldPos.xyz() - camPos;
+
+	float t = -(glm::dot(camPos, plane.xyz()) + plane.w) / (glm::dot(dir, plane.xyz()));
+
+	vec3 result = camPos + dir * t;
+
+	return result;
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////

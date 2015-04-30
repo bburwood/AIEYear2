@@ -3,8 +3,8 @@
 
 #include "glm/glm.hpp"
 
-const unsigned int cg_uiNUM_HOUSESX = 20;
-const unsigned int cg_uiNUM_HOUSESZ = 20;
+const unsigned int cg_uiNUM_HOUSESX = 50;
+const unsigned int cg_uiNUM_HOUSESZ = 50;
 
 struct MyHouse
 {
