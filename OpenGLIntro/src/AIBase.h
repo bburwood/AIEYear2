@@ -89,6 +89,7 @@ public:
 	virtual int	makeDecision(const Game& game)
 	{
 		std::vector<int> actions;
+		std::vector<int> bestActions;
 		game.getValidActions(actions);
 		if (actions.size() > 0)
 		{
@@ -142,7 +143,7 @@ public:
 			//	something *non*-random for other moves
 			//	run through each eaction and do m_iPlayouts random play throughs for each action to work out a high scoring next move
 			int iBestAction = 0;
-			float fBestScore = 0.0f;
+			float fBestScore = -9999999999.0f;	//	large negative to start with
 			for (unsigned int g = 0; g < actions.size(); ++g)
 			{
 				int iValue = 0;
@@ -177,6 +178,11 @@ public:
 					//	we have a new winning move
 					iBestAction = g;
 					fBestScore = fTempScore;
+					//	now reset the best actions vector
+				}
+				else if (fTempScore == fBestScore)
+				{
+					//	add it to the list of highest scores ...
 				}
 			}
 			return actions[iBestAction];

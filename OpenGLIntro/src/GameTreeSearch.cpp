@@ -67,7 +67,7 @@ bool	GameTreeSearch::startup()
 	//	create an AI, just the random one for now
 //	m_ai = new RandomAI();
 	
-	m_ai = new MCTS(1000);
+	m_ai = new MCTS(c_iPLAYOUTS);
 
 	return true;
 }
@@ -93,6 +93,16 @@ bool	GameTreeSearch::update()
 	if (glfwGetKey(m_window, GLFW_KEY_R) == GLFW_PRESS)
 	{
 		ReloadShader();
+	}
+	//	check if we need to restart the game
+	if (glfwGetKey(m_window, GLFW_KEY_T) == GLFW_PRESS)
+	{
+		delete m_ai;
+		delete m_game;
+		//	create a new game of Connect Four
+		m_game = new ConnectFour();
+		//	create a new AI
+		m_ai = new MCTS(c_iPLAYOUTS);
 	}
 
 	float	dT = (float)glfwGetTime();

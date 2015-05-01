@@ -7,6 +7,8 @@
 #include "AntTweakBar.h"
 #include "ConnectFour.h"
 
+const int c_iPLAYOUTS = 777;
+
 class GameTreeSearch : public Application
 {
 public:
