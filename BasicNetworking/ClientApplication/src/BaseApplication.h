@@ -2,7 +2,8 @@
 
 struct GLFWwindow;
 
-class BaseApplication {
+class BaseApplication
+{
 public:
 
 	BaseApplication() {}

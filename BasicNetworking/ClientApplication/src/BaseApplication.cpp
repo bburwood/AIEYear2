@@ -3,20 +3,23 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-bool BaseApplication::createWindow(const char* title, int width, int height) {
+bool BaseApplication::createWindow(const char* title, int width, int height)
+{
 
 	if (glfwInit() == GL_FALSE)
 		return false;
 
 	m_window = glfwCreateWindow(width, height, title, nullptr, nullptr);
-	if (m_window == nullptr) {
+	if (m_window == nullptr)
+	{
 		glfwTerminate();
 		return false;
 	}
 
 	glfwMakeContextCurrent(m_window);
 
-	if (ogl_LoadFunctions() == ogl_LOAD_FAILED) {
+	if (ogl_LoadFunctions() == ogl_LOAD_FAILED)
+	{
 		glfwDestroyWindow(m_window);
 		glfwTerminate();
 		return false;
@@ -36,19 +39,22 @@ bool BaseApplication::createWindow(const char* title, int width, int height) {
 	return true;
 }
 
-void BaseApplication::destroyWindow() {
+void BaseApplication::destroyWindow()
+{
 
 	glfwDestroyWindow(m_window);
 	glfwTerminate();
 }
 
-void BaseApplication::run() {
+void BaseApplication::run()
+{
 
 	double prevTime = glfwGetTime();
 	double currTime = 0;
 		
 	while (currTime = glfwGetTime(),
-		update((float)(currTime - prevTime))) {
+		update((float)(currTime - prevTime)))
+	{
 
 		glfwPollEvents();
 		draw();

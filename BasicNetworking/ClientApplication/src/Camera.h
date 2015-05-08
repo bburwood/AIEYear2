@@ -5,7 +5,7 @@
 
 class Camera {
 public:
-
+	Camera() {}
 	Camera(float fovY, float aspectRatio, float near, float far);
 	virtual ~Camera();
 

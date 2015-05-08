@@ -1,3 +1,7 @@
+#include "Server.h"
+
+/*
+//	Networking 1 tutorial includes:
 #include <iostream>
 #include <string>
 #include <thread>
@@ -8,7 +12,15 @@
 #include "BitStream.h"
 
 #include "GameMessages.h"
+*/
 
+void main()
+{
+	Server server;
+	server.run();
+}
+
+/*
 void sendClientPing(RakNet::RakPeerInterface* pPeerInterface)
 {
 	while (true)
@@ -21,9 +33,11 @@ void sendClientPing(RakNet::RakPeerInterface* pPeerInterface)
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 }
+*/
 
 
-
+/*
+//	Networking 1 tutorial main() version:
 int main()
 {
 	const unsigned short PORT = 5456;
@@ -42,7 +56,8 @@ int main()
 	pPeerInterface->SetMaximumIncomingConnections(32);
 
 	// Startup a thread to ping clients every second
-	std::thread pingThread(sendClientPing, pPeerInterface);
+	std::thread pingThread(sendClientPing, pPeerInterface);
+
 
 	RakNet::Packet* packet = nullptr;
 	while (1)
@@ -67,6 +82,6 @@ int main()
 			}
 		}
 	}
-
-
 }
+*/
+

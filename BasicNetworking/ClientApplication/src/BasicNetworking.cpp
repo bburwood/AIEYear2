@@ -7,6 +7,10 @@
 #include "MessageIdentifiers.h"
 #include "BitStream.h"
 
+#include "gl_core_4_4.h"
+#include "Gizmos.h"
+
+#include "../../ServerApplication/GameObject.h"
 
 BasicNetworkingApplication::BasicNetworkingApplication()
 {
@@ -21,7 +25,10 @@ BasicNetworkingApplication::~BasicNetworkingApplication()
 bool BasicNetworkingApplication::startup()
 {
 	//Setup the basic window
-	//createWindow("Client Application", 1280, 720);
+	createWindow("Client Application", 1280, 720);
+	m_camera = Camera(0, 0, 0, 0);
+	Gizmos::create();
+
 
 	handleNetworkConnection();
 	return true;
@@ -35,11 +42,28 @@ void BasicNetworkingApplication::shutdown()
 bool BasicNetworkingApplication::update(float deltaTime)
 {
 	handleNetworkMessages();
+	m_camera.update(deltaTime);
 	return true;
 }
 
 void BasicNetworkingApplication::draw()
 {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	Gizmos::clear();
+
+	for (int i = 0; i < 10; ++i)
+	{
+		Gizmos::addLine(glm::vec3(-5.0f, 0.0f, -5 + i), glm::vec3(5.0f, 0.0f, -5 + i), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		Gizmos::addLine(glm::vec3(-5.0f + i, 0.0f, -5), glm::vec3(-5.0f + i, 0.0f, -5), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+	}
+
+	for (unsigned int i = 0; i < m_gameobjects.size(); ++i)
+	{
+		GameObject* obj = &m_gameobjects[i];
+		Gizmos::addSphere(glm::vec3(obj->fXPos, 2, 0), 1.0f, 10, 10, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+	}
+
+	Gizmos::draw(m_camera.getProjectionView());
 
 }
 
@@ -107,12 +131,17 @@ void BasicNetworkingApplication::handleNetworkMessages()
 			std::cout << str.C_String() << std::endl;
 			break;
 		}
+		case ID_SERVER_CLIENT_ID:
+		{
+			RakNet::BitStream bsIn(packet->data, packet->length, false);
+			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+			bsIn.Read(m_uiClientId);
+			std::cout << "Server has given us an id of: " << m_uiClientId << std::endl;
+			break;
+		}
 		default:
 			std::cout << "Received a message with a unknown id: " << packet->data[0];
 			break;
 		}
-	}
+	}	
 }
-
-
-
