@@ -46,6 +46,7 @@ void Server::handleNetworkMessages()
 			{
 				addNewConnection(packet->systemAddress);
 				std::cout << "A connection is incoming.\n";
+				sendAllGameObjectsToClient(packet->systemAddress);
 				break;
 			}
 			case ID_CLIENT_CREATE_OBJECT:
@@ -55,7 +56,16 @@ void Server::handleNetworkMessages()
 				GameObject newObject = createNewObject(bsIn, packet->systemAddress);
 				sendGameObjectToAllClients(newObject, RakNet::UNASSIGNED_SYSTEM_ADDRESS);
 				break;
-			}			case ID_DISCONNECTION_NOTIFICATION:
+			}
+			case ID_CLIENT_UPDATE_OBJECT_POSITION:
+			{
+				RakNet::BitStream bsIn(packet->data, packet->length, false);
+				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				updateObject(bsIn, packet->systemAddress);
+				//	update object will also send the updated object to all clients if this is a legal update
+				break;
+			}
+			case ID_DISCONNECTION_NOTIFICATION:
 				std::cout << "A client has disconnected.\n";
 				removeConnection(packet->systemAddress);
 				break;
@@ -149,3 +159,53 @@ void Server::sendGameObjectToAllClients(GameObject& gameObject, RakNet::SystemAd
 	m_pPeerInterface->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, ownerSystemAddress, true);
 }
 
+void Server::sendGameObjectToClient(GameObject& gameObject, RakNet::SystemAddress ownerSystemAddress)
+{
+	RakNet::BitStream bsOut;
+	bsOut.Write((RakNet::MessageID)GameMessages::ID_SERVER_FULL_OBJECT_DATA);
+	bsOut.Write(gameObject.fXPos);
+	bsOut.Write(gameObject.fZPos);
+	bsOut.Write(gameObject.fRedColour);
+	bsOut.Write(gameObject.fGreenColour);
+	bsOut.Write(gameObject.fBlueColour);
+	bsOut.Write(gameObject.uiOwnerClientID);
+	bsOut.Write(gameObject.uiObjectID);
+	m_pPeerInterface->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, ownerSystemAddress, false);
+}
+
+void Server::sendAllGameObjectsToClient(RakNet::SystemAddress ownerSystemAddress)
+{
+	for (unsigned int i = 0; i < m_gameObjects.size(); ++i)
+	{
+		sendGameObjectToClient(m_gameObjects[i], ownerSystemAddress);
+	}
+}
+void Server::updateObject(RakNet::BitStream& bsIn, RakNet::SystemAddress& ownerSysAddress)
+{
+	unsigned int uiObjectID;
+	float fXPos;
+	float fZPos;
+	bsIn.Read(uiObjectID);
+	bsIn.Read(fXPos);
+	bsIn.Read(fZPos);
+
+	unsigned int uiSenderID = systemAddressToClientID(ownerSysAddress);
+
+	for (int i = 0; i < m_gameObjects.size(); i++)
+	{
+		if (m_gameObjects[i].uiObjectID == uiObjectID)
+		{
+			//	we have found the object, now check if the sender actually owns it!!
+			if (m_gameObjects[i].uiOwnerClientID == uiSenderID)
+			{
+				//	yes they own it - so they're not trying to cheat!  So update the object's position.
+				m_gameObjects[i].fXPos = fXPos;
+				m_gameObjects[i].fZPos = fZPos;
+				//	now send the updated object to all clients, except the owner that updated the object
+				sendGameObjectToAllClients(m_gameObjects[i], ownerSysAddress);
+				//	ok, now the object has now been updated, get out of the loop
+				break;
+			}
+		}
+	}
+}

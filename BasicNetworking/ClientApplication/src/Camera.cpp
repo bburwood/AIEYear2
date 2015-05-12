@@ -46,9 +46,9 @@ void Camera::update(float deltaTime)
 		m_transform[3] += m_transform[0] * frameSpeed;
 	if (glfwGetKey(window,'A') == GLFW_PRESS)
 		m_transform[3] -= m_transform[0] * frameSpeed;
-	if (glfwGetKey(window,'Q') == GLFW_PRESS)
-		m_transform[3] += m_transform[1] * frameSpeed;
 	if (glfwGetKey(window,'E') == GLFW_PRESS)
+		m_transform[3] += m_transform[1] * frameSpeed;
+	if (glfwGetKey(window,'Q') == GLFW_PRESS)
 		m_transform[3] -= m_transform[1] * frameSpeed;
 	
 	// check for rotation

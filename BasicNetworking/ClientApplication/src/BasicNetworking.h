@@ -7,6 +7,7 @@
 #include "BaseApplication.h"
 #include "RakPeerInterface.h"
 #include "Camera.h"
+#include "gl_core_4_4.h"
 
 class BasicNetworkingApplication : public BaseApplication
 {
@@ -26,12 +27,14 @@ public:
 	void handleNetworkConnection();
 	void initialiseClientConnection();
 	//Handle incoming packets
-	void handleNetworkMessages();	
+	void handleNetworkMessages();	void readObjectDataFromServer(RakNet::BitStream& bsIn);	void createGameObject();	void moveClientObject(float deltaTime);	void sendUpdatedObjectPositionToServer(GameObject& myClientObject);	
 private:
 	Camera	m_camera;
 	RakNet::RakPeerInterface* m_pPeerInterface;
 	const char* IP = "127.0.0.1";
 	const unsigned short PORT = 5456;
 	unsigned int m_uiClientId = 0;	//	0 is no ID yet
-	std::vector<GameObject>	m_gameobjects;
+	unsigned int m_uiclientObjectIndex = 0;
+	std::vector<GameObject>	m_gameObjects;
+	glm::vec4	m_myColour;
 };

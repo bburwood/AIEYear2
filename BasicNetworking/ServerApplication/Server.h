@@ -33,7 +33,10 @@ protected:
 
 	void sendClientIDToClient(unsigned int uiClientID);
 	GameObject createNewObject(RakNet::BitStream& bsIn, RakNet::SystemAddress& ownerSysAddress);
+	void updateObject(RakNet::BitStream& bsIn, RakNet::SystemAddress& ownerSysAddress);
 	void sendGameObjectToAllClients(GameObject& gameObject, RakNet::SystemAddress ownerSystemAddress);
+	void sendGameObjectToClient(GameObject& gameObject, RakNet::SystemAddress ownerSystemAddress);
+	void sendAllGameObjectsToClient(RakNet::SystemAddress ownerSystemAddress);
 
 private:
 	struct ConnectionInfo
