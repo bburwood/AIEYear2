@@ -11,4 +11,7 @@ struct GameObject
 
 	float fXPos;
 	float fZPos;
+
+	float fXVel;
+	float fZVel;
 };

@@ -5,6 +5,8 @@ Server::Server()
 {
 	//Initialize the Raknet peer interface first
 	m_pPeerInterface = RakNet::RakPeerInterface::GetInstance();
+	//	Simulate latency and packet loss - comment out for release builds
+	m_pPeerInterface->ApplyNetworkSimulator(0.0f, 150, 50);
 
 	m_uiConnectionCounter = 1;
 	m_uiObjectCounter = 1;
@@ -133,6 +135,8 @@ GameObject Server::createNewObject(RakNet::BitStream& bsIn, RakNet::SystemAddres
 	//Read in the information from the packet
 	bsIn.Read(newGameObject.fXPos);
 	bsIn.Read(newGameObject.fZPos);
+	bsIn.Read(newGameObject.fXVel);
+	bsIn.Read(newGameObject.fZVel);
 	bsIn.Read(newGameObject.fRedColour);
 	bsIn.Read(newGameObject.fGreenColour);
 	bsIn.Read(newGameObject.fBlueColour);
@@ -151,6 +155,8 @@ void Server::sendGameObjectToAllClients(GameObject& gameObject, RakNet::SystemAd
 	bsOut.Write((RakNet::MessageID)GameMessages::ID_SERVER_FULL_OBJECT_DATA);
 	bsOut.Write(gameObject.fXPos);
 	bsOut.Write(gameObject.fZPos);
+	bsOut.Write(gameObject.fXVel);
+	bsOut.Write(gameObject.fZVel);
 	bsOut.Write(gameObject.fRedColour);
 	bsOut.Write(gameObject.fGreenColour);
 	bsOut.Write(gameObject.fBlueColour);
@@ -165,6 +171,8 @@ void Server::sendGameObjectToClient(GameObject& gameObject, RakNet::SystemAddres
 	bsOut.Write((RakNet::MessageID)GameMessages::ID_SERVER_FULL_OBJECT_DATA);
 	bsOut.Write(gameObject.fXPos);
 	bsOut.Write(gameObject.fZPos);
+	bsOut.Write(gameObject.fXVel);
+	bsOut.Write(gameObject.fZVel);
 	bsOut.Write(gameObject.fRedColour);
 	bsOut.Write(gameObject.fGreenColour);
 	bsOut.Write(gameObject.fBlueColour);
@@ -185,9 +193,13 @@ void Server::updateObject(RakNet::BitStream& bsIn, RakNet::SystemAddress& ownerS
 	unsigned int uiObjectID;
 	float fXPos;
 	float fZPos;
+	float fXVel;
+	float fZVel;
 	bsIn.Read(uiObjectID);
 	bsIn.Read(fXPos);
 	bsIn.Read(fZPos);
+	bsIn.Read(fXVel);
+	bsIn.Read(fZVel);
 
 	unsigned int uiSenderID = systemAddressToClientID(ownerSysAddress);
 
@@ -201,6 +213,8 @@ void Server::updateObject(RakNet::BitStream& bsIn, RakNet::SystemAddress& ownerS
 				//	yes they own it - so they're not trying to cheat!  So update the object's position.
 				m_gameObjects[i].fXPos = fXPos;
 				m_gameObjects[i].fZPos = fZPos;
+				m_gameObjects[i].fXPos = fXVel;
+				m_gameObjects[i].fZPos = fZVel;
 				//	now send the updated object to all clients, except the owner that updated the object
 				sendGameObjectToAllClients(m_gameObjects[i], ownerSysAddress);
 				//	ok, now the object has now been updated, get out of the loop

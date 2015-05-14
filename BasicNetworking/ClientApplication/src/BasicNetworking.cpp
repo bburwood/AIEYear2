@@ -15,7 +15,8 @@
 
 #include "../../ServerApplication/GameObject.h"
 
-BasicNetworkingApplication::BasicNetworkingApplication()
+BasicNetworkingApplication::BasicNetworkingApplication() :
+m_fSendTimer(0.0f), m_bObjectMoved(false)
 {
 	//	select a random colour
 	m_myColour = glm::vec4( (float)rand() / (float)RAND_MAX,
@@ -48,8 +49,15 @@ void BasicNetworkingApplication::shutdown()
 
 bool BasicNetworkingApplication::update(float deltaTime)
 {
+	m_fSendTimer += deltaTime;
 	handleNetworkMessages();
 	moveClientObject(deltaTime);
+	if (m_bObjectMoved && (m_fSendTimer > m_fSendInterval))
+	{
+		sendUpdatedObjectPositionToServer(m_gameObjects[m_uiclientObjectIndex]);
+		m_bObjectMoved = false;
+		m_fSendTimer = 0.0f;
+	}
 	m_camera.update(deltaTime);
 	return true;
 }
@@ -81,7 +89,9 @@ void BasicNetworkingApplication::handleNetworkConnection()
 {
 	//Initialize the Raknet peer interface first
 	m_pPeerInterface = RakNet::RakPeerInterface::GetInstance();
-	initialiseClientConnection();}
+	//	Simulate latency and packet loss - comment out for release builds
+	m_pPeerInterface->ApplyNetworkSimulator(0.10f, 100 + (unsigned short)(rand() % 100), 10 + (unsigned short)(rand() % 100));
+	initialiseClientConnection();}
 
 void BasicNetworkingApplication::initialiseClientConnection()
 {
@@ -170,6 +180,8 @@ void BasicNetworkingApplication::readObjectDataFromServer(RakNet::BitStream& bsI
 	//Read in the object data
 	bsIn.Read(tempGameObject.fXPos);
 	bsIn.Read(tempGameObject.fZPos);
+	bsIn.Read(tempGameObject.fXVel);
+	bsIn.Read(tempGameObject.fZVel);
 	bsIn.Read(tempGameObject.fRedColour);
 	bsIn.Read(tempGameObject.fGreenColour);
 	bsIn.Read(tempGameObject.fBlueColour);
@@ -186,6 +198,8 @@ void BasicNetworkingApplication::readObjectDataFromServer(RakNet::BitStream& bsI
 			GameObject& obj = m_gameObjects[i];
 			obj.fXPos = tempGameObject.fXPos;
 			obj.fZPos = tempGameObject.fZPos;
+			obj.fXPos = tempGameObject.fXVel;
+			obj.fZPos = tempGameObject.fZVel;
 			obj.fRedColour = tempGameObject.fRedColour;
 			obj.fGreenColour = tempGameObject.fGreenColour;
 			obj.fBlueColour = tempGameObject.fBlueColour;
@@ -211,6 +225,8 @@ void BasicNetworkingApplication::createGameObject()
 	GameObject tempGameObject;
 	tempGameObject.fXPos = 0.0f;
 	tempGameObject.fZPos = 0.0f;
+	tempGameObject.fXVel = 0.0f;
+	tempGameObject.fZVel = 0.0f;
 	tempGameObject.fRedColour = m_myColour.r;
 	tempGameObject.fGreenColour = m_myColour.g;
 	tempGameObject.fBlueColour = m_myColour.b;
@@ -218,6 +234,8 @@ void BasicNetworkingApplication::createGameObject()
 	bsOut.Write((RakNet::MessageID)GameMessages::ID_CLIENT_CREATE_OBJECT);
 	bsOut.Write(tempGameObject.fXPos);
 	bsOut.Write(tempGameObject.fZPos);
+	bsOut.Write(tempGameObject.fXVel);
+	bsOut.Write(tempGameObject.fZVel);
 	bsOut.Write(tempGameObject.fRedColour);
 	bsOut.Write(tempGameObject.fGreenColour);
 	bsOut.Write(tempGameObject.fBlueColour);
@@ -231,22 +249,36 @@ void BasicNetworkingApplication::moveClientObject(float deltaTime)
 	if (m_uiClientId == 0) return;
 	//No game objects sent to us, so we don't know who we are yet
 	if (m_gameObjects.size() == 0) return;
-	bool bUpdatedObjectPosition = false;
+//	bool bUpdatedObjectPosition = false;
 	GameObject& myClientObject = m_gameObjects[m_uiclientObjectIndex];
 	if (glfwGetKey(m_window, GLFW_KEY_UP))
 	{
-		myClientObject.fZPos += 2 * deltaTime;
-		bUpdatedObjectPosition = true;
+		myClientObject.fZPos -= 2 * deltaTime;
+		myClientObject.fZVel = -2.0f;
+		m_bObjectMoved = true;
 	}
 	if (glfwGetKey(m_window, GLFW_KEY_DOWN))
 	{
-		myClientObject.fZPos -= 2 * deltaTime;
-		bUpdatedObjectPosition = true;
+		myClientObject.fZPos += 2 * deltaTime;
+		myClientObject.fZVel = 2.0f;
+		m_bObjectMoved = true;
 	}
-	if (bUpdatedObjectPosition == true)
+	if (glfwGetKey(m_window, GLFW_KEY_RIGHT))
 	{
-		sendUpdatedObjectPositionToServer(myClientObject);
+		myClientObject.fXPos += 2 * deltaTime;
+		myClientObject.fXVel = 2.0f;
+		m_bObjectMoved = true;
 	}
+	if (glfwGetKey(m_window, GLFW_KEY_LEFT))
+	{
+		myClientObject.fXPos -= 2 * deltaTime;
+		myClientObject.fXVel = -2.0f;
+		m_bObjectMoved = true;
+	}
+	//	if (bUpdatedObjectPosition == true)
+//	{
+//		sendUpdatedObjectPositionToServer(myClientObject);
+//	}
 }
 
 void BasicNetworkingApplication::sendUpdatedObjectPositionToServer(GameObject& a_myClientObject)
@@ -258,6 +290,8 @@ void BasicNetworkingApplication::sendUpdatedObjectPositionToServer(GameObject& a
 	bsOut.Write(a_myClientObject.uiObjectID);
 	bsOut.Write(a_myClientObject.fXPos);
 	bsOut.Write(a_myClientObject.fZPos);
+	bsOut.Write(a_myClientObject.fXVel);
+	bsOut.Write(a_myClientObject.fZVel);
 	m_pPeerInterface->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0,
 		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
 }

@@ -37,4 +37,7 @@ private:
 	unsigned int m_uiclientObjectIndex = 0;
 	std::vector<GameObject>	m_gameObjects;
 	glm::vec4	m_myColour;
+	float	m_fSendTimer;
+	float	m_fSendInterval = 0.10f;	//	send object position update data to server only after this time
+	bool	m_bObjectMoved = false;
 };
