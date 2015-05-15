@@ -1,5 +1,16 @@
 #include "Server.h"
 #include "GameObject.h"
+#include <iostream>
+
+//	set this to turn on debug couts
+bool	bServerDebug = true;
+/*  copy this empty if statement
+if (bServerDebug)
+{
+std::cout << "" << '\n';
+}
+*/
+
 
 Server::Server()
 {
@@ -29,6 +40,10 @@ void Server::run()
 	//Now call startup - max of 32 connections, on the assigned port
 	m_pPeerInterface->Startup(32, &sd, 1);
 	m_pPeerInterface->SetMaximumIncomingConnections(32);
+	if (bServerDebug)
+	{
+		std::cout << "Server started." << '\n';
+	}
 
 	handleNetworkMessages();
 }
@@ -92,6 +107,10 @@ void Server::addNewConnection(RakNet::SystemAddress systemAddress)
 	m_connectedClients[info.uiConnectionID] = info;
 
 	sendClientIDToClient(info.uiConnectionID);
+	if (bServerDebug)
+	{
+		std::cout << "ClientID issued: " << info.uiConnectionID << '\n';
+	}
 }
 
 void Server::removeConnection(RakNet::SystemAddress systemAddress)
@@ -133,6 +152,8 @@ GameObject Server::createNewObject(RakNet::BitStream& bsIn, RakNet::SystemAddres
 {
 	GameObject newGameObject;
 	//Read in the information from the packet
+	bsIn.Read(newGameObject);
+	/*
 	bsIn.Read(newGameObject.fXPos);
 	bsIn.Read(newGameObject.fZPos);
 	bsIn.Read(newGameObject.fXVel);
@@ -140,11 +161,15 @@ GameObject Server::createNewObject(RakNet::BitStream& bsIn, RakNet::SystemAddres
 	bsIn.Read(newGameObject.fRedColour);
 	bsIn.Read(newGameObject.fGreenColour);
 	bsIn.Read(newGameObject.fBlueColour);
-
+	*/
 	newGameObject.uiOwnerClientID = systemAddressToClientID(ownerSysAddress);
 	newGameObject.uiObjectID = m_uiObjectCounter++;
 
 	m_gameObjects.push_back(newGameObject);	//	add object to the server;s object list
+	if (bServerDebug)
+	{
+		std::cout << "New object created by client: " << newGameObject.uiOwnerClientID << '\n';
+	}
 
 	return newGameObject;
 }
@@ -153,6 +178,8 @@ void Server::sendGameObjectToAllClients(GameObject& gameObject, RakNet::SystemAd
 {
 	RakNet::BitStream bsOut;
 	bsOut.Write((RakNet::MessageID)GameMessages::ID_SERVER_FULL_OBJECT_DATA);
+	bsOut.Write(gameObject);
+	/*
 	bsOut.Write(gameObject.fXPos);
 	bsOut.Write(gameObject.fZPos);
 	bsOut.Write(gameObject.fXVel);
@@ -162,13 +189,22 @@ void Server::sendGameObjectToAllClients(GameObject& gameObject, RakNet::SystemAd
 	bsOut.Write(gameObject.fBlueColour);
 	bsOut.Write(gameObject.uiOwnerClientID);
 	bsOut.Write(gameObject.uiObjectID);
+	*/
 	m_pPeerInterface->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, ownerSystemAddress, true);
+	if (bServerDebug)
+	{
+		std::cout << "GameObject sent to all clients." << '\n';
+		std::cout << "  Postion(X/Z): " << gameObject.fXPos << " / " << gameObject.fZPos << '\n';
+		std::cout << "  Velocity(X/Z): " << gameObject.fXVel << " / " << gameObject.fZVel << '\n';
+	}
 }
 
 void Server::sendGameObjectToClient(GameObject& gameObject, RakNet::SystemAddress ownerSystemAddress)
 {
 	RakNet::BitStream bsOut;
 	bsOut.Write((RakNet::MessageID)GameMessages::ID_SERVER_FULL_OBJECT_DATA);
+	bsOut.Write(gameObject);
+	/*
 	bsOut.Write(gameObject.fXPos);
 	bsOut.Write(gameObject.fZPos);
 	bsOut.Write(gameObject.fXVel);
@@ -178,7 +214,12 @@ void Server::sendGameObjectToClient(GameObject& gameObject, RakNet::SystemAddres
 	bsOut.Write(gameObject.fBlueColour);
 	bsOut.Write(gameObject.uiOwnerClientID);
 	bsOut.Write(gameObject.uiObjectID);
+	*/
 	m_pPeerInterface->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, ownerSystemAddress, false);
+	if (bServerDebug)
+	{
+		std::cout << "GameObject sent to client." << '\n';
+	}
 }
 
 void Server::sendAllGameObjectsToClient(RakNet::SystemAddress ownerSystemAddress)
@@ -186,6 +227,10 @@ void Server::sendAllGameObjectsToClient(RakNet::SystemAddress ownerSystemAddress
 	for (unsigned int i = 0; i < m_gameObjects.size(); ++i)
 	{
 		sendGameObjectToClient(m_gameObjects[i], ownerSystemAddress);
+	}
+	if (bServerDebug)
+	{
+		std::cout << "All GameObjects sent to client: " << systemAddressToClientID(ownerSystemAddress) << '\n';
 	}
 }
 void Server::updateObject(RakNet::BitStream& bsIn, RakNet::SystemAddress& ownerSysAddress)
@@ -195,13 +240,29 @@ void Server::updateObject(RakNet::BitStream& bsIn, RakNet::SystemAddress& ownerS
 	float fZPos;
 	float fXVel;
 	float fZVel;
+	/*
 	bsIn.Read(uiObjectID);
 	bsIn.Read(fXPos);
 	bsIn.Read(fZPos);
 	bsIn.Read(fXVel);
 	bsIn.Read(fZVel);
+	*/
+	GameObject	tempGameObject;
+	bsIn.Read(tempGameObject);
+	uiObjectID = tempGameObject.uiObjectID;
+	fXPos = tempGameObject.fXPos;
+	fZPos = tempGameObject.fZPos;
+	fXVel = tempGameObject.fXVel;
+	fZVel = tempGameObject.fZVel;
 
 	unsigned int uiSenderID = systemAddressToClientID(ownerSysAddress);
+
+	if (bServerDebug)
+	{
+		std::cout << "Incoming Object update from client: " << uiSenderID << '\n';
+		std::cout << "  Postion(X/Z): " << tempGameObject.fXPos << " / " << tempGameObject.fZPos << '\n';
+		std::cout << "  Velocity(X/Z): " << tempGameObject.fXVel << " / " << tempGameObject.fZVel << '\n';
+	}
 
 	for (int i = 0; i < m_gameObjects.size(); i++)
 	{
@@ -218,6 +279,10 @@ void Server::updateObject(RakNet::BitStream& bsIn, RakNet::SystemAddress& ownerS
 				//	now send the updated object to all clients, except the owner that updated the object
 				sendGameObjectToAllClients(m_gameObjects[i], ownerSysAddress);
 				//	ok, now the object has now been updated, get out of the loop
+				if (bServerDebug)
+				{
+					std::cout << "Object updated and sent to all clients." << '\n';
+				}
 				break;
 			}
 		}

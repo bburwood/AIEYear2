@@ -15,6 +15,15 @@
 
 #include "../../ServerApplication/GameObject.h"
 
+//	set this to turn on debug couts
+bool	bDebug = true;
+/*  copy this empty if statement
+if (bDebug)
+{
+	std::cout << "" << '\n';
+}
+*/
+
 BasicNetworkingApplication::BasicNetworkingApplication() :
 m_fSendTimer(0.0f), m_bObjectMoved(false)
 {
@@ -55,6 +64,12 @@ bool BasicNetworkingApplication::update(float deltaTime)
 	if (m_bObjectMoved && (m_fSendTimer > m_fSendInterval))
 	{
 		sendUpdatedObjectPositionToServer(m_gameObjects[m_uiclientObjectIndex]);
+		if (bDebug)
+		{
+			std::cout << "Updated object position sent to server." << '\n';
+			std::cout << "  Postion(X/Z): " << m_gameObjects[m_uiclientObjectIndex].fXPos << " / " << m_gameObjects[m_uiclientObjectIndex].fZPos << '\n';
+			std::cout << "  Velocity(X/Z): " << m_gameObjects[m_uiclientObjectIndex].fXVel << " / " << m_gameObjects[m_uiclientObjectIndex].fZVel << '\n';
+		}
 		m_bObjectMoved = false;
 		m_fSendTimer = 0.0f;
 	}
@@ -90,7 +105,7 @@ void BasicNetworkingApplication::handleNetworkConnection()
 	//Initialize the Raknet peer interface first
 	m_pPeerInterface = RakNet::RakPeerInterface::GetInstance();
 	//	Simulate latency and packet loss - comment out for release builds
-	m_pPeerInterface->ApplyNetworkSimulator(0.10f, 100 + (unsigned short)(rand() % 100), 10 + (unsigned short)(rand() % 100));
+	m_pPeerInterface->ApplyNetworkSimulator(0.0f, 100 + (unsigned short)(rand() % 100), 10 + (unsigned short)(rand() % 100));
 	initialiseClientConnection();}
 
 void BasicNetworkingApplication::initialiseClientConnection()
@@ -107,7 +122,11 @@ void BasicNetworkingApplication::initialiseClientConnection()
 	if (res != RakNet::CONNECTION_ATTEMPT_STARTED)
 	{
 		std::cout << "Unable to start connection, Error number: " << res << std::endl;
-	}
+		return;
+	}	if (bDebug)
+	{
+		std::cout << "Connection initiated" << '\n';
+	}
 }
 
 //Handle incoming packets
@@ -178,6 +197,8 @@ void BasicNetworkingApplication::readObjectDataFromServer(RakNet::BitStream& bsI
 	//Create a temp object that we will pull all the object data into
 	GameObject tempGameObject;
 	//Read in the object data
+	bsIn.Read(tempGameObject);
+	/*
 	bsIn.Read(tempGameObject.fXPos);
 	bsIn.Read(tempGameObject.fZPos);
 	bsIn.Read(tempGameObject.fXVel);
@@ -187,6 +208,13 @@ void BasicNetworkingApplication::readObjectDataFromServer(RakNet::BitStream& bsI
 	bsIn.Read(tempGameObject.fBlueColour);
 	bsIn.Read(tempGameObject.uiOwnerClientID);
 	bsIn.Read(tempGameObject.uiObjectID);
+	*/
+	if (bDebug)
+	{
+		std::cout << "Incoming object data from server!" << '\n';
+		std::cout << "Updated Object:" << '\n';
+		std::cout << "  Postion(X/Z): " << tempGameObject.fXPos << " / " << tempGameObject.fZPos << '\n';
+	}
 	//Check to see whether or not this object is already stored in our local object list
 	bool bFound = false;
 	for (int i = 0; i < m_gameObjects.size(); i++)
@@ -198,18 +226,26 @@ void BasicNetworkingApplication::readObjectDataFromServer(RakNet::BitStream& bsI
 			GameObject& obj = m_gameObjects[i];
 			obj.fXPos = tempGameObject.fXPos;
 			obj.fZPos = tempGameObject.fZPos;
-			obj.fXPos = tempGameObject.fXVel;
-			obj.fZPos = tempGameObject.fZVel;
+			obj.fXVel = tempGameObject.fXVel;
+			obj.fZVel = tempGameObject.fZVel;
 			obj.fRedColour = tempGameObject.fRedColour;
 			obj.fGreenColour = tempGameObject.fGreenColour;
 			obj.fBlueColour = tempGameObject.fBlueColour;
 			obj.uiOwnerClientID = tempGameObject.uiOwnerClientID;
+			if (bDebug)
+			{
+				std::cout << "Object found and updated!" << '\n';
+			}
 			break;
 		}
 	}
 	//If we didn't find it, then it is a new object - add it to our object list
 	if (!bFound)
 	{
+		if (bDebug)
+		{
+			std::cout << "New object. Adding to local list." << '\n';
+		}
 		m_gameObjects.push_back(tempGameObject);
 		if (tempGameObject.uiOwnerClientID == m_uiClientId)
 		{
@@ -232,6 +268,8 @@ void BasicNetworkingApplication::createGameObject()
 	tempGameObject.fBlueColour = m_myColour.b;
 	//Ensure that the write order is the same as the read order on the server!
 	bsOut.Write((RakNet::MessageID)GameMessages::ID_CLIENT_CREATE_OBJECT);
+	bsOut.Write(tempGameObject);
+	/*
 	bsOut.Write(tempGameObject.fXPos);
 	bsOut.Write(tempGameObject.fZPos);
 	bsOut.Write(tempGameObject.fXVel);
@@ -239,8 +277,13 @@ void BasicNetworkingApplication::createGameObject()
 	bsOut.Write(tempGameObject.fRedColour);
 	bsOut.Write(tempGameObject.fGreenColour);
 	bsOut.Write(tempGameObject.fBlueColour);
+	*/
 	m_pPeerInterface->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0,
 		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+	if (bDebug)
+	{
+		std::cout << "Requested new GameObject from server." << '\n';
+	}
 }
 
 void BasicNetworkingApplication::moveClientObject(float deltaTime)
@@ -253,28 +296,33 @@ void BasicNetworkingApplication::moveClientObject(float deltaTime)
 	GameObject& myClientObject = m_gameObjects[m_uiclientObjectIndex];
 	if (glfwGetKey(m_window, GLFW_KEY_UP))
 	{
-		myClientObject.fZPos -= 2 * deltaTime;
 		myClientObject.fZVel = -2.0f;
+		myClientObject.fZPos += myClientObject.fZVel * deltaTime;
 		m_bObjectMoved = true;
 	}
 	if (glfwGetKey(m_window, GLFW_KEY_DOWN))
 	{
-		myClientObject.fZPos += 2 * deltaTime;
 		myClientObject.fZVel = 2.0f;
+		myClientObject.fZPos += myClientObject.fZVel * deltaTime;
 		m_bObjectMoved = true;
 	}
 	if (glfwGetKey(m_window, GLFW_KEY_RIGHT))
 	{
-		myClientObject.fXPos += 2 * deltaTime;
 		myClientObject.fXVel = 2.0f;
+		myClientObject.fXPos += myClientObject.fXVel * deltaTime;
 		m_bObjectMoved = true;
 	}
 	if (glfwGetKey(m_window, GLFW_KEY_LEFT))
 	{
-		myClientObject.fXPos -= 2 * deltaTime;
 		myClientObject.fXVel = -2.0f;
+		myClientObject.fXPos += myClientObject.fXVel * deltaTime;
 		m_bObjectMoved = true;
 	}
+	//if (bDebug && m_bObjectMoved)
+	//{
+	//	std::cout << "Object has been moved." << '\n';
+	//}
+
 	//	if (bUpdatedObjectPosition == true)
 //	{
 //		sendUpdatedObjectPositionToServer(myClientObject);
@@ -287,11 +335,20 @@ void BasicNetworkingApplication::sendUpdatedObjectPositionToServer(GameObject& a
 	RakNet::BitStream bsOut;
 
 	bsOut.Write((RakNet::MessageID)GameMessages::ID_CLIENT_UPDATE_OBJECT_POSITION);
+	bsOut.Write(a_myClientObject);
+	/*
 	bsOut.Write(a_myClientObject.uiObjectID);
 	bsOut.Write(a_myClientObject.fXPos);
 	bsOut.Write(a_myClientObject.fZPos);
 	bsOut.Write(a_myClientObject.fXVel);
 	bsOut.Write(a_myClientObject.fZVel);
+	*/
 	m_pPeerInterface->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0,
 		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+	if (bDebug)
+	{
+		std::cout << "Updated object position sent to server." << '\n';
+		std::cout << "  Postion(X/Z): " << a_myClientObject.fXPos << " / " << a_myClientObject.fZPos << '\n';
+		std::cout << "  Velocity(X/Z): " << a_myClientObject.fXVel << " / " << a_myClientObject.fZVel << '\n';
+	}
 }
