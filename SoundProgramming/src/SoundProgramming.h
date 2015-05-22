@@ -36,7 +36,8 @@ public:
 	FMOD_VECTOR position;
 	FMOD_VECTOR velocity;
 	FMOD_VECTOR forward;
-	FMOD_VECTOR up;
+	FMOD_VECTOR up;
+
 	//	GeneralSoundsGroup properties
 	FMOD_VECTOR GenSoundPosition;
 	FMOD_VECTOR GenSoundVelocity;
