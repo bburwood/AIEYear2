@@ -43,11 +43,11 @@ int main()
 //	RenderTargets	app;
 //	PostProcess	app;
 //	Shadows	app;
-//	Deferred	app;
+	Deferred	app;
 //	ProceduralGeneration	app;
 //	AdvancedNavigation	app;
 //	PhysicallyBasedRendering	app;
-	GameTreeSearch app;
+//	GameTreeSearch app;
 
 	if (app.startup() == false)
 	{

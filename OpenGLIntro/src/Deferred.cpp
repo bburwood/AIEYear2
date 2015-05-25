@@ -47,7 +47,7 @@ bool	Deferred::startup()
 	m_bDrawGizmos = false;
 
 	//	now initialise the FlyCamera
-	m_FlyCamera = FlyCamera(vec3(10, 10, 10), vec3(0, 0, 0), glm::radians(50.0f), 1280.0f / 720.0f, 0.1f, 1000.0f);
+	m_FlyCamera = FlyCamera(vec3(20, 40, 45), vec3(0, 18, 0), glm::radians(50.0f), 1280.0f / 720.0f, 0.1f, 1000.0f);
 
 	//	initialise basic AntTweakBar info
 	m_bar = TwNewBar("Amazing new AntTweakBar!!");
@@ -212,14 +212,23 @@ void	Deferred::draw()
 	RenderPointLight(vec3(0, 5, 5), 3.0f, vec3(1, 1, 0));
 	RenderPointLight(vec3(-3, 3, -3), 3.0f, vec3(1, 0, 0));
 	RenderPointLight(vec3(0, -1.5f, 0), 3.0f, vec3(0, 1, 0));
+	float	fXLightRange = 20.0f;
+	float	fYLightRange = 30.0f;
+	float	fZLightRange = 16.0f;
+	float	fXLightOffset = 0.0f;
+	float	fYLightOffset = 15.0f;
+	float	fZLightOffset = 0.0f;
+	float	fLightRadius = 0.8f;
 	for (unsigned int i = 0; i < 32; ++i)
 	{
 		for (unsigned int j = 0; j < 32; ++j)
 		{
 			for (unsigned int k = 0; k < 32; ++k)
 			{
-				RenderPointLight(vec3(sin(m_timer * i * 0.01) * 5.0f, 3.1f + cos(m_timer * j * 0.01) * 6.5f, sin(m_timer * k * 0.01) * 5.0f),
-						0.3f, vec3(sin(i * 0.15f), cos(j * 0.1), sin(k * 0.05f)));
+				RenderPointLight(vec3(	fXLightOffset + sin(m_timer * i * 0.01) * fXLightRange,
+										fYLightOffset + cos(m_timer * j * 0.01) * fYLightRange,
+										fZLightOffset + sin(m_timer * k * 0.01) * fZLightRange),
+										fLightRadius, vec3(sin(i * 0.15f), cos(j * 0.1), sin(k * 0.05f)));
 			}
 		}
 	}
@@ -277,8 +286,8 @@ void	Deferred::BuildMeshes()
 	std::vector<tinyobj::shape_t>	shapes;
 	std::vector<tinyobj::material_t>	materials;
 
-//	tinyobj::LoadObj(shapes, materials, "./models/stanford/bunny.obj");
-	tinyobj::LoadObj(shapes, materials, "./models/f16/f16.obj");
+	tinyobj::LoadObj(shapes, materials, "./models/stanford/bunny.obj");
+//	tinyobj::LoadObj(shapes, materials, "./models/f16/f16.obj");
 
 	m_Bunny.m_uiIndexCount = shapes[0].mesh.indices.size();
 
@@ -508,7 +517,7 @@ void	Deferred::BuildCube()
 		1, 2, 3,
 	};
 
-	m_ScreenSpaceQuad.m_uiIndexCount = 6;
+	m_LightCube.m_uiIndexCount = 36;
 
 	glGenVertexArrays(1, &m_LightCube.m_uiVAO);
 	glBindVertexArray(m_LightCube.m_uiVAO);
