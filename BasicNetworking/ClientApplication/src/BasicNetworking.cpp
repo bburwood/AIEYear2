@@ -232,6 +232,7 @@ void BasicNetworkingApplication::readObjectDataFromServer(RakNet::BitStream& bsI
 			obj.fGreenColour = tempGameObject.fGreenColour;
 			obj.fBlueColour = tempGameObject.fBlueColour;
 			obj.uiOwnerClientID = tempGameObject.uiOwnerClientID;
+			obj.eSyncType = tempGameObject.eSyncType;
 			if (bDebug)
 			{
 				std::cout << "Object found and updated!" << '\n';
@@ -266,6 +267,7 @@ void BasicNetworkingApplication::createGameObject()
 	tempGameObject.fRedColour = m_myColour.r;
 	tempGameObject.fGreenColour = m_myColour.g;
 	tempGameObject.fBlueColour = m_myColour.b;
+	tempGameObject.eSyncType = SyncType::INTERPOLATION;
 	//Ensure that the write order is the same as the read order on the server!
 	bsOut.Write((RakNet::MessageID)GameMessages::ID_CLIENT_CREATE_OBJECT);
 	bsOut.Write(tempGameObject);
@@ -296,25 +298,25 @@ void BasicNetworkingApplication::moveClientObject(float deltaTime)
 	GameObject& myClientObject = m_gameObjects[m_uiclientObjectIndex];
 	if (glfwGetKey(m_window, GLFW_KEY_UP))
 	{
-		myClientObject.fZVel = -2.0f;
+		myClientObject.fZVel = -2.5f;
 		myClientObject.fZPos += myClientObject.fZVel * deltaTime;
 		m_bObjectMoved = true;
 	}
 	if (glfwGetKey(m_window, GLFW_KEY_DOWN))
 	{
-		myClientObject.fZVel = 2.0f;
+		myClientObject.fZVel = 2.5f;
 		myClientObject.fZPos += myClientObject.fZVel * deltaTime;
 		m_bObjectMoved = true;
 	}
 	if (glfwGetKey(m_window, GLFW_KEY_RIGHT))
 	{
-		myClientObject.fXVel = 2.0f;
+		myClientObject.fXVel = 2.5f;
 		myClientObject.fXPos += myClientObject.fXVel * deltaTime;
 		m_bObjectMoved = true;
 	}
 	if (glfwGetKey(m_window, GLFW_KEY_LEFT))
 	{
-		myClientObject.fXVel = -2.0f;
+		myClientObject.fXVel = -2.5f;
 		myClientObject.fXPos += myClientObject.fXVel * deltaTime;
 		m_bObjectMoved = true;
 	}

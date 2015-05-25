@@ -233,6 +233,7 @@ void Server::sendAllGameObjectsToClient(RakNet::SystemAddress ownerSystemAddress
 		std::cout << "All GameObjects sent to client: " << systemAddressToClientID(ownerSystemAddress) << '\n';
 	}
 }
+
 void Server::updateObject(RakNet::BitStream& bsIn, RakNet::SystemAddress& ownerSysAddress)
 {
 	unsigned int uiObjectID;
@@ -274,8 +275,9 @@ void Server::updateObject(RakNet::BitStream& bsIn, RakNet::SystemAddress& ownerS
 				//	yes they own it - so they're not trying to cheat!  So update the object's position.
 				m_gameObjects[i].fXPos = fXPos;
 				m_gameObjects[i].fZPos = fZPos;
-				m_gameObjects[i].fXPos = fXVel;
-				m_gameObjects[i].fZPos = fZVel;
+				m_gameObjects[i].fXVel = fXVel;
+				m_gameObjects[i].fZVel = fZVel;
+				m_gameObjects[i].eSyncType = tempGameObject.eSyncType;
 				//	now send the updated object to all clients, except the owner that updated the object
 				sendGameObjectToAllClients(m_gameObjects[i], ownerSysAddress);
 				//	ok, now the object has now been updated, get out of the loop

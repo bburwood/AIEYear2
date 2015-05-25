@@ -1,5 +1,12 @@
 #pragma once
 
+enum SyncType
+{
+	POSITION_ONLY,
+	LERP,
+	INTERPOLATION
+};
+
 struct GameObject
 {
 	unsigned int uiOwnerClientID;
@@ -14,4 +21,6 @@ struct GameObject
 
 	float fXVel;
 	float fZVel;
+
+	SyncType	eSyncType;
 };

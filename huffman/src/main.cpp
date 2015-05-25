@@ -72,8 +72,17 @@ int main(int argc, char**argv)
 	const char* inputFileName = argv[1];
 	const char* outputFileName = argv[2];
 
+	if (strcmp(inputFileName, outputFileName) == 0)
+	{
+		//	file names are the same
+		printf("Input and Output file names are the same, please use different file names!\n");
+		printf("Usage:\nhuffman <input-file> <output-file>\n");
+		return 0;
+	}
+	//	should probably also do a check to see if the output (and input) file already exists
+
 	FILE*	inputFile = fopen(inputFileName, "rb");
-	unsigned int	uiByteCounts[256] = {};	//	set the arary to all zeros
+	unsigned int	uiByteCounts[256] = {};	//	set the array to all zeros
 
 	while (!feof(inputFile))
 	{
@@ -94,7 +103,7 @@ int main(int argc, char**argv)
 		if (uiByteCounts[i] != 0)
 		{
 			HuffmanNode*	node = &huffmanPool[iNodesUsed++];
-			node->iFrequency = uiByteCounts[0];
+			node->iFrequency = uiByteCounts[i];
 			node->value = (unsigned char)i;
 
 			aSymbolTree.push_back(node);
