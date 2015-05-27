@@ -15,7 +15,7 @@ uniform mat4 worldTransform;
 void main()
 {
 	lfrag_normal = -normal;
-	lfrag_position = position;
+	lfrag_position = worldTransform * position;
 	lfragTexCoord = texCoord;
 	gl_Position = projection_view * worldTransform * position;
 }

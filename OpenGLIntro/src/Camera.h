@@ -23,7 +23,7 @@ public:
 	mat4	GetProjection();
 	mat4	GetProjectionView();
 	void	UpdateProjectionViewTransform();
-	vec3	Camera::PickAgainstPlane(float x, float y, vec4 plane);
+	vec3	PickAgainstPlane(float x, float y, vec4 plane);
 
 	
 	mat4	m_worldTransform;
