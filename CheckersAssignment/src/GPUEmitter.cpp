@@ -131,6 +131,8 @@ void	GPUPointEmitter::Draw(float a_fDT, mat4 a_cameraTransform, mat4 a_projectio
 	//	render pass
 	glUseProgram(m_uiDrawShader);
 
+	glDisable(GL_DEPTH_TEST);
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -140,8 +142,8 @@ void	GPUPointEmitter::Draw(float a_fDT, mat4 a_cameraTransform, mat4 a_projectio
 	int	endSizeUniform = glGetUniformLocation(m_uiDrawShader, "end_size");
 	int	startColourUniform = glGetUniformLocation(m_uiDrawShader, "start_colour");
 	int	endColourUniform = glGetUniformLocation(m_uiDrawShader, "end_colour");
-	iEmitterAgeUniform = glGetUniformLocation(m_uiUpdateShader, "fEmitterAge");
-	iEmitterLifespanUniform = glGetUniformLocation(m_uiUpdateShader, "fEmitterLifespan");
+	iEmitterAgeUniform = glGetUniformLocation(m_uiDrawShader, "fEmitterAge");
+	iEmitterLifespanUniform = glGetUniformLocation(m_uiDrawShader, "fEmitterLifespan");
 	int	iEmitterAgePercentUniform = glGetUniformLocation(m_uiDrawShader, "fEmitterAgePercent");
 	
 
@@ -165,6 +167,8 @@ void	GPUPointEmitter::Draw(float a_fDT, mat4 a_cameraTransform, mat4 a_projectio
 	glDrawArrays(GL_POINTS, 0, m_uiMaxParticles);
 	m_uiActiveBuffer = uiOtherBuffer;
 	//m_fLastDrawTime = a_currTime;
+	glEnable(GL_DEPTH_TEST);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void	GPUPointEmitter::CreateBuffers()

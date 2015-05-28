@@ -15,7 +15,7 @@ out vec2 fragTexCoord;
 uniform mat4 projection_view;
 uniform mat4 camera_world;
 uniform float start_size;
-uniform float end_size;
+uniform float end_size;	//	why is this value stuffed!?!?
 
 uniform vec4 start_colour;
 uniform vec4 end_colour;
@@ -38,7 +38,9 @@ void	main()
 
 	//	get half the size of the quad so that the total width and height will be correct
 	//float half_size = mix(start_size, end_size, t) * 0.5f;
-	float half_size = 0.5f * (start_size + end_size) * t / (start_size + end_size);
+	float half_size = mix(start_size, 0.5f * start_size, t) * 0.5f;
+	//float half_size = 0.5f * ((start_size * (1.0f - t)) + (end_size * t));
+	//float half_size = 0.5f * (end_size );
 	//float half_size = 0.05f;
 
 	vec3 corners[4];

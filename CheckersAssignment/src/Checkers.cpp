@@ -55,7 +55,7 @@ bool	Checkers::startup()
 	//	initialise basic AntTweakBar info
 	//m_bar = TwNewBar("Stuff you can mess with!!");
 	m_bar = TwNewBar("GeneralStuff");	//	must be a single word (no spaces) if you want to be able to resize it
-	TwDefine(" GeneralStuff size='300 400' "); // resize bar
+	TwDefine(" GeneralStuff size='300 500' "); // resize bar
 	TwAddSeparator(m_bar, "Misc Data", "");
 	TwAddVarRW(m_bar, "Light Direction", TW_TYPE_DIR3F, &m_vLightDir, "label='Light Direction'");
 	TwAddVarRW(m_bar, "Light Colour", TW_TYPE_COLOR4F, &m_vLightColour, "");
@@ -86,11 +86,11 @@ bool	Checkers::startup()
 
 	//	initialise the GPU Particle emitter variables
 	m_fFiringTimer = 0.0f;
-	m_fFiringInterval = 0.5f;
-	m_fEmitterLifespan = 4.0f;
-	m_fEmitterParticleLifespan = 2.0f;
-	m_uiEmitterMaxParticles = 100;
-	m_fEmitRate = 30.0f;
+	m_fFiringInterval = 0.25f;
+	m_fEmitterLifespan = 3.0f;
+	m_fEmitterParticleLifespan = 1.20f;
+	m_uiEmitterMaxParticles = 10000;
+	m_fEmitRate = 6000.0f;
 	m_iNextEmitterToFire = 0;
 	//	initialise the particle emitters, and it's texture
 	//	Load the particle texture
@@ -167,7 +167,9 @@ bool	Checkers::update()
 	vec4	white(1);
 	vec4	black(0, 0, 0, 1);
 	vec4	blue(0, 0, 1, 1);
+	vec4	lightblue(0.25f, 0.25f, 1.0f, 1.0f);
 	vec4	yellow(1, 1, 0, 1);
+	vec4	gold(1.0f, 1.0f, 0.5f, 1.0f);
 	vec4	green(0, 1, 0, 1);
 	vec4	red(1, 0, 0, 1);
 	//	draw the Gizmos grid
@@ -215,6 +217,7 @@ bool	Checkers::update()
 		xMouse = (2 * (xMouse / 2)) + (zMouse + 1) % 2;
 		if ((xMouse != m_iXSelected) || (zMouse != m_iZSelected))
 		{
+			//	if this square is not already selected then draw it in blue
 			DrawSelectedBox(xMouse, zMouse, fBoxHeight, blue);
 		}
 		if (glfwGetMouseButton(m_window, 0))
@@ -228,12 +231,12 @@ bool	Checkers::update()
 			if (m_fFiringTimer > m_fFiringInterval)
 			{
 				//	just as a debug, fire off the next particle emitter ...
-				vec3	vEmitterPosition = vec3((float)xMouse + 0.5f, fBoxHeight, (float)zMouse + 0.5f);
-				vEmitterPosition = vec3(-4.0f, 2.0f, -2.0f);
+				vec3	vEmitterPosition = vec3((float)xMouse - 3.5f, fBoxHeight, (float)zMouse - 3.5f);
+				//vEmitterPosition = vec3(-4.0f, 2.0f, -2.0f);
 				cout << "Firing Emitter " << m_iNextEmitterToFire << " at location " << vEmitterPosition.x << "/" << vEmitterPosition.y << "/" << vEmitterPosition.z << '\n';
-				m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles, vEmitterPosition, vec3(4.0f, 0.0f, 0.0f), m_fEmitRate,
-					m_fEmitterLifespan, 0.1f * m_fEmitterParticleLifespan, m_fEmitterParticleLifespan, 0.01f, 0.02f,
-					1.0f, 0.1f, 0.1f, blue, yellow, m_iNextEmitterToFire);
+				m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles, vEmitterPosition, vec3(0.0f, 0.02f, 0.0f), m_fEmitRate,
+					m_fEmitterLifespan, 0.1f * m_fEmitterParticleLifespan, m_fEmitterParticleLifespan, 0.4f, 0.7f,
+					0.5f, 0.05f, 0.1f, lightblue, gold, m_iNextEmitterToFire);
 				m_iNextEmitterToFire = (m_iNextEmitterToFire + 1) % c_iNUM_EMITTERS;
 				m_fFiringTimer = 0.0f;
 			}

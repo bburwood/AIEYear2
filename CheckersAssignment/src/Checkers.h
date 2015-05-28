@@ -9,7 +9,7 @@
 
 #include "Game.h"
 
-const	int	c_iNUM_EMITTERS = 4;
+const	int	c_iNUM_EMITTERS = 8;
 
 
 class Checkers : public Application
