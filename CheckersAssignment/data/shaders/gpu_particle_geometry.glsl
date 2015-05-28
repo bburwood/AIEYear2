@@ -24,11 +24,22 @@ void	main()
 {
 	//	calculate a 0 - 1 value for the interpolation of start/end pairs
 	float t = geo_lifetime[0] / geo_lifespan[0];
+	//clamp(t, 0.0f, 1.0f);
+	if (t > 1.0f)
+	{
+		t = 1.0f;
+	}
+	else if (t < 0.0f)
+	{
+		t = 0.0f;
+	}
 	//	interpolate to find the correct colour
 	frag_color = mix(start_colour, end_colour, t);
 
 	//	get half the size of the quad so that the total width and height will be correct
-	float half_size = mix(start_size, end_size, t) * 0.5f;
+	//float half_size = mix(start_size, end_size, t) * 0.5f;
+	float half_size = 0.5f * (start_size + end_size) * t / (start_size + end_size);
+	//float half_size = 0.05f;
 
 	vec3 corners[4];
 	corners[0] = vec3(half_size, -half_size, 0);

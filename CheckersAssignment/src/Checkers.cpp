@@ -70,8 +70,8 @@ bool	Checkers::startup()
 	TwAddVarRW(m_bar, "Start Player", TW_TYPE_INT32, &m_iPlayerToMoveFirst, "min=1 max=2 step=1");
 	TwAddVarRO(m_bar, "Current Player", TW_TYPE_INT32, &m_Game.m_iCurrentPlayer, "");
 	TwAddVarRW(m_bar, "Emitter Lifespan", TW_TYPE_FLOAT, &m_fEmitterLifespan, "min=0.25 max=25 step=0.25");
-	TwAddVarRW(m_bar, "Emitter MaxParticles", TW_TYPE_UINT32, &m_uiEmitterMaxParticles, "min=1000 max=50000 step=100");
-	TwAddVarRW(m_bar, "Emitter Emit Rate", TW_TYPE_FLOAT, &m_fEmitRate, "min=100 max=20000 step=100");
+	TwAddVarRW(m_bar, "Emitter MaxParticles", TW_TYPE_UINT32, &m_uiEmitterMaxParticles, "min=100 max=50000 step=100");
+	TwAddVarRW(m_bar, "Emitter Emit Rate", TW_TYPE_FLOAT, &m_fEmitRate, "min=10 max=20000 step=10");
 	TwAddVarRW(m_bar, "Player 1 Colour", TW_TYPE_COLOR4F, &m_Player1Colour, "");
 	TwAddVarRW(m_bar, "Player 2 Colour", TW_TYPE_COLOR4F, &m_Player2Colour, "");
 	TwAddVarRW(m_bar, "Checkerboard SpecPower", TW_TYPE_FLOAT, &m_fCheckerboardSpecPower, "min=0.0 max=250.0 step=0.5");
@@ -86,12 +86,21 @@ bool	Checkers::startup()
 
 	//	initialise the GPU Particle emitter variables
 	m_fFiringTimer = 0.0f;
-	m_fFiringInterval = 1.0f;
+	m_fFiringInterval = 0.5f;
 	m_fEmitterLifespan = 4.0f;
 	m_fEmitterParticleLifespan = 2.0f;
-	m_uiEmitterMaxParticles = 50000;
-	m_fEmitRate = 30000.0f;
+	m_uiEmitterMaxParticles = 100;
+	m_fEmitRate = 30.0f;
 	m_iNextEmitterToFire = 0;
+	//	initialise the particle emitters, and it's texture
+	//	Load the particle texture
+	LoadAlphaTexture("./textures/particleTexture.png", m_uiParticleTexture);
+	//	and pass the particle texture to all particle emitters
+	for (unsigned int i = 0; i < c_iNUM_EMITTERS; ++i)
+	{
+		m_emitters[i].SetParticleTexture(m_uiParticleTexture);
+	}
+
 
 	m_fCheckerboardSpecPower = 40.0f;
 	m_fCheckerPieceSpecPower = 150.0f;
@@ -216,6 +225,18 @@ bool	Checkers::update()
 			m_iZSelected = zMouse;
 			//	also create a bitboard for the selected piece here <<<<------************
 			m_bPieceSelected = true;	//	as soon as a move is selected set this back to false
+			if (m_fFiringTimer > m_fFiringInterval)
+			{
+				//	just as a debug, fire off the next particle emitter ...
+				vec3	vEmitterPosition = vec3((float)xMouse + 0.5f, fBoxHeight, (float)zMouse + 0.5f);
+				vEmitterPosition = vec3(-4.0f, 2.0f, -2.0f);
+				cout << "Firing Emitter " << m_iNextEmitterToFire << " at location " << vEmitterPosition.x << "/" << vEmitterPosition.y << "/" << vEmitterPosition.z << '\n';
+				m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles, vEmitterPosition, vec3(4.0f, 0.0f, 0.0f), m_fEmitRate,
+					m_fEmitterLifespan, 0.1f * m_fEmitterParticleLifespan, m_fEmitterParticleLifespan, 0.01f, 0.02f,
+					1.0f, 0.1f, 0.1f, blue, yellow, m_iNextEmitterToFire);
+				m_iNextEmitterToFire = (m_iNextEmitterToFire + 1) % c_iNUM_EMITTERS;
+				m_fFiringTimer = 0.0f;
+			}
 		}
 	}
 	if (m_bPieceSelected)
@@ -237,6 +258,11 @@ void	Checkers::draw()
 	DrawModels();
 
 
+	//	now draw any particle emitters
+	for (unsigned int i = 0; i < c_iNUM_EMITTERS; ++i)
+	{
+		m_emitters[i].Draw(1.0f / m_fFPS, m_FlyCamera.m_worldTransform, m_FlyCamera.GetProjectionView());
+	}
 
 	if (m_bDrawGizmos)
 	{
