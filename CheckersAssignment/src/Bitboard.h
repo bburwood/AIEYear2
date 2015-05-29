@@ -35,7 +35,7 @@ extern	Bitboard	bbP2StartKings;
 
 
 extern	void	InitPieceCoordsArray();
-
+extern	Bitboard	GenerateBitMaskFromCoords(int iX, int iZ);
 
 
 #endif	//	_BITBOARD_H_

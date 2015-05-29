@@ -34,5 +34,17 @@ void	InitPieceCoordsArray()
 	}
 }
 
-
+Bitboard	GenerateBitMaskFromCoords(int iX, int iZ)
+{
+	//	assumes that coordinates passed in are valid checkerboard coords
+	Bitboard	bbResult = 0;	//	start with an empty bitboard
+	if ((iX == -1) || (iZ == -1))
+	{
+		//	then one of the coordinates is not on the board
+		return bbResult;
+	}
+	int	iBitIndex = (iZ * 4) + (iX / 2);
+	bbResult = 1 << iBitIndex;
+	return bbResult;
+}
 

@@ -9,7 +9,7 @@
 
 #include "Game.h"
 
-const	int	c_iNUM_EMITTERS = 8;
+const	int	c_iNUM_EMITTERS = 64;
 
 
 class Checkers : public Application
@@ -66,6 +66,8 @@ public:
 private:
 	Game	m_Game;
 	GPUPointEmitter	m_emitters[c_iNUM_EMITTERS];	//	have 4 gpu particle emitters, used for "exploding" pieces when captured
+	vec4	m_CurrentPlayerColour;
+
 	float	m_fFiringTimer;
 	float	m_fFiringInterval;
 	float	m_fEmitterLifespan;

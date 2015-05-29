@@ -68,7 +68,7 @@ bool	Checkers::startup()
 	TwAddSeparator(m_bar, "Game Data", "");
 	TwAddVarRW(m_bar, "Reset Game", TW_TYPE_BOOL8, &m_bResetGame, "");
 	TwAddVarRW(m_bar, "Start Player", TW_TYPE_INT32, &m_iPlayerToMoveFirst, "min=1 max=2 step=1");
-	TwAddVarRO(m_bar, "Current Player", TW_TYPE_INT32, &m_Game.m_iCurrentPlayer, "");
+	TwAddVarRO(m_bar, "Current Player Colour", TW_TYPE_COLOR4F, &m_CurrentPlayerColour, "");
 	TwAddVarRW(m_bar, "Emitter Lifespan", TW_TYPE_FLOAT, &m_fEmitterLifespan, "min=0.25 max=25 step=0.25");
 	TwAddVarRW(m_bar, "Emitter MaxParticles", TW_TYPE_UINT32, &m_uiEmitterMaxParticles, "min=100 max=50000 step=100");
 	TwAddVarRW(m_bar, "Emitter Emit Rate", TW_TYPE_FLOAT, &m_fEmitRate, "min=10 max=20000 step=10");
@@ -86,7 +86,7 @@ bool	Checkers::startup()
 
 	//	initialise the GPU Particle emitter variables
 	m_fFiringTimer = 0.0f;
-	m_fFiringInterval = 0.25f;
+	m_fFiringInterval = 0.10f;
 	m_fEmitterLifespan = 3.0f;
 	m_fEmitterParticleLifespan = 1.20f;
 	m_uiEmitterMaxParticles = 10000;
@@ -124,6 +124,8 @@ bool	Checkers::startup()
 
 	ReloadShader();
 	m_iPlayerToMoveFirst = 1;
+	m_CurrentPlayerColour = m_Player1Colour;
+
 	m_Game.ResetGame(m_iPlayerToMoveFirst);
 
 	return true;
@@ -151,7 +153,14 @@ bool	Checkers::update()
 	{
 		ReloadShader();
 	}
-
+	if (m_Game.m_iCurrentPlayer == 1)
+	{
+		m_CurrentPlayerColour = m_Player1Colour;
+	}
+	else
+	{
+		m_CurrentPlayerColour = m_Player2Colour;
+	}
 	float	dT = (float)glfwGetTime();
 	glfwSetTime(0.0f);
 	m_fFPS = (float)(1.0f / dT);
@@ -190,55 +199,61 @@ bool	Checkers::update()
 //		cout << "PlanePos (X/Y/Z): " << vPlanePos.x << " / " << vPlanePos.y << " / " << vPlanePos.z << '\n';
 //		m_timer = 0.0f;
 //	}
-	int	xMouse, zMouse;
+	int	iXMouse, iZMouse;
 	if ((vPlanePos.x < -4.0) || (vPlanePos.x > 4.0))
 	{
-		xMouse = -1;	//	mouse is outside the board
+		iXMouse = -1;	//	mouse is outside the board
 	}
 	else
 	{
 		//	calculate the x coordinate on the board
-		xMouse = (int)(vPlanePos.x + 4);
+		iXMouse = (int)(vPlanePos.x + 4);
 	}
 	if ((vPlanePos.z < -4.0) || (vPlanePos.z > 4.0))
 	{
-		zMouse = -1;	//	mouse is outside the board
+		iZMouse = -1;	//	mouse is outside the board
 	}
 	else
 	{
 		//	calculate the z coordinate on the board
-		zMouse = (int)(vPlanePos.z + 4);
+		iZMouse = (int)(vPlanePos.z + 4);
 	}
 	float	fBoxHeight = 0.35f;	//	Y-coordinate of any squares to draw
-	if ((xMouse != -1) && (zMouse != -1))
+	if ((iXMouse != -1) && (iZMouse != -1))
 	{
 		//	the mouse is on the board so draw a box on the relevant square
 		//	first we need to "fix" the x position so only on the black squares are selected
-		xMouse = (2 * (xMouse / 2)) + (zMouse + 1) % 2;
-		if ((xMouse != m_iXSelected) || (zMouse != m_iZSelected))
+		iXMouse = (2 * (iXMouse / 2)) + (iZMouse + 1) % 2;
+		Bitboard	bbSelectedSquare = GenerateBitMaskFromCoords(iXMouse, iZMouse);
+		//cout << "Selected move Bitboard: " << bbValidMove << '\n';
+		if ((bbSelectedSquare > 0) && ((bbSelectedSquare & m_Game.m_P1Pieces) || (bbSelectedSquare & m_Game.m_P2Pieces)))
 		{
-			//	if this square is not already selected then draw it in blue
-			DrawSelectedBox(xMouse, zMouse, fBoxHeight, blue);
-		}
-		if (glfwGetMouseButton(m_window, 0))
-		{
-			//	user has clicked on the board, so select the appropriate piece
-			//	will also need to do checks for correct player here as well
-			m_iXSelected = xMouse;
-			m_iZSelected = zMouse;
-			//	also create a bitboard for the selected piece here <<<<------************
-			m_bPieceSelected = true;	//	as soon as a move is selected set this back to false
-			if (m_fFiringTimer > m_fFiringInterval)
+			//	then we have clicked on a valid piece
+			if ((iXMouse != m_iXSelected) || (iZMouse != m_iZSelected))
 			{
-				//	just as a debug, fire off the next particle emitter ...
-				vec3	vEmitterPosition = vec3((float)xMouse - 3.5f, fBoxHeight, (float)zMouse - 3.5f);
-				//vEmitterPosition = vec3(-4.0f, 2.0f, -2.0f);
-				cout << "Firing Emitter " << m_iNextEmitterToFire << " at location " << vEmitterPosition.x << "/" << vEmitterPosition.y << "/" << vEmitterPosition.z << '\n';
-				m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles, vEmitterPosition, vec3(0.0f, 0.02f, 0.0f), m_fEmitRate,
-					m_fEmitterLifespan, 0.1f * m_fEmitterParticleLifespan, m_fEmitterParticleLifespan, 0.4f, 0.7f,
-					0.5f, 0.05f, 0.1f, lightblue, gold, m_iNextEmitterToFire);
-				m_iNextEmitterToFire = (m_iNextEmitterToFire + 1) % c_iNUM_EMITTERS;
-				m_fFiringTimer = 0.0f;
+				//	if this square is not already selected then draw it in blue
+				DrawSelectedBox(iXMouse, iZMouse, fBoxHeight, blue);
+			}
+			if (glfwGetMouseButton(m_window, 0))
+			{
+				//	user has clicked on the board, so select the appropriate piece
+				//	will also need to do checks for correct player here as well
+				m_iXSelected = iXMouse;
+				m_iZSelected = iZMouse;
+				//	also create a bitboard for the selected piece here <<<<------************
+				m_bPieceSelected = true;	//	as soon as a move is selected set this back to false
+				if (m_fFiringTimer > m_fFiringInterval)
+				{
+					//	just as a debug, fire off the next particle emitter ...
+					vec3	vEmitterPosition = vec3((float)iXMouse - 3.5f, fBoxHeight, (float)iZMouse - 3.5f);
+					//vEmitterPosition = vec3(-4.0f, 2.0f, -2.0f);
+					cout << "Firing Emitter " << m_iNextEmitterToFire << " at location " << vEmitterPosition.x << "/" << vEmitterPosition.y << "/" << vEmitterPosition.z << '\n';
+					m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles, vEmitterPosition, vec3(0.0f, 0.4f, 0.0f), m_fEmitRate,
+						m_fEmitterLifespan, 0.1f * m_fEmitterParticleLifespan, m_fEmitterParticleLifespan, 0.4f, 0.7f,
+						0.5f, 0.05f, 0.1f, lightblue, gold, m_iNextEmitterToFire);
+					m_iNextEmitterToFire = (m_iNextEmitterToFire + 1) % c_iNUM_EMITTERS;
+					m_fFiringTimer = 0.0f;
+				}
 			}
 		}
 	}
