@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\Gizmos.cpp" />
+    <ClCompile Include="src\gl_core_4_4.c" />
+    <ClCompile Include="src\heatmap.c" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\HeatmapProject.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Application.h" />
+    <ClInclude Include="src\Camera.h" />
+    <ClInclude Include="src\Gizmos.h" />
+    <ClInclude Include="src\gl_core_4_4.h" />
+    <ClInclude Include="src\heatmap.h" />
+    <ClInclude Include="src\HeatmapProject.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="ResourceFiles">
+      <UniqueIdentifier>{b4241bbe-dcb6-4926-91e1-6f4e0920bcbd}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\shaders\textured_fragment.glsl">
+      <Filter>ResourceFiles</Filter>
+    </None>
+    <None Include="data\shaders\textured_vertex.glsl">
+      <Filter>ResourceFiles</Filter>
+    </None>
+  </ItemGroup>
+</Project>
