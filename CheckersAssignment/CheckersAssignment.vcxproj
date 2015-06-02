@@ -90,6 +90,7 @@
     <ClCompile Include="src\GPUEmitter.cpp" />
     <ClCompile Include="src\GPUParticles.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Player.cpp" />
     <ClCompile Include="src\tiny_obj_loader.cc" />
     <ClCompile Include="src\Utility.cpp" />
   </ItemGroup>
@@ -104,6 +105,7 @@
     <ClInclude Include="src\gl_core_4_4.h" />
     <ClInclude Include="src\GPUEmitter.h" />
     <ClInclude Include="src\GPUParticles.h" />
+    <ClInclude Include="src\Player.h" />
     <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\tiny_obj_loader.h" />
     <ClInclude Include="src\Utility.h" />

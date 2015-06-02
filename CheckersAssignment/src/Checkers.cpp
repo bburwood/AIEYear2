@@ -153,7 +153,7 @@ bool	Checkers::update()
 	{
 		ReloadShader();
 	}
-	if (m_Game.m_iCurrentPlayer == 1)
+	if (m_Game.m_oGameState.m_iCurrentPlayer == 1)
 	{
 		m_CurrentPlayerColour = m_Player1Colour;
 	}
@@ -226,7 +226,7 @@ bool	Checkers::update()
 		iXMouse = (2 * (iXMouse / 2)) + (iZMouse + 1) % 2;
 		Bitboard	bbSelectedSquare = GenerateBitMaskFromCoords(iXMouse, iZMouse);
 		//cout << "Selected move Bitboard: " << bbValidMove << '\n';
-		if ((bbSelectedSquare > 0) && ((bbSelectedSquare & m_Game.m_P1Pieces) || (bbSelectedSquare & m_Game.m_P2Pieces)))
+		if ((bbSelectedSquare > 0) && ((bbSelectedSquare & m_Game.m_oGameState.m_P1Pieces) || (bbSelectedSquare & m_Game.m_oGameState.m_P2Pieces)))
 		{
 			//	then we have clicked on a valid piece
 			if ((iXMouse != m_iXSelected) || (iZMouse != m_iZSelected))
@@ -240,23 +240,39 @@ bool	Checkers::update()
 				//	will also need to do checks for correct player here as well
 				m_iXSelected = iXMouse;
 				m_iZSelected = iZMouse;
+				m_Game.MouseClickedOnBoardAt(iXMouse, iZMouse);
 				//	also create a bitboard for the selected piece here <<<<------************
 				m_bPieceSelected = true;	//	as soon as a move is selected set this back to false
 				if (m_fFiringTimer > m_fFiringInterval)
 				{
 					//	just as a debug, fire off the next particle emitter ...
 					vec3	vEmitterPosition = vec3((float)iXMouse - 3.5f, fBoxHeight, (float)iZMouse - 3.5f);
-					//vEmitterPosition = vec3(-4.0f, 2.0f, -2.0f);
-					cout << "Firing Emitter " << m_iNextEmitterToFire << " at location " << vEmitterPosition.x << "/" << vEmitterPosition.y << "/" << vEmitterPosition.z << '\n';
-					m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles, vEmitterPosition, vec3(0.0f, 0.4f, 0.0f), m_fEmitRate,
+					//cout << "Firing Emitter " << m_iNextEmitterToFire << " at location " << vEmitterPosition.x << "/" << vEmitterPosition.y << "/" << vEmitterPosition.z << '\n';
+					m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles, vEmitterPosition, vec3(0.0f, 0.04f, 0.0f), m_fEmitRate,
 						m_fEmitterLifespan, 0.1f * m_fEmitterParticleLifespan, m_fEmitterParticleLifespan, 0.4f, 0.7f,
 						0.5f, 0.05f, 0.1f, lightblue, gold, m_iNextEmitterToFire);
 					m_iNextEmitterToFire = (m_iNextEmitterToFire + 1) % c_iNUM_EMITTERS;
 					m_fFiringTimer = 0.0f;
 				}
 			}
+			else
+			{
+				//	no mouse click, so feed through error coords
+				m_Game.MouseClickedOnBoardAt(-1, -1);
+			}
+		}
+		else
+		{
+			//	we are still on the board, so check for a closing mouse click on an empty square
+			if (glfwGetMouseButton(m_window, 0))
+			{
+				m_Game.MouseClickedOnBoardAt(iXMouse, iZMouse);
+			}
 		}
 	}
+
+	m_Game.update(dT);
+
 	if (m_bPieceSelected)
 	{
 		DrawSelectedBox(m_iXSelected, m_iZSelected, fBoxHeight, yellow);
@@ -729,10 +745,10 @@ void	Checkers::DrawModels()
 	glUniform3fv(iCheckerColourUniform, 1, (float*)&vPieceColour.rgb);
 
 	//	get a copy of the bitboards
-	Bitboard	bbP1Pieces = m_Game.m_P1Pieces;
-	Bitboard	bbP1Kings = m_Game.m_P1Kings;
-	Bitboard	bbP2Pieces = m_Game.m_P2Pieces;
-	Bitboard	bbP2Kings = m_Game.m_P2Kings;
+	Bitboard	bbP1Pieces = m_Game.m_oGameState.m_P1Pieces;
+	Bitboard	bbP1Kings = m_Game.m_oGameState.m_P1Kings;
+	Bitboard	bbP2Pieces = m_Game.m_oGameState.m_P2Pieces;
+	Bitboard	bbP2Kings = m_Game.m_oGameState.m_P2Kings;
 	for (int i = 0; i < 32; ++i)
 	{
 		if ((bbP1Pieces & bbP1Kings & (0x00000001 << i)) > 0)
