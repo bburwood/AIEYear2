@@ -78,7 +78,9 @@ Bitboard	GetCurrentAvailableMoves(int a_iPlayer, Bitboard a_bbP1Pieces, Bitboard
 		Bitboard	bbP2AllShift4 = (a_bbP1Pieces >> 4) & (!bbAllPieces);	//	can a piece move to the main next row position
 	}
 
-	return bbResult;
+	//	Just for testing!!!!
+	return 0x000FF000;
+	//return bbResult;
 }
 
 Bitboard	CheckForCaptureMoves(int a_iPlayer, Bitboard a_bbP1Pieces, Bitboard a_bbP1Kings, Bitboard a_bbP2Pieces, Bitboard a_bbP2Kings)
