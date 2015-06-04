@@ -41,24 +41,26 @@ void	Player::update(float dT, GameState a_oCurrentGameState)
 				//	it has just become my turn, so set relevant flags
 				m_bNotMyTurn = false;
 				m_bPieceSelected = false;
+				m_bMoveInProgress = false;
 				m_bMoveCompleted = false;
 				//	clear any old move information
 				m_oSelectedMove.StartPos = 0;
 				m_oSelectedMove.EndPos = 0;
 			}
-			if ((m_iMouseX != -1) && (m_iMouseY != -1))
+			if ((m_iMouseX != -1) && (m_iMouseY != -1) && !m_bMoveInProgress && !m_bMoveCompleted)
 			{
 				//	then the mouse has been clicked somewhere on the board
 				Bitboard	bbMouseClick = GenerateBitMaskFromCoords(m_iMouseX, m_iMouseY);
-				Bitboard	bbAvailableMoves = GetCurrentAvailableMoves(a_oCurrentGameState.m_iCurrentPlayer, a_oCurrentGameState.m_P1Pieces, a_oCurrentGameState.m_P1Kings, a_oCurrentGameState.m_P2Pieces, a_oCurrentGameState.m_P2Kings);
+				Bitboard	bbAvailableMoves = GetCurrentAvailableMovers(a_oCurrentGameState);
 				if ((bbMouseClick & bbAvailableMoves) > 0)
 				{
 					//	then we have a click on a piece with a valid move
 					m_oSelectedMove.StartPos = bbMouseClick;
+					m_bPieceSelected = true;
 				}
-				if (m_oSelectedMove.StartPos > 0)
+				else if (m_bPieceSelected && (m_oSelectedMove.StartPos > 0) && (bbMouseClick != m_oSelectedMove.StartPos))
 				{
-					//	we have a valid start move recorded, check if this is a valid empty square to move to
+					//	we have a valid start move recorded, and the mouse has clicked somewhere else, check if this is a valid empty square to move to
 					Bitboard	bbEmptySquares = GetEmptySquares(a_oCurrentGameState.m_P1Pieces, a_oCurrentGameState.m_P2Pieces);
 					if ((bbMouseClick & bbEmptySquares) > 0)
 					{
@@ -70,12 +72,32 @@ void	Player::update(float dT, GameState a_oCurrentGameState)
 						{
 							//	then we have a valid move, so make it!
 							m_pGame->MakeMove(oTestMove);
+							m_bMoveInProgress = true;
+							if (IsCaptureMove(oTestMove))
+							{
+								m_oSelectedMove.StartPos = oTestMove.EndPos;
+							}
+							else
+							{
+								m_bMoveInProgress = false;
+								m_bMoveCompleted = true;
+							}
 						}
 					}
 				}
 			}
-		}
+			else
+			{
+				if (m_bMoveInProgress)
+				{
+					//	continue capture move from current selected startpos
+					//	only need to test if the current piece can jump
+					//	(do not automatically select the jump, as there may be more than 1 option - use the mouse click as the selection)
 
+				}
+
+			}
+		}
 	}
 	else
 	{
@@ -118,7 +140,7 @@ float	Player::ScoreCurrentBoard(int a_iPlayer, Bitboard a_bbP1Pieces, Bitboard a
 
 void	Player::MakeMoveDecision()
 {
-
+	//	AI function to look for a move ...
 }
 
 void	Player::MouseClickedOnBoardAt(int iBoardX, int iBoardY)
@@ -126,34 +148,4 @@ void	Player::MouseClickedOnBoardAt(int iBoardX, int iBoardY)
 	//	set values based on what is passed through
 	m_iMouseX = iBoardX;
 	m_iMouseY = iBoardY;
-}
-
-bool	Player::ValidMove(Move a_oTestMove, GameState a_oCurrentState)
-{
-	//	This function takes in a move and a game state and returns whether the move is a valid move or not
-	//	Useful information found on this web page:
-	//	http://www.3dkingdoms.com/checkers/bitboards.htm
-	bool	bResult = false;
-
-	if (a_oCurrentState.m_iCurrentPlayer == 1)
-	{
-		//	check if a valid move for player 1
-		//	first check if this is a king
-		if ((a_oTestMove.StartPos & a_oCurrentState.m_P1Kings) > 1)
-		{
-			//	it is a king so check for valid king moves
-		}
-		else
-		{
-			//	it is not a king, so check for valid man moves
-		}
-	}
-	else
-	{
-		//	check if a valid move for player 2
-	}
-
-	return true;	//	just for testing ...
-
-//	return bResult;
 }

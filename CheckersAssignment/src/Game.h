@@ -16,6 +16,7 @@ public:
 	void	DecideMove();
 	void	ResetGame(int a_iFirstMover);
 	void	MouseClickedOnBoardAt(int iBoardX, int iBoardY);
+	void	EndTurn();
 //	void	xxx();
 
 	GameState	m_oGameState;	//	current state of the game

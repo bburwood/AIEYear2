@@ -23,7 +23,7 @@ public:
 	float	ScoreCurrentBoard(int a_iPlayer, Bitboard a_bbP1Pieces, Bitboard a_bbP1Kings, Bitboard a_bbP2Pieces, Bitboard a_bbP2Kings);
 	void	MakeMoveDecision();
 	void	MouseClickedOnBoardAt(int iBoardX, int iBoardY);
-	bool	ValidMove(Move a_oTestMove, GameState a_oCurrentState);
+	//bool	ValidMove(Move a_oTestMove, GameState a_oCurrentState);
 
 
 	PlayerType	m_ePlayerType;	//	public so that it can be easily accessed and changed from AntTweakBar
@@ -38,6 +38,7 @@ private:
 	Game*	m_pGame;	//	so we can call the game to return moves once decided
 	bool	m_bNotMyTurn;
 	bool	m_bPieceSelected;
+	bool	m_bMoveInProgress;
 	bool	m_bMoveCompleted;
 };
 

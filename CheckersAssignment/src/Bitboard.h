@@ -38,6 +38,7 @@ struct Move
 	Bitboard	EndPos;
 };
 
+extern	Bitboard	abbSquareMasks[32];
 extern	vec3 aPieceCoords[32];
 extern	vec3 aKingCoords[32];
 extern	Bitboard	bbP1StartPieces;
@@ -48,11 +49,13 @@ extern	Bitboard	bbP2StartKings;
 
 extern	void	InitPieceCoordsArray();
 extern	Bitboard	GenerateBitMaskFromCoords(int iX, int iZ);
-extern	Bitboard	GetCurrentAvailableMoves(int a_iPlayer, Bitboard a_bbP1Pieces, Bitboard a_bbP1Kings, Bitboard a_bbP2Pieces, Bitboard a_bbP2Kings);
-extern	Bitboard	CheckForCaptureMoves(int a_iPlayer, Bitboard a_bbP1Pieces, Bitboard a_bbP1Kings, Bitboard a_bbP2Pieces, Bitboard a_bbP2Kings);
+extern	int	GetFirstBitNumber(Bitboard a_bbBoard);
+extern	Bitboard	GetCurrentAvailableMovers(GameState a_oCurrentState);
+extern	Bitboard	CheckForCaptureMoves(GameState a_oCurrentState);
 extern	Bitboard	GetEmptySquares(Bitboard a_bbP1Pieces, Bitboard a_bbP2Pieces);
 //	May need to add a CheckForCaptureContinue function for the multi capture move cases.
 extern	int			CountPieces(Bitboard a_bbBoard);
-
+extern	bool	ValidMove(Move a_oTestMove, GameState a_oCurrentState);
+extern	bool	IsCaptureMove(Move a_oMove);
 
 #endif	//	_BITBOARD_H_
