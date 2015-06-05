@@ -25,6 +25,7 @@
 #include "AdvancedNavigation.h"
 #include "PhysicallyBasedRendering.h"
 #include "GameTreeSearch.h"
+#include "PhysicsApp.h"
 
 int main()
 {
@@ -43,11 +44,12 @@ int main()
 //	RenderTargets	app;
 //	PostProcess	app;
 //	Shadows	app;
-	Deferred	app;
+//	Deferred	app;
 //	ProceduralGeneration	app;
 //	AdvancedNavigation	app;
 //	PhysicallyBasedRendering	app;
 //	GameTreeSearch app;
+	PhysicsApp	app;
 
 	if (app.startup() == false)
 	{

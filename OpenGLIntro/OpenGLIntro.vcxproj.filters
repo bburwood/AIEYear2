@@ -46,6 +46,9 @@
     <Filter Include="GameTreeSearch">
       <UniqueIdentifier>{eccb5790-e371-47c6-b711-5b7f15576ed4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="PhysicsEngine">
+      <UniqueIdentifier>{3d70d718-7016-4ad3-be66-371a3d7a1284}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -162,6 +165,15 @@
     <ClInclude Include="src\GameTreeSearch.h">
       <Filter>GameTreeSearch</Filter>
     </ClInclude>
+    <ClInclude Include="src\PhysicsApp.h">
+      <Filter>PhysicsEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BBPhysics.h">
+      <Filter>PhysicsEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BBPhysicsObject.h">
+      <Filter>PhysicsEngine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\gl_core_4_4.c">
@@ -253,6 +265,15 @@
     </ClCompile>
     <ClCompile Include="src\GameTreeSearch.cpp">
       <Filter>GameTreeSearch</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PhysicsApp.cpp">
+      <Filter>PhysicsEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BBPhysics.cpp">
+      <Filter>PhysicsEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BBPhysicsObject.cpp">
+      <Filter>PhysicsEngine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

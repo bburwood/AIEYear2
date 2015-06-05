@@ -740,8 +740,8 @@ void Gizmos::add2DAABB(const glm::vec2& a_center, const glm::vec2& a_extents, co
 
 	verts[0] = a_center - vX - vY;
 	verts[1] = a_center + vX - vY;
-	verts[2] = a_center - vX + vY;
-	verts[3] = a_center + vX + vY;
+	verts[2] = a_center + vX + vY;
+	verts[3] = a_center - vX + vY;
 
 	add2DLine(verts[0], verts[1], a_colour, a_colour);
 	add2DLine(verts[1], verts[2], a_colour, a_colour);
