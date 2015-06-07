@@ -12,6 +12,7 @@
 //	when the game window appears)
 
 #include "GLMHeader.h"
+#include <vector>
 
 typedef	unsigned int	Bitboard;
 
@@ -27,35 +28,45 @@ struct GameState
 	int	m_iCurrentPlayer;	//	who's turn is it?
 	//	and where are all the pieces?
 	Bitboard	m_P1Pieces;
-	Bitboard	m_P1Kings;
 	Bitboard	m_P2Pieces;
-	Bitboard	m_P2Kings;
+	Bitboard	m_Kings;
 };
 
 struct Move
 {
 	Bitboard	StartPos;
 	Bitboard	EndPos;
+	bool	bJumper;
 };
 
 extern	Bitboard	abbSquareMasks[32];
 extern	vec3 aPieceCoords[32];
 extern	vec3 aKingCoords[32];
 extern	Bitboard	bbP1StartPieces;
-extern	Bitboard	bbP1StartKings;
 extern	Bitboard	bbP2StartPieces;
-extern	Bitboard	bbP2StartKings;
+extern	Bitboard	bbStartKings;
+extern	Bitboard	bbP1KingRow;
+extern	Bitboard	bbP2KingRow;
 
 
 extern	void	InitPieceCoordsArray();
 extern	Bitboard	GenerateBitMaskFromCoords(int iX, int iZ);
+extern	int	GetBitIndexFromXY(int iX, int iZ);
+extern	int	GetBitIndex(Bitboard a_bbBoard);
+extern	int	GetBoardXCoord(Bitboard a_bbBoard);
+extern	int	GetBoardYCoord(Bitboard a_bbBoard);
+extern	int	GetXOffsetFromRow(int a_iRow);
+extern	int	GetBoardXCoordFromIndex(int a_iIndex);
+extern	int	GetBoardYCoordFromIndex(int a_iIndex);
 extern	int	GetFirstBitNumber(Bitboard a_bbBoard);
-extern	Bitboard	GetCurrentAvailableMovers(GameState a_oCurrentState);
+extern	Bitboard	GetPlayerJumpers(int a_iPlayer, GameState a_oCurrentState);
+extern	Bitboard	GetCurrentAvailableMovers(GameState a_oCurrentState, bool &a_bJumpers);
 extern	Bitboard	CheckForCaptureMoves(GameState a_oCurrentState);
 extern	Bitboard	GetEmptySquares(Bitboard a_bbP1Pieces, Bitboard a_bbP2Pieces);
 //	May need to add a CheckForCaptureContinue function for the multi capture move cases.
-extern	int			CountPieces(Bitboard a_bbBoard);
+extern	int		CountPieces(Bitboard a_bbBoard);
 extern	bool	ValidMove(Move a_oTestMove, GameState a_oCurrentState);
+extern	void	GenerateMovesForMover(int a_iMover, GameState a_oGameState, std::vector<Move> &a_aMoveList, bool a_bJumper);
 extern	bool	IsCaptureMove(Move a_oMove);
 
 #endif	//	_BITBOARD_H_

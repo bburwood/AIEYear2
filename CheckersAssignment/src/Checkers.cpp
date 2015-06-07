@@ -62,12 +62,15 @@ bool	Checkers::startup()
 	TwAddVarRW(m_bar, "Ambient Colour", TW_TYPE_COLOR4F, &m_vAmbientLightColour, "");
 	TwAddVarRW(m_bar, "Clear Colour", TW_TYPE_COLOR4F, &m_BackgroundColour, "");
 	TwAddVarRW(m_bar, "Draw Gizmos", TW_TYPE_BOOL8, &m_bDrawGizmos, "");
+	TwAddVarRW(m_bar, "Draw Debug Gizmos", TW_TYPE_BOOL8, &m_bDebug, "");
 	TwAddVarRW(m_bar, "Camera Speed", TW_TYPE_FLOAT, &m_FlyCamera.m_fSpeed, "min=1 max=250 step=1");
 	TwAddVarRO(m_bar, "FPS", TW_TYPE_FLOAT, &m_fFPS, "");
 
 	TwAddSeparator(m_bar, "Game Data", "");
 	TwAddVarRW(m_bar, "Reset Game", TW_TYPE_BOOL8, &m_bResetGame, "");
 	TwAddVarRW(m_bar, "Start Player", TW_TYPE_INT32, &m_iPlayerToMoveFirst, "min=1 max=2 step=1");
+	TwAddVarRW(m_bar, "No Capture Turn Limiting Moves", TW_TYPE_INT32, &m_Game.m_iNoCaptureTurnsLimit, "min=10 max=100 step=2");
+	TwAddVarRO(m_bar, "Current No Capture Move Count", TW_TYPE_INT32, &m_Game.m_iTurnsSinceLastCapture, "");
 	TwAddVarRO(m_bar, "Current Player Colour", TW_TYPE_COLOR4F, &m_CurrentPlayerColour, "");
 	TwAddVarRW(m_bar, "Emitter Lifespan", TW_TYPE_FLOAT, &m_fEmitterLifespan, "min=0.25 max=25 step=0.25");
 	TwAddVarRW(m_bar, "Emitter MaxParticles", TW_TYPE_UINT32, &m_uiEmitterMaxParticles, "min=100 max=50000 step=100");
@@ -125,8 +128,11 @@ bool	Checkers::startup()
 	ReloadShader();
 	m_iPlayerToMoveFirst = 1;
 	m_CurrentPlayerColour = m_Player1Colour;
+	m_bDebug = true;
 
 	m_Game.ResetGame(m_iPlayerToMoveFirst);
+	m_Game.SetCheckersPointer(this);
+	m_Game.SetPlayerCheckersPointer(this);
 
 	return true;
 }
@@ -232,27 +238,25 @@ bool	Checkers::update()
 			if ((iXMouse != m_iXSelected) || (iZMouse != m_iZSelected))
 			{
 				//	if this square is not already selected then draw it in blue
-				DrawSelectedBox(iXMouse, iZMouse, fBoxHeight, blue);
+				DrawSelectedBox(iXMouse, iZMouse, 1.0f, fBoxHeight, blue);
 			}
 			if (glfwGetMouseButton(m_window, 0))
 			{
 				//	user has clicked on the board, so select the appropriate piece
 				//	will also need to do checks for correct player here as well
-				m_iXSelected = iXMouse;
-				m_iZSelected = iZMouse;
+				//m_iXSelected = iXMouse;
+				//m_iZSelected = iZMouse;
 				m_Game.MouseClickedOnBoardAt(iXMouse, iZMouse);
 				//	also create a bitboard for the selected piece here <<<<------************
-				m_bPieceSelected = true;	//	as soon as a move is selected set this back to false
+				m_Game.GetSelectedMoveDetails(m_bPieceSelected, m_iXSelected, m_iZSelected);
+				//m_bPieceSelected = true;	//	as soon as a move is selected set this back to false
 				if (m_fFiringTimer > m_fFiringInterval)
 				{
 					//	just as a debug, fire off the next particle emitter ...
-					vec3	vEmitterPosition = vec3((float)iXMouse - 3.5f, fBoxHeight, (float)iZMouse - 3.5f);
-					//cout << "Firing Emitter " << m_iNextEmitterToFire << " at location " << vEmitterPosition.x << "/" << vEmitterPosition.y << "/" << vEmitterPosition.z << '\n';
-					m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles, vEmitterPosition, vec3(0.0f, 0.04f, 0.0f), m_fEmitRate,
-						m_fEmitterLifespan, 0.1f * m_fEmitterParticleLifespan, m_fEmitterParticleLifespan, 0.4f, 0.7f,
-						0.5f, 0.05f, 0.1f, lightblue, gold, m_iNextEmitterToFire);
-					m_iNextEmitterToFire = (m_iNextEmitterToFire + 1) % c_iNUM_EMITTERS;
-					m_fFiringTimer = 0.0f;
+					if (m_bPieceSelected)
+					{
+						//FireEmitterAt(m_iXSelected, m_iZSelected, fBoxHeight);	//	function resets the firing timer
+					}
 				}
 			}
 			else
@@ -272,10 +276,23 @@ bool	Checkers::update()
 	}
 
 	m_Game.update(dT);
+	m_Game.GetSelectedMoveDetails(m_bPieceSelected, m_iXSelected, m_iZSelected);
+	
+	//	debug draw stuff ...
+	//m_bDebug = true;
+	if (m_bDebug)
+	{
+		bool	bJumpers = false;
+		bbDAvailableMovers = GetCurrentAvailableMovers(m_Game.m_oGameState, bJumpers);
+		//	and draw them ...
+		DrawBitboardAsBoxes(bbDAvailableMovers, 0.9f, gold);
+		DebugDrawMoveList(0.1f, gold);
+	}
+
 
 	if (m_bPieceSelected)
 	{
-		DrawSelectedBox(m_iXSelected, m_iZSelected, fBoxHeight, yellow);
+		DrawSelectedBox(m_iXSelected, m_iZSelected, 1.0f, fBoxHeight, yellow);
 	}
 
 
@@ -283,14 +300,42 @@ bool	Checkers::update()
 	return true;
 }
 
+void	Checkers::DrawBitboardAsBoxes(Bitboard a_bbBoard, float a_fBoxSize, vec4 a_vColour)
+{
+	for (unsigned int i = 0; i < 32; ++i)
+	{
+		if ((a_bbBoard & abbSquareMasks[i]) > 0)
+		{
+			//	then we have a piece here so draw a box for it
+			DrawSelectedBox(GetBoardXCoordFromIndex(i), GetBoardYCoordFromIndex(i), a_fBoxSize, 0.15f, a_vColour);
+		}
+	}
+}
+
+void	Checkers::DebugDrawMoveList(float a_fHeight, vec4 a_vColour)
+{
+	//	simply draws a line on the board, at the height and colour passed in, for every move in the current move list vector
+	float	fStartX = -3.5f;
+	float	fStartZ = -3.5f;
+	int	iStartX;
+	int	iStartZ;
+	int	iEndX;
+	int	iEndZ;
+	for (int i = 0; i < m_Game.m_aMoveList.size(); ++i)
+	{
+		iStartX = GetBoardXCoord(m_Game.m_aMoveList[i].StartPos);
+		iStartZ = GetBoardYCoord(m_Game.m_aMoveList[i].StartPos);
+		iEndX = GetBoardXCoord(m_Game.m_aMoveList[i].EndPos);
+		iEndZ = GetBoardYCoord(m_Game.m_aMoveList[i].EndPos);
+		Gizmos::addLine(vec3(fStartX + iStartX, a_fHeight, fStartZ + iStartZ), vec3(fStartX + iEndX, a_fHeight, fStartZ + iEndZ), a_vColour);
+	}
+}
+
 void	Checkers::draw()
 {
 	Application::draw();
 
-
-
 	DrawModels();
-
 
 	//	now draw any particle emitters
 	for (unsigned int i = 0; i < c_iNUM_EMITTERS; ++i)
@@ -305,6 +350,72 @@ void	Checkers::draw()
 	TwDraw();
 	glfwSwapBuffers(m_window);
 	glfwPollEvents();
+}
+
+void	Checkers::FireEmitterAt(int a_iXIndex, int a_iZindex, float a_fHeight)
+{
+	//	fires a smaller emitter with fewer particles, and shorter emitter and particle lifespan, when a piece is clicked on
+	vec3	vEmitterPosition = vec3((float)a_iXIndex - 3.5f, a_fHeight, (float)a_iZindex - 3.5f);
+	vec4	lightblue(0.25f, 0.25f, 1.0f, 1.0f);
+	vec4	gold(1.0f, 1.0f, 0.5f, 1.0f);
+	//cout << "Firing Emitter " << m_iNextEmitterToFire << " at location " << vEmitterPosition.x << "/" << vEmitterPosition.y << "/" << vEmitterPosition.z << '\n';
+	if (m_fFiringTimer > m_fFiringInterval)
+	{
+		m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles * 0.5f, vEmitterPosition, vec3(0.0f, 0.04f, 0.0f), m_fEmitRate * 0.5f,
+			m_fEmitterLifespan * 0.75f, 0.1f * m_fEmitterParticleLifespan, 0.75f * m_fEmitterParticleLifespan, 0.15f, 0.35f,
+			0.5f, 0.05f, 0.1f, lightblue, gold, m_iNextEmitterToFire);
+		m_iNextEmitterToFire = (m_iNextEmitterToFire + 1) % c_iNUM_EMITTERS;
+		m_fFiringTimer = 0.0f;
+	}
+}
+
+void	Checkers::FireCaptureEmitterAt(int a_iXIndex, int a_iZindex, float a_fHeight)
+{
+	//	fires a larger emitter with the full particle count, when a piece is captured
+	//	typically called by the player in the check for if the move made is a capture move
+	vec3	vEmitterPosition = vec3((float)a_iXIndex - 3.5f, a_fHeight, (float)a_iZindex - 3.5f);
+	vec4	lightblue(0.25f, 0.25f, 1.0f, 1.0f);
+	vec4	gold(1.0f, 1.0f, 0.5f, 1.0f);
+	//cout << "Firing Emitter " << m_iNextEmitterToFire << " at location " << vEmitterPosition.x << "/" << vEmitterPosition.y << "/" << vEmitterPosition.z << '\n';
+	m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles, vEmitterPosition, vec3(0.0f, 0.10f, 0.0f), m_fEmitRate,
+		m_fEmitterLifespan, 0.1f * m_fEmitterParticleLifespan, m_fEmitterParticleLifespan, 0.4f, 0.7f,
+		0.5f, 0.05f, 0.1f, lightblue, gold, m_iNextEmitterToFire);
+	m_iNextEmitterToFire = (m_iNextEmitterToFire + 1) % c_iNUM_EMITTERS;
+	m_fFiringTimer = 0.0f;
+}
+
+void	Checkers::FireGameOverEmitterAt(int a_iXIndex, int a_iZindex, float a_fHeight, int a_iWinner)
+{
+	//	fires a larger emitter with the full particle count, when a piece is captured
+	//	typically called by the Game when a Game Over condition is met
+	//	a_iWinner will either be 0 (for no winner), or 1 or 2 for the winning player.  This will determine the colour used.
+	vec3	vEmitterPosition = vec3((float)a_iXIndex - 3.5f, a_fHeight, (float)a_iZindex - 3.5f);
+	vec4	gold(1.0f, 1.0f, 0.5f, 1.0f);
+	vec4	vStartColour(0.7f, 0.7f, 0.35f, 1.0f);
+	vec4	vEndColour;
+	switch (a_iWinner)
+	{
+	case 1:
+	{
+		vEndColour = m_Player1Colour;
+		break;
+	}
+	case 2:
+	{
+		vEndColour = m_Player2Colour;
+		break;
+	}
+	default:
+	{
+		vEndColour = gold;
+		break;
+	}
+	}
+	//cout << "Firing Emitter " << m_iNextEmitterToFire << " at location " << vEmitterPosition.x << "/" << vEmitterPosition.y << "/" << vEmitterPosition.z << '\n';
+	m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles, vEmitterPosition, vec3(0.0f, 0.5f, 0.0f), m_fEmitRate,
+		4.0f * m_fEmitterLifespan, 0.1f * m_fEmitterParticleLifespan, m_fEmitterParticleLifespan, 0.5f, 0.8f,
+		0.5f, 0.05f, 0.1f, vStartColour, vEndColour, m_iNextEmitterToFire);
+	m_iNextEmitterToFire = (m_iNextEmitterToFire + 1) % c_iNUM_EMITTERS;
 }
 
 void	Checkers::BuildBasicCube(OpenGLData& a_cube, float a_fSideLength)
@@ -746,16 +857,15 @@ void	Checkers::DrawModels()
 
 	//	get a copy of the bitboards
 	Bitboard	bbP1Pieces = m_Game.m_oGameState.m_P1Pieces;
-	Bitboard	bbP1Kings = m_Game.m_oGameState.m_P1Kings;
 	Bitboard	bbP2Pieces = m_Game.m_oGameState.m_P2Pieces;
-	Bitboard	bbP2Kings = m_Game.m_oGameState.m_P2Kings;
+	Bitboard	bbKings = m_Game.m_oGameState.m_Kings;
 	for (int i = 0; i < 32; ++i)
 	{
-		if ((bbP1Pieces & bbP1Kings & (0x00000001 << i)) > 0)
+		if ((bbP1Pieces & bbKings & (0x00000001 << i)) > 0)
 		{
 			//	there is a P1 King in this position
 			//	this needs to be different for each checker
-			m_CheckerWorldTransform = glm::scale(glm::translate(aPieceCoords[i]), vec3(0.25f, 0.25f, 0.25f));
+			m_CheckerWorldTransform = glm::scale(glm::translate(aKingCoords[i]), vec3(0.25f, 0.25f, 0.25f));
 			iWorldUniform = glGetUniformLocation(m_uiModelProgramID, "worldTransform");
 			glUniformMatrix4fv(iWorldUniform, 1, GL_FALSE, (float*)&m_CheckerWorldTransform);
 			glBindVertexArray(m_KingMesh.m_uiVAO);
@@ -779,11 +889,11 @@ void	Checkers::DrawModels()
 
 	for (int i = 0; i < 32; ++i)
 	{
-		if ((bbP2Pieces & bbP2Kings & (0x00000001 << i)) > 0)
+		if ((bbP2Pieces & bbKings & (0x00000001 << i)) > 0)
 		{
-			//	there is a P1 King in this position
+			//	there is a P2 King in this position
 			//	this needs to be different for each checker
-			m_CheckerWorldTransform = glm::scale(glm::translate(aPieceCoords[i]), vec3(0.25f, 0.25f, 0.25f));
+			m_CheckerWorldTransform = glm::scale(glm::translate(aKingCoords[i]), vec3(0.25f, 0.25f, 0.25f));
 			iWorldUniform = glGetUniformLocation(m_uiModelProgramID, "worldTransform");
 			glUniformMatrix4fv(iWorldUniform, 1, GL_FALSE, (float*)&m_CheckerWorldTransform);
 			glBindVertexArray(m_KingMesh.m_uiVAO);
@@ -802,25 +912,26 @@ void	Checkers::DrawModels()
 	}
 }
 
-void	Checkers::DrawSelectedBox(int a_iXIndex, int a_iZIndex, float a_fYCoord, vec4 a_Colour)
+void	Checkers::DrawSelectedBox(int a_iXIndex, int a_iZIndex, float a_fSideLength, float a_fYCoord, vec4 a_Colour)
 {
-	//	draws a box around the passed in checkerboard square at the Y coordinate height and colour passed in
+	//	draws a box around the passed in checkerboard square, of the side length passed in at the Y coordinate height and colour passed in
 	float	fYBottom = 0.01f;
+	float	fLengthOffset = 0.5f * (1.0f - a_fSideLength);
 	//	draw the bottom
-	Gizmos::addLine(vec3(-4.0f + a_iXIndex, fYBottom, -4.0f + a_iZIndex), vec3(-3.0f + a_iXIndex, fYBottom, -4.0f + a_iZIndex), a_Colour);
-	Gizmos::addLine(vec3(-3.0f + a_iXIndex, fYBottom, -4.0f + a_iZIndex), vec3(-3.0f + a_iXIndex, fYBottom, -3.0f + a_iZIndex), a_Colour);
-	Gizmos::addLine(vec3(-3.0f + a_iXIndex, fYBottom, -3.0f + a_iZIndex), vec3(-4.0f + a_iXIndex, fYBottom, -3.0f + a_iZIndex), a_Colour);
-	Gizmos::addLine(vec3(-4.0f + a_iXIndex, fYBottom, -3.0f + a_iZIndex), vec3(-4.0f + a_iXIndex, fYBottom, -4.0f + a_iZIndex), a_Colour);
+	Gizmos::addLine(vec3(-4.0f + a_iXIndex + fLengthOffset, fYBottom, -4.0f + a_iZIndex + fLengthOffset), vec3(-3.0f + a_iXIndex - fLengthOffset, fYBottom, -4.0f + a_iZIndex + fLengthOffset), a_Colour);
+	Gizmos::addLine(vec3(-3.0f + a_iXIndex - fLengthOffset, fYBottom, -4.0f + a_iZIndex + fLengthOffset), vec3(-3.0f + a_iXIndex - fLengthOffset, fYBottom, -3.0f + a_iZIndex - fLengthOffset), a_Colour);
+	Gizmos::addLine(vec3(-3.0f + a_iXIndex - fLengthOffset, fYBottom, -3.0f + a_iZIndex - fLengthOffset), vec3(-4.0f + a_iXIndex + fLengthOffset, fYBottom, -3.0f + a_iZIndex - fLengthOffset), a_Colour);
+	Gizmos::addLine(vec3(-4.0f + a_iXIndex + fLengthOffset, fYBottom, -3.0f + a_iZIndex - fLengthOffset), vec3(-4.0f + a_iXIndex + fLengthOffset, fYBottom, -4.0f + a_iZIndex + fLengthOffset), a_Colour);
 	//	draw the top
-	Gizmos::addLine(vec3(-4.0f + a_iXIndex, a_fYCoord, -4.0f + a_iZIndex), vec3(-3.0f + a_iXIndex, a_fYCoord, -4.0f + a_iZIndex), a_Colour);
-	Gizmos::addLine(vec3(-3.0f + a_iXIndex, a_fYCoord, -4.0f + a_iZIndex), vec3(-3.0f + a_iXIndex, a_fYCoord, -3.0f + a_iZIndex), a_Colour);
-	Gizmos::addLine(vec3(-3.0f + a_iXIndex, a_fYCoord, -3.0f + a_iZIndex), vec3(-4.0f + a_iXIndex, a_fYCoord, -3.0f + a_iZIndex), a_Colour);
-	Gizmos::addLine(vec3(-4.0f + a_iXIndex, a_fYCoord, -3.0f + a_iZIndex), vec3(-4.0f + a_iXIndex, a_fYCoord, -4.0f + a_iZIndex), a_Colour);
+	Gizmos::addLine(vec3(-4.0f + a_iXIndex + fLengthOffset, a_fYCoord, -4.0f + a_iZIndex + fLengthOffset), vec3(-3.0f + a_iXIndex - fLengthOffset, a_fYCoord, -4.0f + a_iZIndex + fLengthOffset), a_Colour);
+	Gizmos::addLine(vec3(-3.0f + a_iXIndex - fLengthOffset, a_fYCoord, -4.0f + a_iZIndex + fLengthOffset), vec3(-3.0f + a_iXIndex - fLengthOffset, a_fYCoord, -3.0f + a_iZIndex - fLengthOffset), a_Colour);
+	Gizmos::addLine(vec3(-3.0f + a_iXIndex - fLengthOffset, a_fYCoord, -3.0f + a_iZIndex - fLengthOffset), vec3(-4.0f + a_iXIndex + fLengthOffset, a_fYCoord, -3.0f + a_iZIndex - fLengthOffset), a_Colour);
+	Gizmos::addLine(vec3(-4.0f + a_iXIndex + fLengthOffset, a_fYCoord, -3.0f + a_iZIndex - fLengthOffset), vec3(-4.0f + a_iXIndex + fLengthOffset, a_fYCoord, -4.0f + a_iZIndex + fLengthOffset), a_Colour);
 	//	draw the verticals
-	Gizmos::addLine(vec3(-4.0f + a_iXIndex, fYBottom, -4.0f + a_iZIndex), vec3(-4.0f + a_iXIndex, a_fYCoord, -4.0f + a_iZIndex), a_Colour);
-	Gizmos::addLine(vec3(-3.0f + a_iXIndex, fYBottom, -4.0f + a_iZIndex), vec3(-3.0f + a_iXIndex, a_fYCoord, -4.0f + a_iZIndex), a_Colour);
-	Gizmos::addLine(vec3(-3.0f + a_iXIndex, fYBottom, -3.0f + a_iZIndex), vec3(-3.0f + a_iXIndex, a_fYCoord, -3.0f + a_iZIndex), a_Colour);
-	Gizmos::addLine(vec3(-4.0f + a_iXIndex, fYBottom, -3.0f + a_iZIndex), vec3(-4.0f + a_iXIndex, a_fYCoord, -3.0f + a_iZIndex), a_Colour);
+	Gizmos::addLine(vec3(-4.0f + a_iXIndex + fLengthOffset, fYBottom, -4.0f + a_iZIndex + fLengthOffset), vec3(-4.0f + a_iXIndex + fLengthOffset, a_fYCoord, -4.0f + a_iZIndex + fLengthOffset), a_Colour);
+	Gizmos::addLine(vec3(-3.0f + a_iXIndex - fLengthOffset, fYBottom, -4.0f + a_iZIndex + fLengthOffset), vec3(-3.0f + a_iXIndex - fLengthOffset, a_fYCoord, -4.0f + a_iZIndex + fLengthOffset), a_Colour);
+	Gizmos::addLine(vec3(-3.0f + a_iXIndex - fLengthOffset, fYBottom, -3.0f + a_iZIndex - fLengthOffset), vec3(-3.0f + a_iXIndex - fLengthOffset, a_fYCoord, -3.0f + a_iZIndex - fLengthOffset), a_Colour);
+	Gizmos::addLine(vec3(-4.0f + a_iXIndex + fLengthOffset, fYBottom, -3.0f + a_iZIndex - fLengthOffset), vec3(-4.0f + a_iXIndex + fLengthOffset, a_fYCoord, -3.0f + a_iZIndex - fLengthOffset), a_Colour);
 }
 
 void	Checkers::ReloadShader()

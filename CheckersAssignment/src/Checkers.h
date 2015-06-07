@@ -29,7 +29,12 @@ public:
 	void	BuildBackboard(OpenGLData& a_board, float a_fSideLength, float a_fThickness);
 	void	LoadMeshes();
 	void	DrawModels();
-	void	DrawSelectedBox(int a_iXIndex, int a_iZIndex, float a_fYCoord, vec4 a_Colour);
+	void	DrawSelectedBox(int a_iXIndex, int a_iZIndex, float a_fSideLength, float a_fYCoord, vec4 a_Colour);
+	void	FireEmitterAt(int a_iXIndex, int a_iZindex, float a_fHeight);
+	void	FireCaptureEmitterAt(int a_iXIndex, int a_iZindex, float a_fHeight);
+	void	FireGameOverEmitterAt(int a_iXIndex, int a_iZindex, float a_fHeight, int a_iWinner);
+	void	DrawBitboardAsBoxes(Bitboard a_bbBoard, float a_fBoxSize, vec4 a_vColour);
+	void	DebugDrawMoveList(float a_fHeight, vec4 a_vColour);
 
 	OpenGLData	m_BoardMesh;
 	OpenGLData	m_BackBoardMesh;
@@ -57,10 +62,14 @@ public:
 //	vec4	m_;
 	float	m_fFPS;
 
+	//	public debug stuff ...
+	Bitboard	bbDAvailableMovers;
+
 	TwBar*	m_bar;
 
 	bool	m_bDrawGizmos;
 	bool	m_bResetGame;
+	bool	m_bDebug;
 
 
 private:

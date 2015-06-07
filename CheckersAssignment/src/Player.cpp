@@ -1,5 +1,7 @@
 #include "Player.h"
 #include "Game.h"
+#include "Checkers.h"	//	again ... ONLY used for telling the program to fire off the particle emitters for a capture move when made ...
+						//	I should probably move them into the Game class instead ...
 
 Player::Player()
 {
@@ -22,6 +24,7 @@ void	Player::update(float dT, GameState a_oCurrentGameState)
 {
 	if (a_oCurrentGameState.m_iCurrentPlayer == m_iPlayerNumber)
 	{
+		//	if it is my turn then mago through the turn taking logic
 		if (m_ePlayerType == PLAYER_MCTS_AI)
 		{
 			if (m_bNotMyTurn)
@@ -46,48 +49,121 @@ void	Player::update(float dT, GameState a_oCurrentGameState)
 				//	clear any old move information
 				m_oSelectedMove.StartPos = 0;
 				m_oSelectedMove.EndPos = 0;
+				m_oSelectedMove.bJumper = false;
 			}
-			if ((m_iMouseX != -1) && (m_iMouseY != -1) && !m_bMoveInProgress && !m_bMoveCompleted)
+			if ((m_iMouseX != -1) && (m_iMouseY != -1))
 			{
-				//	then the mouse has been clicked somewhere on the board
+				//	we have clicked on the board
+				bool	bJumpers = false;
 				Bitboard	bbMouseClick = GenerateBitMaskFromCoords(m_iMouseX, m_iMouseY);
-				Bitboard	bbAvailableMoves = GetCurrentAvailableMovers(a_oCurrentGameState);
-				if ((bbMouseClick & bbAvailableMoves) > 0)
+				Bitboard	bbAvailableMoves;
+				if (m_bMoveInProgress)
 				{
-					//	then we have a click on a piece with a valid move
-					m_oSelectedMove.StartPos = bbMouseClick;
-					m_bPieceSelected = true;
+					bbAvailableMoves = m_oSelectedMove.StartPos;
+					bJumpers = true;
 				}
-				else if (m_bPieceSelected && (m_oSelectedMove.StartPos > 0) && (bbMouseClick != m_oSelectedMove.StartPos))
+				else
 				{
-					//	we have a valid start move recorded, and the mouse has clicked somewhere else, check if this is a valid empty square to move to
-					Bitboard	bbEmptySquares = GetEmptySquares(a_oCurrentGameState.m_P1Pieces, a_oCurrentGameState.m_P2Pieces);
-					if ((bbMouseClick & bbEmptySquares) > 0)
+					bbAvailableMoves = GetCurrentAvailableMovers(a_oCurrentGameState, bJumpers);
+				}
+				GenerateMovesFromAvailableMovers(bbAvailableMoves, bJumpers);
+				if (m_pGame->m_aMoveList.size() == 0)
+				{
+					//	no moves were generated so end the turn
+					m_bMoveCompleted = true;
+				}
+				if (!m_bMoveCompleted)
+				{
+					if (((bbMouseClick & bbAvailableMoves) > 0) && !m_bMoveInProgress)
 					{
-						//	an empty square has been clicked on, so check if this will be a valid move
-						Move	oTestMove;
-						oTestMove.StartPos = m_oSelectedMove.StartPos;
-						oTestMove.EndPos = bbMouseClick;
-						if (ValidMove(oTestMove, a_oCurrentGameState))
+						//	then we have a click on a piece with a valid move
+						m_oSelectedMove.StartPos = bbMouseClick;
+						m_bPieceSelected = true;
+						//	then fire off a selected emitter
+						int	iFireX = (GetBoardXCoord(bbMouseClick) + GetBoardXCoord(bbMouseClick)) / 2;
+						int	iFireY = (GetBoardYCoord(bbMouseClick) + GetBoardYCoord(bbMouseClick)) / 2;
+						m_pProgram->FireEmitterAt(iFireX, iFireY, 0.35f);
+					}
+					else if (m_bMoveInProgress)
+					{
+						//	check that the move can continue.  If it can't then end the turn.
+						//Bitboard	bbCaptureMoves = GetPlayerJumpers(m_iPlayerNumber, a_oCurrentGameState);
+						//if ((m_oSelectedMove.StartPos & bbCaptureMoves) == 0)
+						if ((m_oSelectedMove.StartPos & bbAvailableMoves) == 0)
 						{
-							//	then we have a valid move, so make it!
-							m_pGame->MakeMove(oTestMove);
-							m_bMoveInProgress = true;
-							if (IsCaptureMove(oTestMove))
-							{
-								m_oSelectedMove.StartPos = oTestMove.EndPos;
-							}
-							else
-							{
-								m_bMoveInProgress = false;
-								m_bMoveCompleted = true;
-							}
+							//	this move is not in the list of available moves for the player, therefore the move cannot continue
+							m_bMoveInProgress = false;
+							m_bMoveCompleted = true;
+						}
+						else
+						{
+							//	check if the mouse click was on an appropriate end move square
+
 						}
 					}
+					//else
+					if (m_bPieceSelected && (m_oSelectedMove.StartPos > 0) && (bbMouseClick != m_oSelectedMove.StartPos))
+					{
+						//	we have a valid start move recorded, and the mouse has clicked somewhere else, check if this is a valid empty square to move to
+						Bitboard	bbEmptySquares = GetEmptySquares(a_oCurrentGameState.m_P1Pieces, a_oCurrentGameState.m_P2Pieces);
+						if ((bbMouseClick & bbEmptySquares) > 0)
+						{
+							//	an empty square has been clicked on, so check if this will be a valid move
+							Move	oTestMove;
+							oTestMove.StartPos = m_oSelectedMove.StartPos;
+							oTestMove.EndPos = bbMouseClick;
+							oTestMove.bJumper = bJumpers;
+							if (ValidMove(oTestMove, a_oCurrentGameState))
+							{
+								//	then we have a valid move, so make it!
+								m_pGame->MakeMove(oTestMove);
+								if (IsCaptureMove(oTestMove))
+								{
+									m_oSelectedMove.StartPos = oTestMove.EndPos;
+									m_bMoveInProgress = true;
+									m_bPieceSelected = true;
+									//	then fire off a capture emitter
+									int	iFireX = (GetBoardXCoord(oTestMove.StartPos) + GetBoardXCoord(oTestMove.EndPos)) / 2;
+									int	iFireY = (GetBoardYCoord(oTestMove.StartPos) + GetBoardYCoord(oTestMove.EndPos)) / 2;
+									m_pProgram->FireCaptureEmitterAt(iFireX, iFireY, 0.35f);
+									m_pGame->RemoveCapturedPiece(GenerateBitMaskFromCoords(iFireX, iFireY));	//	now tell the game to remove the piece captured ...
+								}
+								else
+								{
+									m_bMoveInProgress = false;
+									m_bMoveCompleted = true;
+								}
+								//	now need to check if the moving piece should be made a King
+								//	first get the relevant King row mask ...
+								Bitboard	bbKingRow;
+								if (m_iPlayerNumber == 1)
+								{
+									bbKingRow = bbP1KingRow;
+								}
+								else
+								{
+									bbKingRow = bbP2KingRow;
+								}
+								if (oTestMove.EndPos & bbKingRow)
+								{
+									m_pGame->m_oGameState.m_Kings |= oTestMove.EndPos;
+								}
+							}
+						}
+						else
+						{
+							//	mouse clicked on a square with a piece in it
+						}
+					}
+				}
+				else
+				{
+					//	move is complete, so do nothing
 				}
 			}
 			else
 			{
+				//	did not click on the board
 				if (m_bMoveInProgress)
 				{
 					//	continue capture move from current selected startpos
@@ -95,7 +171,11 @@ void	Player::update(float dT, GameState a_oCurrentGameState)
 					//	(do not automatically select the jump, as there may be more than 1 option - use the mouse click as the selection)
 
 				}
-
+			}
+			if (m_bMoveCompleted)
+			{
+				m_bNotMyTurn = true;
+				m_pGame->EndTurn();
 			}
 		}
 	}
@@ -148,4 +228,35 @@ void	Player::MouseClickedOnBoardAt(int iBoardX, int iBoardY)
 	//	set values based on what is passed through
 	m_iMouseX = iBoardX;
 	m_iMouseY = iBoardY;
+}
+
+
+void	Player::GetSelectedMoveDetails(bool& a_bPieceSelected, int& a_iXCoord, int& a_iZCoord)
+{
+	a_bPieceSelected = m_bPieceSelected;
+	a_iXCoord = GetBoardXCoord(m_oSelectedMove.StartPos);
+	a_iZCoord = GetBoardYCoord(m_oSelectedMove.StartPos);
+}
+
+void	Player::SetCheckersPointer(Checkers* a_pCheckers)
+{
+	m_pProgram = a_pCheckers;
+}
+
+void	Player::GenerateMovesFromAvailableMovers(Bitboard a_bbMovers, bool a_bJumpers)
+{
+	//	This function generates a list of available moves from the bitboard of available moving pieces passed in.
+	//	Also passed in is a flag indicating if the movers passed in are jumpers or not.  This simplifies the move generation requirements.
+	//	The list is stored in the Game's m_aMoveList vector, replacing any moves previously stored in it.
+	m_pGame->m_aMoveList.clear();
+	Move	oTempMove;
+	for (unsigned int i = 0; i < 32; ++i)
+	{
+		if ((a_bbMovers & abbSquareMasks[i]) > 0)
+		{
+			//	we have a moving piece, so generate any possible moves for that piece and store them in the move list vector
+			//oTempMove.StartPos = abbSquareMasks[i];
+			GenerateMovesForMover(i, m_pGame->m_oGameState, m_pGame->m_aMoveList, a_bJumpers);
+		}
+	}
 }
