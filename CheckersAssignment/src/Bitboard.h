@@ -47,7 +47,16 @@ extern	Bitboard	bbP2StartPieces;
 extern	Bitboard	bbStartKings;
 extern	Bitboard	bbP1KingRow;
 extern	Bitboard	bbP2KingRow;
-
+extern	Bitboard	bbRow0;
+extern	Bitboard	bbRow1;
+extern	Bitboard	bbRow2;
+extern	Bitboard	bbRow3;
+extern	Bitboard	bbRow4;
+extern	Bitboard	bbRow5;
+extern	Bitboard	bbRow6;
+extern	Bitboard	bbRow7;
+extern	Bitboard	bbCentreSquares;
+extern	Bitboard	bbAllEdgePlaces;
 
 extern	void	InitPieceCoordsArray();
 extern	Bitboard	GenerateBitMaskFromCoords(int iX, int iZ);

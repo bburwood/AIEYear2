@@ -10,11 +10,11 @@ Game::Game()
 {
 	InitPieceCoordsArray();
 	//	Initiate the default player types.
-	m_P1.m_ePlayerType = PLAYER_HUMAN;	//	change this to PLAYER_MCTS_AI when some AI code starts getting written
-	m_P2.m_ePlayerType = PLAYER_HUMAN;
+	m_P1.m_ePlayerType = PLAYER_MCTS_AI;	//	change this to PLAYER_MCTS_AI / PLAYER_HUMAN as needed
+	m_P2.m_ePlayerType = PLAYER_HUMAN;		//	change this to PLAYER_MCTS_AI / PLAYER_HUMAN as needed
 	m_aMoveList.reserve(32);	//	probably not likely to be more than 32 available moves in any given turn ... but you never know, which is why this is a std::vector
 	m_iTurnsSinceLastCapture = 0;
-	m_iNoCaptureTurnsLimit = 20;	//	should be 10 turns each (at least for testing - push this to at least 40 for the final version)
+	m_iNoCaptureTurnsLimit = 100;	//	should be 10 turns each (at least for testing - push this to at least 40 for the final version)
 
 }
 
@@ -64,8 +64,6 @@ void	Game::MakeMove(Move a_oMove)
 			m_oGameState.m_Kings = (m_oGameState.m_Kings & ~a_oMove.StartPos) | a_oMove.EndPos;
 		}
 		m_oGameState.m_P1Pieces = (m_oGameState.m_P1Pieces & ~a_oMove.StartPos) | a_oMove.EndPos;
-		//	this would also be where a check for a capture move is made and then fire off a particle system for the captured piece
-		//	the captured piece would then also need to be removed from the game board
 	}
 	else
 	{
@@ -77,7 +75,6 @@ void	Game::MakeMove(Move a_oMove)
 			m_oGameState.m_Kings = (m_oGameState.m_Kings & ~a_oMove.StartPos) | a_oMove.EndPos;
 		}
 		m_oGameState.m_P2Pieces = (m_oGameState.m_P2Pieces & ~a_oMove.StartPos) | a_oMove.EndPos;
-		//	this would also be where a check for a capture move is made and then fire off a particle system for the captured piece
 	}
 }
 
@@ -126,7 +123,27 @@ void	Game::CheckForGameOver()
 {
 	int	iP1Pieces = CountPieces(m_oGameState.m_P1Pieces);
 	int	iP2Pieces = CountPieces(m_oGameState.m_P2Pieces);
-	if (iP1Pieces == 0)
+	//	first we need to check for if the new player is blocked or not - ie., if they have no moves available!
+	bool	bP1Blocked = false;
+	bool	bP2Blocked = false;
+	bool	bJumpers;
+	Bitboard	bbAvailableMoves = GetCurrentAvailableMovers(m_oGameState, bJumpers);
+	if (bbAvailableMoves == 0)
+	{
+		//	there are no moves available for the current player! So it's game over for them as they are blocked!
+		if (m_oGameState.m_iCurrentPlayer == 1)
+		{
+			//	Player 1 is blocked!
+			bP1Blocked = true;
+		}
+		else
+		{
+			//	Player 2 is blocked!
+			bP2Blocked = true;
+		}
+	}
+
+	if ((iP1Pieces == 0) || bP1Blocked)
 	{
 		//	Player 2 wins
 		m_bGameOver = true;
@@ -136,7 +153,7 @@ void	Game::CheckForGameOver()
 			m_pProgram->FireGameOverEmitterAt(i % 8, 7, 0.5f, 2);
 		}
 	}
-	if (iP2Pieces == 0)
+	if ((iP2Pieces == 0) || bP2Blocked)
 	{
 		//	Player 1 wins
 		m_bGameOver = true;
@@ -149,7 +166,7 @@ void	Game::CheckForGameOver()
 	//	otherwise do a check for the number of turns since the last piece was taken, and end the game if it is too long
 	if (m_iTurnsSinceLastCapture > m_iNoCaptureTurnsLimit)
 	{
-		//	then it's game over - sorry you didn't capture a piece for too long so nobody wins!!
+		//	then it's game over - sorry you didn't capture a piece for too long, so nobody wins!!
 		m_bGameOver = true;
 		for (int i = 0; i < 64; ++i)
 		{
@@ -160,13 +177,15 @@ void	Game::CheckForGameOver()
 
 void	Game::ResetGame(int a_iFirstMover)
 {
+	m_P1.CloseThreads();
+	m_P2.CloseThreads();
 	m_oGameState.m_iCurrentPlayer = a_iFirstMover;
 	m_oGameState.m_P1Pieces = bbP1StartPieces;
 	m_oGameState.m_P2Pieces = bbP2StartPieces;
 	m_oGameState.m_Kings = bbStartKings;
 	m_iTurnsSinceLastCapture = 0;
-	m_P1.InitPlayer(1, PLAYER_HUMAN, 1.0f, this);	//	change this to PLAYER_MCTS_AI when some AI code starts getting written
-	m_P2.InitPlayer(2, PLAYER_HUMAN, 1.0f, this);
+	m_P1.InitPlayer(1, m_P1.m_ePlayerType, m_P1.m_fMaxTimePerAIMove, this);
+	m_P2.InitPlayer(2, m_P2.m_ePlayerType, m_P2.m_fMaxTimePerAIMove, this);
 	m_bPieceMoving = false;
 	m_bMoveStarted = false;
 	m_bMoveEnded = false;

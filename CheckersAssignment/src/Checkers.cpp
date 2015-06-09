@@ -11,6 +11,10 @@ using glm::vec4;
 using glm::mat4;
 using namespace std;
 
+//	globals (at least in this file), ick! I know, but this was trying to get the AntTweakBar enums to work, and this was the quickest way to make it happen.
+TwType	ATB_PlayerType;
+int	P1Type, P1Prev, P2Type, P2Prev;
+
 Checkers::Checkers()
 {
 }
@@ -55,7 +59,17 @@ bool	Checkers::startup()
 	//	initialise basic AntTweakBar info
 	//m_bar = TwNewBar("Stuff you can mess with!!");
 	m_bar = TwNewBar("GeneralStuff");	//	must be a single word (no spaces) if you want to be able to resize it
-	TwDefine(" GeneralStuff size='300 500' "); // resize bar
+	TwDefine(" GeneralStuff size='320 500' "); // resize bar
+
+	//	set up the Player type AntTweakBar enum
+	TwEnumVal	ATB_PlayerTypeEnumVals[] = { { 0, "HUMAN" }, { 1, "MCTS_AI" } };
+	//	ATB_PlayerType = TwDefineEnum("PlayerType", ATB_PlayerTypeEnumVals, 2);	//	change the "2" to the number of values in the type if/when changed
+	ATB_PlayerType = TwDefineEnumFromString("ATB_PlayerType", "HUMAN, MCTS_AI");
+//	P1Type = ATB_PlayerType;
+//	P2Type = ATB_PlayerType;
+//	P1Prev = ATB_PlayerType;
+//	P1Prev = ATB_PlayerType;
+
 	TwAddSeparator(m_bar, "Misc Data", "");
 	TwAddVarRW(m_bar, "Light Direction", TW_TYPE_DIR3F, &m_vLightDir, "label='Light Direction'");
 	TwAddVarRW(m_bar, "Light Colour", TW_TYPE_COLOR4F, &m_vLightColour, "");
@@ -76,7 +90,15 @@ bool	Checkers::startup()
 	TwAddVarRW(m_bar, "Emitter MaxParticles", TW_TYPE_UINT32, &m_uiEmitterMaxParticles, "min=100 max=50000 step=100");
 	TwAddVarRW(m_bar, "Emitter Emit Rate", TW_TYPE_FLOAT, &m_fEmitRate, "min=10 max=20000 step=10");
 	TwAddVarRW(m_bar, "Player 1 Colour", TW_TYPE_COLOR4F, &m_Player1Colour, "");
+	TwAddVarRW(m_bar, "Player 1 Type", ATB_PlayerType, &P1Type, NULL);
+//	TwAddVarRW(m_bar, "Player 1 AI Threads", TW_TYPE_INT32, &m_Game.m_P1.m_iAIThreads, "min=1 max=8 step=1");
+	TwAddVarRW(m_bar, "Player 1 AI Max Time Per Move", TW_TYPE_FLOAT, &m_Game.m_P1.m_fMaxTimePerAIMove, "min=0.1 max=25.0 step=0.1");
+	TwAddVarRW(m_bar, "Player 1 AI LookAheadMoves", TW_TYPE_INT32, &m_Game.m_P1.m_iAILookAheadMoves, "min=0 max=50 step=1");	//	might change this to 100 later ...
 	TwAddVarRW(m_bar, "Player 2 Colour", TW_TYPE_COLOR4F, &m_Player2Colour, "");
+	TwAddVarRW(m_bar, "Player 2 Type", ATB_PlayerType, &P2Type, NULL);
+//	TwAddVarRW(m_bar, "Player 2 AI Threads", TW_TYPE_INT32, &m_Game.m_P2.m_iAIThreads, "min=1 max=8 step=1");
+	TwAddVarRW(m_bar, "Player 2 AI Max Time Per Move", TW_TYPE_FLOAT, &m_Game.m_P2.m_fMaxTimePerAIMove, "min=0.1 max=25.0 step=0.1");
+	TwAddVarRW(m_bar, "Player 2 AI LookAheadMoves", TW_TYPE_INT32, &m_Game.m_P2.m_iAILookAheadMoves, "min=0 max=50 step=1");	//	might change this to 100 later ...
 	TwAddVarRW(m_bar, "Checkerboard SpecPower", TW_TYPE_FLOAT, &m_fCheckerboardSpecPower, "min=0.0 max=250.0 step=0.5");
 	TwAddVarRW(m_bar, "Checker Piece SpecPower", TW_TYPE_FLOAT, &m_fCheckerPieceSpecPower, "min=0.0 max=500.0 step=0.5");
 
@@ -133,6 +155,48 @@ bool	Checkers::startup()
 	m_Game.ResetGame(m_iPlayerToMoveFirst);
 	m_Game.SetCheckersPointer(this);
 	m_Game.SetPlayerCheckersPointer(this);
+	switch (m_Game.m_P1.m_ePlayerType)
+	{
+	case PLAYER_HUMAN:
+	{
+		P1Type = 0;
+		P1Prev = 0;
+		break;
+	}
+	case PLAYER_MCTS_AI:
+	{
+		P1Type = 1;
+		P1Prev = 1;
+		break;
+	}
+	default:
+	{
+		P1Type = 0;
+		P1Prev = 0;
+		break;
+	}
+	}
+	switch (m_Game.m_P2.m_ePlayerType)
+	{
+	case PLAYER_HUMAN:
+	{
+		P2Type = 0;
+		P2Prev = 0;
+		break;
+	}
+	case PLAYER_MCTS_AI:
+	{
+		P2Type = 1;
+		P2Prev = 1;
+		break;
+	}
+	default:
+	{
+		P2Type = 0;
+		P2Prev = 0;
+		break;
+	}
+	}
 
 	return true;
 }
@@ -197,6 +261,45 @@ bool	Checkers::update()
 			i == 10 ? white : black);
 	}
 	*/
+	//	before getting mouse clicks, check for both player's type being changed ...
+	if (P1Type != P1Prev)
+	{
+		P1Prev = P1Type;
+		switch (P1Type)
+		{
+		default:
+		case 0:
+		{
+			m_Game.m_P1.m_ePlayerType = PLAYER_HUMAN;
+			break;
+		}
+		case 1:
+		{
+			m_Game.m_P1.m_ePlayerType = PLAYER_MCTS_AI;
+			break;
+		}
+		}
+	}
+	if (P2Type != P2Prev)
+	{
+		P2Prev = P2Type;
+		switch (P2Type)
+		{
+		default:
+		case 0:
+		{
+			m_Game.m_P2.m_ePlayerType = PLAYER_HUMAN;
+			break;
+		}
+		case 1:
+		{
+			m_Game.m_P2.m_ePlayerType = PLAYER_MCTS_AI;
+			break;
+		}
+		}
+	}
+
+
 	double	dXDelta, dYDelta;
 	glfwGetCursorPos(m_window, &dXDelta, &dYDelta);
 	vec3	vPlanePos = m_FlyCamera.PickAgainstPlane(dXDelta, dYDelta, vec4(0, 1, 0, 0));
@@ -359,8 +462,33 @@ void	Checkers::FireEmitterAt(int a_iXIndex, int a_iZindex, float a_fHeight)
 	vec4	lightblue(0.25f, 0.25f, 1.0f, 1.0f);
 	vec4	gold(1.0f, 1.0f, 0.5f, 1.0f);
 	//cout << "Firing Emitter " << m_iNextEmitterToFire << " at location " << vEmitterPosition.x << "/" << vEmitterPosition.y << "/" << vEmitterPosition.z << '\n';
-	if (m_fFiringTimer > m_fFiringInterval)
+	bool	bHumanPlayer = false;
+	int	iCurrentPlayer = m_Game.m_oGameState.m_iCurrentPlayer;
+	if (iCurrentPlayer == 1)
 	{
+		if (m_Game.m_P1.m_ePlayerType == PLAYER_HUMAN)
+		{
+			bHumanPlayer == true;
+		}
+	}
+	else
+	{
+		if (m_Game.m_P2.m_ePlayerType == PLAYER_HUMAN)
+		{
+			bHumanPlayer == true;
+		}
+	}
+	if ((m_fFiringTimer > m_fFiringInterval) && bHumanPlayer)
+	{
+		m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles * 0.5f, vEmitterPosition, vec3(0.0f, 0.04f, 0.0f), m_fEmitRate * 0.5f,
+			m_fEmitterLifespan * 0.75f, 0.1f * m_fEmitterParticleLifespan, 0.75f * m_fEmitterParticleLifespan, 0.15f, 0.35f,
+			0.5f, 0.05f, 0.1f, lightblue, gold, m_iNextEmitterToFire);
+		m_iNextEmitterToFire = (m_iNextEmitterToFire + 1) % c_iNUM_EMITTERS;
+		m_fFiringTimer = 0.0f;
+	}
+	else
+	{
+		//	AI player so just fire the emitter ignoring timing!
 		m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles * 0.5f, vEmitterPosition, vec3(0.0f, 0.04f, 0.0f), m_fEmitRate * 0.5f,
 			m_fEmitterLifespan * 0.75f, 0.1f * m_fEmitterParticleLifespan, 0.75f * m_fEmitterParticleLifespan, 0.15f, 0.35f,
 			0.5f, 0.05f, 0.1f, lightblue, gold, m_iNextEmitterToFire);
@@ -398,16 +526,19 @@ void	Checkers::FireGameOverEmitterAt(int a_iXIndex, int a_iZindex, float a_fHeig
 	case 1:
 	{
 		vEndColour = m_Player1Colour;
+		vStartColour = vEndColour * 5.0f;
 		break;
 	}
 	case 2:
 	{
 		vEndColour = m_Player2Colour;
+		vStartColour = vEndColour * 5.0f;
 		break;
 	}
 	default:
 	{
 		vEndColour = gold;
+		vStartColour = vEndColour * 2.0f;
 		break;
 	}
 	}

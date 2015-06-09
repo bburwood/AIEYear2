@@ -47,6 +47,15 @@ Bitboard	bbStartKings = 0;	//	start with no kings
 Bitboard	bbAllEdgePlaces = 0xF818181F;	//	bitmask for all places on the outside row / column of the board
 Bitboard	bbP1KingRow = 0xF0000000;
 Bitboard	bbP2KingRow = 0x0000000F;
+Bitboard	bbRow0 = 0x0000000F;
+Bitboard	bbRow1 = 0x000000F0;
+Bitboard	bbRow2 = 0x00000F00;
+Bitboard	bbRow3 = 0x0000F000;
+Bitboard	bbRow4 = 0x000F0000;
+Bitboard	bbRow5 = 0x00F00000;
+Bitboard	bbRow6 = 0x0F000000;
+Bitboard	bbRow7 = 0xF0000000;
+Bitboard	bbCentreSquares = 0x00666600;
 Bitboard	bbP1L3 = 0x00E0E0E0;	//	squares for which it is legal for a P1 piece to move to the place shifted +3
 Bitboard	bbP1L5 = 0x07070707;	//	squares for which it is legal for a P1 piece to move to the place shifted +5
 Bitboard	bbP2R3 = 0x07070700;	//	squares for which it is legal for a P2 piece to move to the place shifted -3
@@ -86,7 +95,7 @@ void	InitPieceCoordsArray()
 	}
 	//	THIS IS FOR TESTING BITMASKS - comment it out for the normal playable version
 	//bbP1StartPieces = 0;
-	//bbP2StartPieces = bbP1L5;
+	//bbP2StartPieces = bbCentreSquares;
 }
 
 Bitboard	GenerateBitMaskFromCoords(int iX, int iZ)

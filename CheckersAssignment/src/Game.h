@@ -29,10 +29,10 @@ public:
 	std::vector<Move>	m_aMoveList;
 	int		m_iNoCaptureTurnsLimit;
 	int		m_iTurnsSinceLastCapture;
+	Player	m_P1;	//	public for AntTweakBar player type access ...
+	Player	m_P2;
 
 private:
-	Player	m_P1;
-	Player	m_P2;
 	Move	m_SelectedMove;
 	Checkers*	m_pProgram;	//	use this ONLY for firing off the particle emitters ...
 	bool	m_bPieceMoving;	//	flags when a move is in progress, for animation purposes.
