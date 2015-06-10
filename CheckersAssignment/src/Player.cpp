@@ -356,7 +356,7 @@ float	Player::ScoreCurrentBoard(int a_iPlayer, GameState a_oGameState)
 		fResult = fP2Term / fP1Term;
 	}
 
-	return fResult * 0.0001f;	//	reduce the score as I was getting some strange infinite scores!
+	return fResult * 0.1f;	//	reduce the score as I was getting some strange infinite scores!
 }
 
 void	Player::BeginMoveDecision()
@@ -440,14 +440,30 @@ void	Player::ConductPlayouts()
 	GameState	oCurrentGameState = m_pGame->m_oGameState;
 	GameState	oTestState;
 	//oTestState.m_iCurrentPlayer = oCurrentGameState.m_iCurrentPlayer;
-	
+	int	iLastMover;
 	if (oCurrentGameState.m_iCurrentPlayer == 1)
 	{
+		if (!m_bMoveInProgress)
+		{
+			iLastMover = 2;
+		}
+		else
+		{
+			iLastMover = 1;
+		}
 		oTestState.m_iCurrentPlayer = 2;
 	}
 	else
 	{
 		oTestState.m_iCurrentPlayer = 1;
+		if (!m_bMoveInProgress)
+		{
+			iLastMover = 1;
+		}
+		else
+		{
+			iLastMover = 2;
+		}
 	}
 	
 	//int	iCurrentMoveIndex = iMinBound;
@@ -506,7 +522,7 @@ void	Player::ConductPlayouts()
 			int	iPlayouts = 20;
 			for (int p = 0; p < iPlayouts; ++p)
 			{
-				m_aMoveScores[i] += ScorePlayout(m_iLookAheadThisTurn, oTestState);
+				m_aMoveScores[i] += ScorePlayout(m_iLookAheadThisTurn, iLastMover, oTestState);
 			}
 			m_aPlayouts[i] += iPlayouts;
 		}
@@ -531,36 +547,72 @@ void	Player::ConductPlayouts()
 	//std::cout << " Exiting ConductPlayouts: Player: " << m_iPlayerNumber << "  Thread #:" << a_iThreadNum << '\n';
 }
 
-float	Player::ScorePlayout(int a_iLookAheadCountDown, GameState a_oGameState)
+float	Player::ScorePlayout(int a_iLookAheadCountDown, int a_iLastMover, GameState a_oGameState)
 {
 	//	This function conducts a playout
 	float	fScore = 0.0f;
-	if (a_oGameState.m_iCurrentPlayer == 1)
+	if (a_iLastMover == a_oGameState.m_iCurrentPlayer)
 	{
-		//	then player 2 has just made a move, so evaluate the board from player 2's perspective
-		//	Player 2's move may have won them the game, so check if player 1 still has pieces left
-		if (a_oGameState.m_P1Pieces == 0)
+		//	then the last move must have been a jump move by the current player
+		if (a_oGameState.m_iCurrentPlayer == 1)
 		{
-			//	Player 1 has no pieces left, therefore they have lost, so this playout ends here
-			return fScore = 250.0f;	//	big score for a win
+			//	then player 1 has just made a jump, so evaluate the board from player 1's perspective
+			//	Player 1's move may have won them the game, so check if player 2 still has pieces left
+			if (a_oGameState.m_P2Pieces == 0)
+			{
+				//	Player 2 has no pieces left, therefore they have lost, so this playout ends here
+				return fScore = 50.0f;	//	bad news for player 2
+			}
+			else
+			{
+				fScore = ScoreCurrentBoard(1, a_oGameState);
+			}
 		}
 		else
 		{
-			fScore = ScoreCurrentBoard(2, a_oGameState);
+			//	then player 2 has just made a jump, so evaluate the board from player 2's perspective
+			//	Player 2's move may have won them the game, so check if player 1 still has pieces left
+			if (a_oGameState.m_P1Pieces == 0)
+			{
+				//	Player 1 has no pieces left, therefore they have lost, so this playout ends here
+				return fScore = 50.0f;	//	bad news for player 1
+			}
+			else
+			{
+				fScore = ScoreCurrentBoard(2, a_oGameState);
+			}
 		}
 	}
 	else
 	{
-		//	then player 1 has just made a move, so evaluate the board from player 1's perspective
-		//	Player 1's move may have won them the game, so check if player 2 still has pieces left
-		if (a_oGameState.m_P2Pieces == 0)
+		//	this is the first move for this player ...
+		if (a_oGameState.m_iCurrentPlayer == 1)
 		{
-			//	Player 2 has no pieces left, therefore they have lost, so this playout ends here
-			return fScore = 250.0f;	//	big score for a win
+			//	then player 2 has just made a move
+			//	Player 2's move may have won them the game, so check if player 1 still has pieces left
+			if (a_oGameState.m_P1Pieces == 0)
+			{
+				//	Player 1 has no pieces left, therefore they have lost, so this playout ends here
+				return fScore = -50.0f;	//	bad news for player 1
+			}
+			else
+			{
+				fScore = ScoreCurrentBoard(1, a_oGameState);
+			}
 		}
 		else
 		{
-			fScore = ScoreCurrentBoard(1, a_oGameState);
+			//	then player 1 has just made a move
+			//	Player 1's move may have won them the game, so check if player 2 still has pieces left
+			if (a_oGameState.m_P2Pieces == 0)
+			{
+				//	Player 2 has no pieces left, therefore they have lost, so this playout ends here
+				return fScore = -50.0f;	//	bad news for player 2
+			}
+			else
+			{
+				fScore = ScoreCurrentBoard(2, a_oGameState);
+			}
 		}
 	}
 	if (a_iLookAheadCountDown > 0)
@@ -571,6 +623,7 @@ float	Player::ScorePlayout(int a_iLookAheadCountDown, GameState a_oGameState)
 		GameState	oNewState;
 		Move	oNewMove;
 		bool	bJumpers = false;
+		bool	bCurrentPlayerSwitched = false;
 		{
 			//	new level of scope with the intent of minimising recursive memory usage by the move lists
 			std::vector<Move>	aMoveList;
@@ -578,8 +631,44 @@ float	Player::ScorePlayout(int a_iLookAheadCountDown, GameState a_oGameState)
 			AIGenerateMovesFromAvailableMovers(a_oGameState, bbAvailableMovers, bJumpers, aMoveList);
 			if (aMoveList.size() == 0)
 			{
-				//	there are no available moves so simply return the score
-				return fScore;
+				//	there are no available moves
+				if (a_iLastMover != a_oGameState.m_iCurrentPlayer)
+				{
+					//	this is bad news for the current player, as it means they cannot move, and have therefore lost, so also subtract a penalty score from the board evaluation score.
+					return (fScore - 50.0f);
+				}
+				else
+				{
+					//	the last mover == the current mover, but cannot move further
+					//	there are no further jump moves for this player, so set the bCurrentPlayerSwitched flag to signal this, as we need to get a new set of moves for the other player
+					bCurrentPlayerSwitched = true;
+				}
+			}
+			else if (!bJumpers && (a_iLastMover == a_oGameState.m_iCurrentPlayer))
+			{
+				//	if there are no jump moves and the current player is also the last one to make a move then we also need to switch players here ...
+				bCurrentPlayerSwitched = true;
+			}
+			if (bCurrentPlayerSwitched)
+			{
+				//	we need to switch players and generate new moves
+				oNewState = a_oGameState;
+				if (a_iLastMover == 1)
+				{
+					oNewState.m_iCurrentPlayer = 2;
+				}
+				else
+				{
+					oNewState.m_iCurrentPlayer = 1;
+				}
+				bbAvailableMovers = GetCurrentAvailableMovers(oNewState, bJumpers);
+				aMoveList.clear();	//	clear the move list
+				AIGenerateMovesFromAvailableMovers(oNewState, bbAvailableMovers, bJumpers, aMoveList);
+				if (aMoveList.size() == 0)
+				{
+					//	this is bad news for the new player, as it means they cannot move, and have therefore lost, so simply return a penalty score
+					return -50.0f;
+				}
 			}
 			//	now pick a random move and add it to the new game state
 			oNewMove = aMoveList[rand() % aMoveList.size()];
@@ -596,13 +685,27 @@ float	Player::ScorePlayout(int a_iLookAheadCountDown, GameState a_oGameState)
 			oNewState.m_P1Pieces = (a_oGameState.m_P1Pieces & ~oNewMove.StartPos) | oNewMove.EndPos;
 			oNewState.m_P2Pieces = a_oGameState.m_P2Pieces;
 
-			if (bJumpers)
+			if (bCurrentPlayerSwitched)
 			{
-				oNewState.m_iCurrentPlayer = 1;
+				if (bJumpers)
+				{
+					oNewState.m_iCurrentPlayer = 2;
+				}
+				else
+				{
+					oNewState.m_iCurrentPlayer = 1;
+				}
 			}
 			else
 			{
-				oNewState.m_iCurrentPlayer = 2;
+				if (bJumpers)
+				{
+					oNewState.m_iCurrentPlayer = 1;
+				}
+				else
+				{
+					oNewState.m_iCurrentPlayer = 2;
+				}
 			}
 		}
 		else
@@ -617,15 +720,30 @@ float	Player::ScorePlayout(int a_iLookAheadCountDown, GameState a_oGameState)
 			oNewState.m_P2Pieces = (a_oGameState.m_P2Pieces & ~oNewMove.StartPos) | oNewMove.EndPos;
 			oNewState.m_P1Pieces = a_oGameState.m_P1Pieces;
 
-			if (bJumpers)
+			if (bCurrentPlayerSwitched)
 			{
-				oNewState.m_iCurrentPlayer = 2;
+				if (bJumpers)
+				{
+					oNewState.m_iCurrentPlayer = 1;
+				}
+				else
+				{
+					oNewState.m_iCurrentPlayer = 2;
+				}
 			}
 			else
 			{
-				oNewState.m_iCurrentPlayer = 1;
+				if (bJumpers)
+				{
+					oNewState.m_iCurrentPlayer = 2;
+				}
+				else
+				{
+					oNewState.m_iCurrentPlayer = 1;
+				}
 			}
 		}
+		
 		if (bJumpers)
 		{
 			//	then we also need to remove the captured piece ...
@@ -635,13 +753,22 @@ float	Player::ScorePlayout(int a_iLookAheadCountDown, GameState a_oGameState)
 			oNewState.m_Kings &= bbNotCaptured;
 			oNewState.m_P1Pieces &= bbNotCaptured;
 			oNewState.m_P2Pieces &= bbNotCaptured;
-			//	it's still our turn so add the returning playout score
-			fScore += ScorePlayout(a_iLookAheadCountDown - 1, oNewState);
+			if (bCurrentPlayerSwitched)
+			{
+				//	it's the opposition's turn, so subtract the returning playout score
+				fScore -= ScorePlayout(a_iLookAheadCountDown - 1, a_oGameState.m_iCurrentPlayer, oNewState);
+			}
+			else
+			{
+				//	it's still our turn so add the returning playout score
+				fScore += ScorePlayout(a_iLookAheadCountDown - 1, a_oGameState.m_iCurrentPlayer, oNewState);
+			}
 		}
 		else
 		{
+			//	not a jump move, so by definition it is a new player's turn
 			//	it's the opposition's turn, so subtract the returning playout score
-			fScore -= ScorePlayout(a_iLookAheadCountDown - 1, oNewState);
+			fScore -= ScorePlayout(a_iLookAheadCountDown - 1, a_oGameState.m_iCurrentPlayer, oNewState);
 		}
 	}
 	return fScore;

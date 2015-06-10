@@ -33,7 +33,7 @@ public:
 	void	AIGenerateMovesFromAvailableMovers(GameState a_oGameState, Bitboard a_bbMovers, bool a_bJumpers, std::vector<Move> &a_aMoveList);
 //	void	ConductPlayouts(int a_iThreadNum, int a_iTotalThreads, int a_iNumMovesInList);	//	worker thread to score its move list segment
 	void	ConductPlayouts();	//	worker thread to score its move list segment ... no so much a thread any more ...
-	float	ScorePlayout(int a_iLookAheadCountDown, GameState a_oGameState);
+	float	ScorePlayout(int a_iLookAheadCountDown, int a_iLastMover, GameState a_oGameState);
 	void	CheckScores();
 	void	CloseThreads();
 	//bool	ValidMove(Move a_oTestMove, GameState a_oCurrentState);

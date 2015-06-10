@@ -15,7 +15,7 @@ Game::Game()
 	m_aMoveList.reserve(32);	//	probably not likely to be more than 32 available moves in any given turn ... but you never know, which is why this is a std::vector
 	m_iTurnsSinceLastCapture = 0;
 	m_iNoCaptureTurnsLimit = 100;	//	should be 10 turns each (at least for testing - push this to at least 40 for the final version)
-
+	m_fMoveSpeed = 4.0f;	//	animation movement speed in squares per second
 }
 
 Game::~Game()
@@ -26,22 +26,45 @@ void	Game::update(float dT)
 {
 	if (!m_bGameOver)
 	{
-		if (m_oGameState.m_iCurrentPlayer == 1)
+		if (m_bPieceMoving)
 		{
-			m_P1.update(dT, m_oGameState);
-			if (m_oGameState.m_iCurrentPlayer == 2)
+			/*
+			m_vMovingPosition += m_vMoveDirection * m_fMoveSpeed;
+			if (m_bJumpMove && (glm::length(m_vMovingPosition - m_vStartPosition) > glm::length(m_vMovingPosition - m_vEndPosition)))
 			{
-				//	this should force the player to update its internal state to match
-				m_P1.update(dT, m_oGameState);
+				//	then we have passed the piece being jumped
+				m_bJumpMove = false;
+				m_pProgram->FireCaptureEmitterAt(m_iCapturePosX, m_iCapturePosY, 0.35f);
+				//	now remove the captured piece from the board
 			}
+			if (glm::length(m_vMovingPosition - m_vStartPosition) > glm::length(m_vEndPosition - m_vStartPosition))
+			{
+				//	the piece has reached its final position, so add it back to the current board
+				m_bPieceMoving = false;
+			}
+			*/
+			//	was going to add animation, but not enough time to do it justice at present ...
+			m_bPieceMoving = false;
 		}
 		else
 		{
-			m_P2.update(dT, m_oGameState);
 			if (m_oGameState.m_iCurrentPlayer == 1)
 			{
-				//	this should force the player to update its internal state to match
+				m_P1.update(dT, m_oGameState);
+				if (m_oGameState.m_iCurrentPlayer == 2)
+				{
+					//	this should force the player to update its internal state to match
+					m_P1.update(dT, m_oGameState);
+				}
+			}
+			else
+			{
 				m_P2.update(dT, m_oGameState);
+				if (m_oGameState.m_iCurrentPlayer == 1)
+				{
+					//	this should force the player to update its internal state to match
+					m_P2.update(dT, m_oGameState);
+				}
 			}
 		}
 	}
@@ -186,6 +209,7 @@ void	Game::ResetGame(int a_iFirstMover)
 	m_iTurnsSinceLastCapture = 0;
 	m_P1.InitPlayer(1, m_P1.m_ePlayerType, m_P1.m_fMaxTimePerAIMove, this);
 	m_P2.InitPlayer(2, m_P2.m_ePlayerType, m_P2.m_fMaxTimePerAIMove, this);
+	m_aMoveList.clear();
 	m_bPieceMoving = false;
 	m_bMoveStarted = false;
 	m_bMoveEnded = false;

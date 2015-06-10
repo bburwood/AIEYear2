@@ -83,6 +83,7 @@ bool	Checkers::startup()
 	TwAddSeparator(m_bar, "Game Data", "");
 	TwAddVarRW(m_bar, "Reset Game", TW_TYPE_BOOL8, &m_bResetGame, "");
 	TwAddVarRW(m_bar, "Start Player", TW_TYPE_INT32, &m_iPlayerToMoveFirst, "min=1 max=2 step=1");
+	TwAddVarRW(m_bar, "Piece Movement Speed", TW_TYPE_FLOAT, &m_Game.m_fMoveSpeed, "min=0.2 max=10 step=0.1");
 	TwAddVarRW(m_bar, "No Capture Turn Limiting Moves", TW_TYPE_INT32, &m_Game.m_iNoCaptureTurnsLimit, "min=10 max=100 step=2");
 	TwAddVarRO(m_bar, "Current No Capture Move Count", TW_TYPE_INT32, &m_Game.m_iTurnsSinceLastCapture, "");
 	TwAddVarRO(m_bar, "Current Player Colour", TW_TYPE_COLOR4F, &m_CurrentPlayerColour, "");
@@ -114,8 +115,8 @@ bool	Checkers::startup()
 	m_fFiringInterval = 0.10f;
 	m_fEmitterLifespan = 3.0f;
 	m_fEmitterParticleLifespan = 1.20f;
-	m_uiEmitterMaxParticles = 10000;
-	m_fEmitRate = 6000.0f;
+	m_uiEmitterMaxParticles = 8000;
+	m_fEmitRate = 4000.0f;
 	m_iNextEmitterToFire = 0;
 	//	initialise the particle emitters, and it's texture
 	//	Load the particle texture
