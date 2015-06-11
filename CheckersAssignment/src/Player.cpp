@@ -346,7 +346,15 @@ float	Player::ScoreCurrentBoard(int a_iPlayer, GameState a_oGameState)
 	//	Penalty points: 1.5 points for Kings on the edges, 0.5 points for opposition jumpers.
 	float	fP1Term = fP1Pieces + (10.0f * fP1Kings) + (5.0f * fP1KingsInMiddle) + (10.0f * fP1Jumpers) - (0.5f * fP1KingsAroundEdge) - (1.5f * fP2Jumpers);
 	float	fP2Term = fP2Pieces + (10.0f * fP2Kings) + (5.0f * fP2KingsInMiddle) + (10.0f * fP2Jumpers) - (0.5f * fP2KingsAroundEdge) - (1.5f * fP1Jumpers);
-
+	//	make sure we don't get divide by sero errors!
+	if (fP1Term == 0.0f)
+	{
+		fP1Term = 0.01f;
+	}
+	if (fP2Term == 0.0f)
+	{
+		fP2Term = 0.01f;
+	}
 	if (a_iPlayer == 1)
 	{
 		fResult = fP1Term / fP2Term;

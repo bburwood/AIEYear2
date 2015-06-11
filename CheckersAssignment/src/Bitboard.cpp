@@ -95,7 +95,7 @@ void	InitPieceCoordsArray()
 	}
 	//	THIS IS FOR TESTING BITMASKS - comment it out for the normal playable version
 	//bbP1StartPieces = 0;
-	//bbP2StartPieces = bbCentreSquares;
+	//bbP2StartPieces = bbJumpUpRightEnd;
 }
 
 Bitboard	GenerateBitMaskFromCoords(int iX, int iZ)

@@ -545,8 +545,8 @@ void	Checkers::FireGameOverEmitterAt(int a_iXIndex, int a_iZindex, float a_fHeig
 	}
 	//cout << "Firing Emitter " << m_iNextEmitterToFire << " at location " << vEmitterPosition.x << "/" << vEmitterPosition.y << "/" << vEmitterPosition.z << '\n';
 	m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles, vEmitterPosition, vec3(0.0f, 0.5f, 0.0f), m_fEmitRate,
-		4.0f * m_fEmitterLifespan, 0.1f * m_fEmitterParticleLifespan, m_fEmitterParticleLifespan, 0.5f, 0.8f,
-		0.5f, 0.05f, 0.1f, vStartColour, vEndColour, m_iNextEmitterToFire);
+		4.0f * m_fEmitterLifespan, 0.3f * m_fEmitterParticleLifespan, m_fEmitterParticleLifespan, 0.75f, 1.0f,
+		0.5f, 0.04f, 0.1f, vStartColour, vEndColour, m_iNextEmitterToFire);
 	m_iNextEmitterToFire = (m_iNextEmitterToFire + 1) % c_iNUM_EMITTERS;
 }
 
