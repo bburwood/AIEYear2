@@ -32,7 +32,7 @@ bool	Checkers::startup()
 	m_fTotalTime = 0.0f;
 
 	TwInit(TW_OPENGL_CORE, nullptr);
-	TwWindowSize(1600, 900);
+	TwWindowSize(BUFFER_WIDTH, BUFFER_HEIGHT);
 	//	setup callbacks to send info to AntTweakBar
 	glfwSetMouseButtonCallback(m_window, OnMouseButton);
 	glfwSetCursorPosCallback(m_window, OnMousePosition);
@@ -53,13 +53,13 @@ bool	Checkers::startup()
 	m_bPieceSelected = false;
 
 	//	now initialise the FlyCamera
-	m_FlyCamera = FlyCamera(vec3(-1, 10, 5), vec3(-1, 0, 1), glm::radians(50.0f), 1600.0f / 900.0f, 0.1f, 30000.0f);
+	m_FlyCamera = FlyCamera(vec3(-1, 10, 5), vec3(-1, 0, 1), glm::radians(50.0f), (float)BUFFER_WIDTH / (float)BUFFER_HEIGHT, 0.1f, 300.0f);
 	m_FlyCamera.SetSpeed(15.0f);
 
 	//	initialise basic AntTweakBar info
 	//m_bar = TwNewBar("Stuff you can mess with!!");
 	m_bar = TwNewBar("GeneralStuff");	//	must be a single word (no spaces) if you want to be able to resize it
-	TwDefine(" GeneralStuff size='320 500' "); // resize bar
+	TwDefine(" GeneralStuff size='320 600' "); // resize bar
 
 	//	set up the Player type AntTweakBar enum
 	TwEnumVal	ATB_PlayerTypeEnumVals[] = { { 0, "HUMAN" }, { 1, "MCTS_AI" } };
@@ -77,6 +77,7 @@ bool	Checkers::startup()
 	TwAddVarRW(m_bar, "Clear Colour", TW_TYPE_COLOR4F, &m_BackgroundColour, "");
 	TwAddVarRW(m_bar, "Draw Gizmos", TW_TYPE_BOOL8, &m_bDrawGizmos, "");
 	TwAddVarRW(m_bar, "Draw Debug Gizmos", TW_TYPE_BOOL8, &m_bDebug, "");
+	TwAddVarRW(m_bar, "Deferred Lighting", TW_TYPE_BOOL8, &m_bDeferredRendering, "");
 	TwAddVarRW(m_bar, "Camera Speed", TW_TYPE_FLOAT, &m_FlyCamera.m_fSpeed, "min=1 max=250 step=1");
 	TwAddVarRO(m_bar, "FPS", TW_TYPE_FLOAT, &m_fFPS, "");
 
@@ -102,12 +103,13 @@ bool	Checkers::startup()
 	TwAddVarRW(m_bar, "Player 2 AI LookAheadMoves", TW_TYPE_INT32, &m_Game.m_P2.m_iAILookAheadMoves, "min=0 max=50 step=1");	//	might change this to 100 later ...
 	TwAddVarRW(m_bar, "Checkerboard SpecPower", TW_TYPE_FLOAT, &m_fCheckerboardSpecPower, "min=0.0 max=250.0 step=0.5");
 	TwAddVarRW(m_bar, "Checker Piece SpecPower", TW_TYPE_FLOAT, &m_fCheckerPieceSpecPower, "min=0.0 max=500.0 step=0.5");
+	TwAddVarRW(m_bar, "Deferred SpecPower", TW_TYPE_FLOAT, &m_fDeferredSpecPower, "min=0.0 max=250.0 step=0.5");
 
 
 	m_Player1Colour = vec4(0.75f, 0.10f, 0.10f, 1.0f);
 	m_Player2Colour = vec4(0.10f, 0.10f, 0.75f, 1.0f);
 	m_vAmbientLightColour = vec4(0.05f, 0.05f, 0.05f, 1.0f);
-	m_vLightColour = vec4(0.8f, 0.8f, 0.8f, 1.0f);
+	m_vLightColour = vec4(0.5f, 0.5f, 0.5f, 1.0f);
 	m_vLightDir = glm::normalize(vec3(-0.10f, -0.85f, 0.5f));
 
 	//	initialise the GPU Particle emitter variables
@@ -130,6 +132,7 @@ bool	Checkers::startup()
 
 	m_fCheckerboardSpecPower = 40.0f;
 	m_fCheckerPieceSpecPower = 150.0f;
+	m_fDeferredSpecPower = 20.0f;
 	m_CheckerBoardWorldTransform = glm::translate(vec3(0, -0.248f, 0));
 	m_BackBoardWorldTransform = glm::translate(vec3(0, -0.748f, 0));
 	m_CheckerWorldTransform = glm::scale(glm::translate(vec3(0.5f, 0.080f, 0.5f)), vec3(0.25f));
@@ -199,11 +202,24 @@ bool	Checkers::startup()
 	}
 	}
 
+	//	now set up the deferred rendering
+	BuildGBuffer();
+	BuildLightBuffer();
+	BuildScreenSpaceQuad();
+	BuildLightCube();
+	SetupDeferredLights();	//	actually add the lights
+	m_bDeferredRendering = false;
+
+	glEnable(GL_CULL_FACE);
 	return true;
 }
 
 void	Checkers::shutdown()
 {
+	//	now clean up
+	Gizmos::destroy();
+	TwDeleteAllBars();
+	TwTerminate();
 }
 
 bool	Checkers::update()
@@ -439,7 +455,16 @@ void	Checkers::draw()
 {
 	Application::draw();
 
-	DrawModels();
+	if (m_bDeferredRendering)
+	{
+		DrawModelsDeferred();
+		AccumulateLightsDeferred();
+		RenderCompositePass();
+	}
+	else
+	{
+		DrawModels();
+	}
 
 	//	now draw any particle emitters
 	for (unsigned int i = 0; i < c_iNUM_EMITTERS; ++i)
@@ -1074,4 +1099,549 @@ void	Checkers::ReloadShader()
 	//LoadShader("shaders/perlin_vertex.glsl", 0, "shaders/perlin_fragment.glsl", &m_uiProgramID);
 	LoadShader("./shaders/lighting_vertex.glsl", nullptr, "./shaders/lighting_fragment.glsl", &m_uiProgramID);
 	LoadShader("./shaders/lighting_colour_vertex.glsl", nullptr, "./shaders/lighting_colour_fragment.glsl", &m_uiModelProgramID);
+
+	LoadShader("shaders/gbuffer_vertex.glsl", 0, "shaders/gbuffer_fragment.glsl", &m_uiGBufferProgram);
+	LoadShader("shaders/composite_vertex.glsl", 0, "shaders/composite_fragment.glsl", &m_uiCompositeProgram);
+	LoadShader("shaders/composite_vertex.glsl", 0, "shaders/directional_light_fragment.glsl", &m_uiDirectionalLightProgram);
+	LoadShader("shaders/point_light_vertex.glsl", 0, "shaders/point_light_fragment.glsl", &m_uiPointLightProgram);
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//	Deferred Rendering Functions
+///////////////////////////////////////////////////////////////////////////////
+void	Checkers::BuildLightCube()
+{
+	//	this will build a unit cube with REVERSE winding order so that the back face automatically renders for the light
+	//	instead of the front faces, without disabling backface culling
+	//	it is a copy / paste from the build cube
+	//	no UV's are required
+	float	vertexData[]
+	{
+		-1, -1, 1, 1,
+			1, -1, 1, 1,
+			1, -1, -1, 1,
+			-1, -1, -1, 1,
+
+			-1, 1, 1, 1,
+			1, 1, 1, 1,
+			1, 1, -1, 1,
+			-1, 1, -1, 1,
+	};
+
+	//	the index data is in REVERSE winding order so the back face is rendered rather than the front face
+	unsigned int	indexData[]
+	{
+		4, 5, 0,
+			5, 1, 0,
+			5, 6, 1,
+			6, 2, 1,
+			6, 7, 2,
+			7, 3, 2,
+
+			7, 4, 3,
+			4, 0, 3,
+			7, 6, 4,
+			6, 5, 4,
+			0, 1, 3,
+			1, 2, 3,
+	};
+
+	m_LightCube.m_uiIndexCount = 36;
+
+	glGenVertexArrays(1, &m_LightCube.m_uiVAO);
+	glBindVertexArray(m_LightCube.m_uiVAO);
+
+	glGenBuffers(1, &m_LightCube.m_uiVBO);
+	glGenBuffers(1, &m_LightCube.m_uiIBO);
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_LightCube.m_uiVBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_LightCube.m_uiIBO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexData), indexData, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);	//	position
+
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, 0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void	Checkers::BuildScreenSpaceQuad()
+{
+	vec2	halfTexel = 1.0f / (vec2((float)BUFFER_WIDTH, (float)BUFFER_HEIGHT) * 0.5f);
+	//	vec2	halfTexel = 1.0f / vec2(1280.0f / 720.0f);
+	//	this is so that the UV's are sampled from the correct texel.
+	float	vertexData[]
+	{
+		-1, -1, 0, 1, halfTexel.x, halfTexel.y,
+			-1, 1, 0, 1, halfTexel.x, 1.0f - halfTexel.y,
+			1, 1, 0, 1, 1.0f - halfTexel.x, 1.0f - halfTexel.y,
+			1, -1, 0, 1, 1.0f - halfTexel.x, halfTexel.y,
+	};
+
+	unsigned int	indexData[]
+	{
+		2, 1, 0,
+			3, 2, 0
+	};
+
+	m_ScreenSpaceQuad.m_uiIndexCount = 6;
+
+	glGenVertexArrays(1, &m_ScreenSpaceQuad.m_uiVAO);
+	glBindVertexArray(m_ScreenSpaceQuad.m_uiVAO);
+
+	glGenBuffers(1, &m_ScreenSpaceQuad.m_uiVBO);
+	glGenBuffers(1, &m_ScreenSpaceQuad.m_uiIBO);
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_ScreenSpaceQuad.m_uiVBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ScreenSpaceQuad.m_uiIBO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexData), indexData, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);	//	position
+	glEnableVertexAttribArray(1);	//	tex coord
+
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)(sizeof(float) * 4));
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void	Checkers::RenderPointLights()
+{
+	mat4	mCamViewTransform = m_FlyCamera.m_viewTransform;
+
+	int	iPosUniform = glGetUniformLocation(m_uiPointLightProgram, "light_position");
+	int	iViewPosUniform = glGetUniformLocation(m_uiPointLightProgram, "light_view_position");
+	int	iLightDiffuseUniform = glGetUniformLocation(m_uiPointLightProgram, "light_diffuse");
+	int	iLightRadiusUniform = glGetUniformLocation(m_uiPointLightProgram, "light_radius");
+	vec3	vLightPos(0, 0, 0);
+	vec3	vLightDiffuse(0, 0, 0);
+	vec4	viewspacePos;
+
+	for (int i = 0; i < aPointLightsX.size(); ++i)
+	{
+		//	now go through the point lights and render them
+		vLightPos.x = aPointLightsX[i];
+		vLightPos.y = aPointLightsY[i];
+		vLightPos.z = aPointLightsZ[i];
+		vLightDiffuse.r = aPointLightsColourR[i];
+		vLightDiffuse.g = aPointLightsColourG[i];
+		vLightDiffuse.b = aPointLightsColourB[i];
+		viewspacePos = mCamViewTransform * vec4(vLightPos, 1.0f);
+		glUniform3fv(iPosUniform, 1, (float*)&vLightPos);
+		glUniform3fv(iViewPosUniform, 1, (float*)&viewspacePos.xyz);
+		glUniform3fv(iLightDiffuseUniform, 1, (float*)&vLightDiffuse);
+		glUniform1f(iLightRadiusUniform, aPointLightsRange[i]);
+
+		glBindVertexArray(m_LightCube.m_uiVAO);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+	}
+}
+
+void	Checkers::AddPointLight(float a_fX, float a_fY, float a_fZ, float a_fR, float a_fG, float a_fB, float a_fRange)
+{
+	aPointLightsX.push_back(a_fX);
+	aPointLightsY.push_back(a_fY);
+	aPointLightsZ.push_back(a_fZ);
+	aPointLightsColourR.push_back(a_fR);
+	aPointLightsColourG.push_back(a_fG);
+	aPointLightsColourB.push_back(a_fB);
+	aPointLightsRange.push_back(a_fRange);
+}
+
+void	Checkers::RenderDirectionalLight(vec3 light_dir, vec3 light_colour)
+{
+	vec4	viewspace_light_dir = m_FlyCamera.m_viewTransform * vec4(glm::normalize(light_dir), 0);
+	int iLightDirUniform = glGetUniformLocation(m_uiDirectionalLightProgram, "light_dir");
+	int iLightColourUniform = glGetUniformLocation(m_uiDirectionalLightProgram, "light_colour");
+
+	glUniform3fv(iLightDirUniform, 1, (float*)&viewspace_light_dir);
+	glUniform3fv(iLightColourUniform, 1, (float*)&light_colour);
+
+	glBindVertexArray(m_ScreenSpaceQuad.m_uiVAO);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
+
+void	Checkers::BuildGBuffer()
+{
+	//	create the framebuffer
+	glGenFramebuffers(1, &m_uiGBufferFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_uiGBufferFBO);
+
+	//	generate all our textures
+	//	albedo, position, normal, depthI(depth is render buffer)
+	glGenTextures(1, &m_uiAlbedoTexture);
+	glBindTexture(GL_TEXTURE_2D, m_uiAlbedoTexture);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, BUFFER_WIDTH, BUFFER_HEIGHT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glGenTextures(1, &m_uiPositionsTexture);
+	glBindTexture(GL_TEXTURE_2D, m_uiPositionsTexture);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, BUFFER_WIDTH, BUFFER_HEIGHT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glGenTextures(1, &m_uiNormalsTexture);
+	glBindTexture(GL_TEXTURE_2D, m_uiNormalsTexture);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, BUFFER_WIDTH, BUFFER_HEIGHT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glGenRenderbuffers(1, &m_uiGBufferDepth);
+	glBindRenderbuffer(GL_RENDERBUFFER, m_uiGBufferDepth);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, BUFFER_WIDTH, BUFFER_HEIGHT);
+
+	//	attach our textures to the framebuffer
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_uiAlbedoTexture, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, m_uiPositionsTexture, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, m_uiNormalsTexture, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_uiGBufferDepth);
+
+	GLenum	targets[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+
+	glDrawBuffers(3, targets);
+
+	//	check that it worked
+	GLenum	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE)
+	{
+		printf("Aahhhh!!  It broke!!  G-Buffer creation FAIL!!\n");
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void	Checkers::BuildLightBuffer()
+{
+	//	create the fbo
+	glGenFramebuffers(1, &m_uiLightFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_uiLightFBO);
+
+	//	create textures
+	//	just the light texture this time
+	glGenTextures(1, &m_uiLightTexture);
+	glBindTexture(GL_TEXTURE_2D, m_uiLightTexture);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, BUFFER_WIDTH, BUFFER_HEIGHT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	//	attach textures
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_uiLightTexture, 0);
+	GLenum	lightTarget = GL_COLOR_ATTACHMENT0;
+	glDrawBuffers(1, &lightTarget);
+
+	//	check framebuffer for success
+	GLenum	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE)
+	{
+		printf("Aahhhh!!  It broke!!  Light Buffer creation FAIL!!\n");
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void	Checkers::DrawModelsDeferred()
+{
+	////////////////////////
+	//	G-BUFFER generation
+	////////////////////////
+	glEnable(GL_DEPTH_TEST);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_uiGBufferFBO);
+	glClearColor(0, 0, 0, 0);	//	so we know where nothing was rendered
+
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	vec4	clearColour = vec4(0, 0, 0, 0);
+	vec4	clearNormal = vec4(0.5f, 0.5f, 0.5f, 0.0f);
+
+	glClearBufferfv(GL_COLOR, 0, (float*)&clearColour);
+	glClearBufferfv(GL_COLOR, 1, (float*)&clearColour);
+	glClearBufferfv(GL_COLOR, 2, (float*)&clearNormal);
+
+	glUseProgram(m_uiGBufferProgram);
+
+	int	iViewUniform = glGetUniformLocation(m_uiGBufferProgram, "view");
+	int	iViewProjUniform = glGetUniformLocation(m_uiGBufferProgram, "view_proj");
+
+	glUniformMatrix4fv(iViewUniform, 1, GL_FALSE, (float*)&m_FlyCamera.m_viewTransform);
+	glUniformMatrix4fv(iViewProjUniform, 1, GL_FALSE, (float*)&m_FlyCamera.m_projectionViewTransform);
+
+	//glBindVertexArray(m_Bunny.m_uiVAO);
+	//glDrawElements(GL_TRIANGLES, m_Bunny.m_uiIndexCount, GL_UNSIGNED_INT, 0);
+
+	//	now draw the checkers
+	//	these use their own version of the lighting shader that takes in a uniform for the piece colour
+	//glUseProgram(m_uiModelProgramID);
+	//int	iViewProjUniform = glGetUniformLocation(m_uiModelProgramID, "projection_view");
+	//glUniformMatrix4fv(iViewProjUniform, 1, GL_FALSE, (float*)&m_FlyCamera.m_projectionViewTransform);
+	//int	eye_pos_uniform = glGetUniformLocation(m_uiModelProgramID, "eye_pos");
+	//glUniform3fv(eye_pos_uniform, 1, (float*)&m_FlyCamera.GetPosition());
+	//int	iLightDirUniform = glGetUniformLocation(m_uiModelProgramID, "light_dir");
+	//glUniform3fv(iLightDirUniform, 1, (float*)&m_vLightDir);
+	//int	iLightColourUniform = glGetUniformLocation(m_uiModelProgramID, "light_colour");
+	//glUniform3fv(iLightColourUniform, 1, (float*)&m_vLightColour.rgb);
+	//int	iAmbientUniform = glGetUniformLocation(m_uiModelProgramID, "ambient_light");
+	//glUniform3fv(iAmbientUniform, 1, (float*)&m_vAmbientLightColour.rgb);
+	//int	iSpecPowerUniform = glGetUniformLocation(m_uiModelProgramID, "specular_power");
+	//glUniform1f(iSpecPowerUniform, m_fCheckerPieceSpecPower);
+	int	iWorldUniform = glGetUniformLocation(m_uiGBufferProgram, "worldTransform");
+
+	vec3	vPieceColour = m_Player1Colour.rgb;	//	this changes for each player ...
+	int	iCheckerColourUniform = glGetUniformLocation(m_uiGBufferProgram, "material_colour");
+	glUniform3fv(iCheckerColourUniform, 1, (float*)&vPieceColour);
+
+	//	get a copy of the bitboards
+	Bitboard	bbP1Pieces = m_Game.m_oGameState.m_P1Pieces;
+	Bitboard	bbP2Pieces = m_Game.m_oGameState.m_P2Pieces;
+	Bitboard	bbKings = m_Game.m_oGameState.m_Kings;
+
+	vec3	vCheckerScale(0.25f, 0.25f, 0.25f);
+	for (int i = 0; i < 32; ++i)
+	{
+		if ((bbP1Pieces & bbKings & (0x00000001 << i)) > 0)
+		{
+			//	there is a P1 King in this position
+			//	this needs to be different for each checker
+			m_CheckerWorldTransform = glm::scale(glm::translate(aKingCoords[i]), vCheckerScale);
+			glUniformMatrix4fv(iWorldUniform, 1, GL_FALSE, (float*)&m_CheckerWorldTransform);
+			glBindVertexArray(m_KingMesh.m_uiVAO);
+			glDrawElements(GL_TRIANGLES, m_KingMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
+		}
+		else if ((bbP1Pieces & (0x00000001 << i)) > 0)
+		{
+			//	There is a regular piece in this position
+			//	this needs to be different for each checker
+			m_CheckerWorldTransform = glm::scale(glm::translate(aPieceCoords[i]), vCheckerScale);
+			//iWorldUniform = glGetUniformLocation(m_uiModelProgramID, "worldTransform");
+			glUniformMatrix4fv(iWorldUniform, 1, GL_FALSE, (float*)&m_CheckerWorldTransform);
+			glBindVertexArray(m_CheckerMesh.m_uiVAO);
+			glDrawElements(GL_TRIANGLES, m_CheckerMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
+		}
+	}
+
+	vPieceColour = m_Player2Colour.rgb;	//	this changes for each player ...
+	iCheckerColourUniform = glGetUniformLocation(m_uiGBufferProgram, "material_colour");
+	glUniform3fv(iCheckerColourUniform, 1, (float*)&vPieceColour);
+	for (int i = 0; i < 32; ++i)
+	{
+		if ((bbP2Pieces & bbKings & (0x00000001 << i)) > 0)
+		{
+			//	there is a P1 King in this position
+			//	this needs to be different for each checker
+			m_CheckerWorldTransform = glm::scale(glm::translate(aKingCoords[i]), vCheckerScale);
+			glUniformMatrix4fv(iWorldUniform, 1, GL_FALSE, (float*)&m_CheckerWorldTransform);
+			glBindVertexArray(m_KingMesh.m_uiVAO);
+			glDrawElements(GL_TRIANGLES, m_KingMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
+		}
+		else if ((bbP2Pieces & (0x00000001 << i)) > 0)
+		{
+			//	There is a regular piece in this position
+			//	this needs to be different for each checker
+			m_CheckerWorldTransform = glm::scale(glm::translate(aPieceCoords[i]), vCheckerScale);
+			//iWorldUniform = glGetUniformLocation(m_uiModelProgramID, "worldTransform");
+			glUniformMatrix4fv(iWorldUniform, 1, GL_FALSE, (float*)&m_CheckerWorldTransform);
+			glBindVertexArray(m_CheckerMesh.m_uiVAO);
+			glDrawElements(GL_TRIANGLES, m_CheckerMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
+		}
+	}
+
+
+	//	draw the checkerboard
+	glUseProgram(m_uiGBufferProgram);
+	iViewProjUniform = glGetUniformLocation(m_uiGBufferProgram, "view_proj");
+	glUniformMatrix4fv(iViewProjUniform, 1, GL_FALSE, (float*)&m_FlyCamera.m_projectionViewTransform);
+	iWorldUniform = glGetUniformLocation(m_uiGBufferProgram, "worldTransform");
+	glUniformMatrix4fv(iWorldUniform, 1, GL_FALSE, (float*)&m_CheckerBoardWorldTransform);
+//	int iTexUniform = glGetUniformLocation(m_uiGBufferProgram, "albedoTexture");
+//	glUniform1i(iTexUniform, 0);
+//	glActiveTexture(GL_TEXTURE0);
+//	glBindTexture(GL_TEXTURE_2D, m_uiCheckerBoardTexture);
+//	eye_pos_uniform = glGetUniformLocation(m_uiGBufferProgram, "eye_pos");
+//	glUniform3fv(eye_pos_uniform, 1, (float*)&m_FlyCamera.GetPosition());
+//	iLightDirUniform = glGetUniformLocation(m_uiGBufferProgram, "light_dir");
+//	glUniform3fv(iLightDirUniform, 1, (float*)&m_vLightDir);
+//	iLightColourUniform = glGetUniformLocation(m_uiGBufferProgram, "light_colour");
+//	glUniform3fv(iLightColourUniform, 1, (float*)&m_vLightColour.rgb);
+//	iAmbientUniform = glGetUniformLocation(m_uiGBufferProgram, "ambient_light");
+//	glUniform3fv(iAmbientUniform, 1, (float*)&m_vAmbientLightColour.rgb);
+//	iSpecPowerUniform = glGetUniformLocation(m_uiGBufferProgram, "specular_power");
+//	glUniform1f(iSpecPowerUniform, m_fCheckerboardSpecPower);
+
+	//	this is temporary until I get the texture working
+	vPieceColour = vec3(0.25f);	//	make the board temporarily dark
+	iCheckerColourUniform = glGetUniformLocation(m_uiGBufferProgram, "material_colour");
+	glUniform3fv(iCheckerColourUniform, 1, (float*)&vPieceColour);
+
+	glBindVertexArray(m_BoardMesh.m_uiVAO);
+	glDrawElements(GL_TRIANGLES, m_BoardMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
+/*
+	//	now draw the Backboard
+	//	uses the same shader program, so no need to load change here yet
+	iWorldUniform = glGetUniformLocation(m_uiProgramID, "worldTransform");
+	glUniformMatrix4fv(iWorldUniform, 1, GL_FALSE, (float*)&m_BackBoardWorldTransform);
+	iTexUniform = glGetUniformLocation(m_uiProgramID, "albedoTexture");
+	glUniform1i(iTexUniform, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_uiBackBoardTexture);
+
+	glBindVertexArray(m_BackBoardMesh.m_uiVAO);
+	glDrawElements(GL_TRIANGLES, m_BackBoardMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
+*/
+
+}
+
+void	Checkers::AccumulateLightsDeferred()
+{
+	////////////////////////
+	//	Light accumulation
+	////////////////////////
+	glBindFramebuffer(GL_FRAMEBUFFER, m_uiLightFBO);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE);
+
+	glUseProgram(m_uiDirectionalLightProgram);
+	int	iPositionTexUniform = glGetUniformLocation(m_uiDirectionalLightProgram, "position_tex");
+	int	iNormalsTexUniform = glGetUniformLocation(m_uiDirectionalLightProgram, "normals_tex");
+	glUniform1i(iPositionTexUniform, 0);
+	glUniform1i(iNormalsTexUniform, 1);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_uiPositionsTexture);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_uiNormalsTexture);
+
+	vec3	light_dir = m_vLightDir;
+	////	vec3	light_colour = vec3(0.2f, 0.4f, 0.8f);
+	vec3	light_colour = m_vLightColour.rgb;
+	RenderDirectionalLight(light_dir, light_colour);
+	//	RenderDirectionalLight(vec3(0, 1, 0), vec3(0.5f, 0.25f, 0.0f));
+	//	RenderDirectionalLight(vec3(1, 1, 0), vec3(0.6f, 0.0f, 0.0f));
+	//	RenderDirectionalLight(vec3(1, 0, 0), vec3(0.0f, 0.6f, 0.0f));
+	//	RenderDirectionalLight(vec3(0, 0, 1), vec3(0.0f, 0.0f, 0.75f));
+	//	RenderDirectionalLight(vec3(0.0f, 1.0f, 1.0f), vec3(0.4f, 0.4f, 0.4f));
+	//	RenderDirectionalLight(vec3(-1.0f, -0.10f, -1.0f), vec3(0.5f, 0.5f, 0.0f));
+
+	//	now render the point lights
+	glUseProgram(m_uiPointLightProgram);
+	int	iViewProjUniform = glGetUniformLocation(m_uiPointLightProgram, "proj_view");
+	iPositionTexUniform = glGetUniformLocation(m_uiPointLightProgram, "position_texture");
+	iNormalsTexUniform = glGetUniformLocation(m_uiPointLightProgram, "normal_texture");
+
+	glUniformMatrix4fv(iViewProjUniform, 1, GL_FALSE, (float*)&m_FlyCamera.m_projectionViewTransform);
+	glUniform1i(iPositionTexUniform, 0);
+	glUniform1i(iNormalsTexUniform, 1);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_uiPositionsTexture);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_uiNormalsTexture);
+
+	//	draw the point lights
+	RenderPointLights();
+
+	glDisable(GL_BLEND);
+}
+
+void	Checkers::RenderCompositePass()
+{
+	////////////////////////
+	//	Composite pass
+	////////////////////////
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glClearColor(m_BackgroundColour.x, m_BackgroundColour.y, m_BackgroundColour.z, m_BackgroundColour.w);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glUseProgram(m_uiCompositeProgram);
+
+	//	these need to be passed in to the composite pass as well:
+	//	m_uiAlbedoTexture
+	//	m_uiPositionsTexture
+	//	m_uiNormalsTexture
+
+	int	iAlbedoTexUniform = glGetUniformLocation(m_uiCompositeProgram, "albedo_tex");
+	int	iPositionsTexUniform = glGetUniformLocation(m_uiCompositeProgram, "position_tex");
+	int	iNormalsTexUniform = glGetUniformLocation(m_uiCompositeProgram, "normals_tex");
+	int	iLightTexUniform = glGetUniformLocation(m_uiCompositeProgram, "light_tex");
+	int	iSpecUniform = glGetUniformLocation(m_uiCompositeProgram, "fSpecPower");
+	int	iEyePosUniform = glGetUniformLocation(m_uiCompositeProgram, "eye_pos");
+	int	iAmbientUniform = glGetUniformLocation(m_uiCompositeProgram, "ambient_light");
+
+	glUniform1i(iAlbedoTexUniform, 0);
+	glUniform1i(iPositionsTexUniform, 1);
+	glUniform1i(iNormalsTexUniform, 2);
+	glUniform1i(iLightTexUniform, 3);
+	glUniform1f(iSpecUniform, m_fDeferredSpecPower);
+	glUniform3fv(iEyePosUniform, 1, (float*)&m_FlyCamera.GetPosition());
+	glUniform3fv(iAmbientUniform, 1, (float*)&m_vAmbientLightColour.rgb);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_uiAlbedoTexture);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_uiPositionsTexture);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, m_uiNormalsTexture);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, m_uiLightTexture);
+
+	/*
+	glEnable(GL_STENCIL_TEST);
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+	glStencilFunc(GL_ALWAYS, 0, 0xFF);
+	*/
+
+	glBindVertexArray(m_ScreenSpaceQuad.m_uiVAO);
+	glDrawElements(GL_TRIANGLES, m_ScreenSpaceQuad.m_uiIndexCount, GL_UNSIGNED_INT, 0);
+}
+
+void	Checkers::SetupDeferredLights()
+{
+	//	Add lights to indicate Player 1's side
+	for (int i = 0; i < 5; ++i)
+	{
+		AddPointLight(i * 2 - 4.0f, 2.0f, -4.0f, 0.5f, 0.1f, 0.1f, 3.5f);
+	}
+	//	Add lights to indicate Player 2's side
+	for (int i = 0; i < 5; ++i)
+	{
+		AddPointLight(i * 2 - 4.0f, 2.0f, 4.0f, 0.1f, 0.1f, 0.5f, 3.5f);
+	}
+	//	Add lights above the board
+	for (int i = 0; i < 13; ++i)
+	{
+		for (int j = 0; j < 13; ++j)
+		{
+			AddPointLight(i - 6.0f, 0.5f, j - 6.0f, 0.25f, 0.25f, 0.25f, 1.5f);
+		}
+	}
+	//	Add lights below the board
+	for (int i = 0; i < 7; ++i)
+	{
+		for (int j = 0; j < 7; ++j)
+		{
+			AddPointLight(i*2 - 6.0f, -1.5f, j*2 - 6.0f, 0.25f, 0.25f, 0.25f, 2.5f);
+		}
+	}
+
+//	AddPointLight(0, 2, 0, 0.5f, 0.5f, 0.5f, 2.75f);	//	initial test light at (0, 5, 0) with a range of 10
+//	AddPointLight(-3, 1, 0, 0.25f, 0.25f, 0.5f, 2.5f);	//	initial test light at (0, 5, 0) with a range of 10
+//	AddPointLight(3, 1, -3, 0.25f, 0.5f, 0.25f, 2.5f);	//	initial test light at (0, 5, 0) with a range of 10
+//	AddPointLight(-3, 1, -3, 0.5f, 0.25f, 0.25f, 2.5f);	//	initial test light at (0, 5, 0) with a range of 10
 }

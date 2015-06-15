@@ -2,6 +2,8 @@
 #include "gl_core_4_4.h"
 #include <GLFW\glfw3.h>
 
+#include "Bitboard.h"	//	for the screenwidth / height ...
+
 #include <cstdio>
 
 
@@ -78,8 +80,8 @@ vec3	Camera::GetPosition()
 
 vec3	Camera::PickAgainstPlane(float x, float y, vec4 plane)
 {
-	float nxPos = x / 1600.0f;
-	float nyPos = y / 900.0f;
+	float nxPos = x / (float)BUFFER_WIDTH;
+	float nyPos = y / (float)BUFFER_HEIGHT;
 
 	float sxPos = nxPos - 0.5f;
 	float syPos = nyPos - 0.5f;
@@ -158,14 +160,14 @@ bool	FlyCamera::update(float dT)
 		//	do the mouse stuff if the right button has been pressed
 		double	dXDelta, dYDelta;
 		glfwGetCursorPos(pCurrentWindow, &dXDelta, &dYDelta);
-		glfwSetCursorPos(pCurrentWindow, 1600.0 * 0.5, 900.0 * 0.5);
+		glfwSetCursorPos(pCurrentWindow, (float)BUFFER_WIDTH * 0.5, (float)BUFFER_HEIGHT * 0.5);
 
 		//calculate x and y deltas here ...
-		dXDelta -= 1600.0f / 2.0f;
-		dYDelta -= 900.0f / 2.0f;
+		dXDelta -= (float)BUFFER_WIDTH / 2.0f;
+		dYDelta -= (float)BUFFER_HEIGHT / 2.0f;
 
-		dXDelta /= -1600.0f / 2.0f;
-		dYDelta /= -900.0f / 2.0f;
+		dXDelta /= (float)-BUFFER_WIDTH / 2.0f;
+		dYDelta /= (float)-BUFFER_HEIGHT / 2.0f;
 		vec3	cameraRight = (vec3)m_worldTransform[0];
 		mat4	cameraYaw = glm::rotate((float)dXDelta, vec3(0, 1, 0));
 		mat4	cameraPitch = glm::rotate((float)dYDelta, cameraRight);
