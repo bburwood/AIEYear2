@@ -106,10 +106,10 @@ bool	Checkers::startup()
 	TwAddVarRW(m_bar, "Deferred SpecPower", TW_TYPE_FLOAT, &m_fDeferredSpecPower, "min=0.0 max=250.0 step=0.5");
 
 
-	m_Player1Colour = vec4(0.75f, 0.10f, 0.10f, 1.0f);
-	m_Player2Colour = vec4(0.10f, 0.10f, 0.75f, 1.0f);
-	m_vAmbientLightColour = vec4(0.05f, 0.05f, 0.05f, 1.0f);
-	m_vLightColour = vec4(0.5f, 0.5f, 0.5f, 1.0f);
+	m_Player1Colour = vec4(0.7f, 0.05f, 0.05f, 1.0f);
+	m_Player2Colour = vec4(0.05f, 0.05f, 0.7f, 1.0f);
+	m_vAmbientLightColour = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	m_vLightColour = vec4(0.2f, 0.2f, 0.2f, 1.0f);
 	m_vLightDir = glm::normalize(vec3(-0.10f, -0.85f, 0.5f));
 
 	//	initialise the GPU Particle emitter variables
@@ -130,8 +130,8 @@ bool	Checkers::startup()
 	}
 
 
-	m_fCheckerboardSpecPower = 40.0f;
-	m_fCheckerPieceSpecPower = 150.0f;
+	m_fCheckerboardSpecPower = 100.0f;
+	m_fCheckerPieceSpecPower = 250.0f;
 	m_fDeferredSpecPower = 20.0f;
 	m_CheckerBoardWorldTransform = glm::translate(vec3(0, -0.248f, 0));
 	m_BackBoardWorldTransform = glm::translate(vec3(0, -0.748f, 0));
@@ -463,7 +463,19 @@ void	Checkers::draw()
 	}
 	else
 	{
-		DrawModels();
+
+		DrawModels(m_vLightDir, m_vLightColour);
+		glEnable(GL_BLEND);
+		glBlendEquation(GL_FUNC_ADD);
+		glBlendFunc(GL_ONE, GL_ONE);
+		glDepthFunc(GL_LEQUAL);
+		
+		DrawModels(glm::normalize(vec3(1, -6, 1)), m_vLightColour);
+		DrawModels(glm::normalize(vec3(1, -6, -1)), m_vLightColour);
+		DrawModels(glm::normalize(vec3(-1, -6, -1)), m_vLightColour);
+		DrawModels(glm::normalize(vec3(-1, -6, 1)), m_vLightColour);
+		glDepthFunc(GL_LESS);
+		glDisable(GL_BLEND);
 	}
 
 	//	now draw any particle emitters
@@ -953,7 +965,7 @@ void	Checkers::LoadMeshes()
 
 }
 
-void	Checkers::DrawModels()
+void	Checkers::DrawModels(vec3 a_vLightDir, vec4 a_vLightColour)
 {
 	//	draw the checkerboard
 	glUseProgram(m_uiProgramID);
@@ -968,9 +980,9 @@ void	Checkers::DrawModels()
 	int	eye_pos_uniform = glGetUniformLocation(m_uiProgramID, "eye_pos");
 	glUniform3fv(eye_pos_uniform, 1, (float*)&m_FlyCamera.GetPosition());
 	int	iLightDirUniform = glGetUniformLocation(m_uiProgramID, "light_dir");
-	glUniform3fv(iLightDirUniform, 1, (float*)&m_vLightDir);
+	glUniform3fv(iLightDirUniform, 1, (float*)&a_vLightDir);
 	int	iLightColourUniform = glGetUniformLocation(m_uiProgramID, "light_colour");
-	glUniform3fv(iLightColourUniform, 1, (float*)&m_vLightColour.rgb);
+	glUniform3fv(iLightColourUniform, 1, (float*)&a_vLightColour.rgb);
 	int	iAmbientUniform = glGetUniformLocation(m_uiProgramID, "ambient_light");
 	glUniform3fv(iAmbientUniform, 1, (float*)&m_vAmbientLightColour.rgb);
 	int	iSpecPowerUniform = glGetUniformLocation(m_uiProgramID, "specular_power");
@@ -1000,9 +1012,9 @@ void	Checkers::DrawModels()
 	eye_pos_uniform = glGetUniformLocation(m_uiModelProgramID, "eye_pos");
 	glUniform3fv(eye_pos_uniform, 1, (float*)&m_FlyCamera.GetPosition());
 	iLightDirUniform = glGetUniformLocation(m_uiModelProgramID, "light_dir");
-	glUniform3fv(iLightDirUniform, 1, (float*)&m_vLightDir);
+	glUniform3fv(iLightDirUniform, 1, (float*)&a_vLightDir);
 	iLightColourUniform = glGetUniformLocation(m_uiModelProgramID, "light_colour");
-	glUniform3fv(iLightColourUniform, 1, (float*)&m_vLightColour.rgb);
+	glUniform3fv(iLightColourUniform, 1, (float*)&a_vLightColour.rgb);
 	iAmbientUniform = glGetUniformLocation(m_uiModelProgramID, "ambient_light");
 	glUniform3fv(iAmbientUniform, 1, (float*)&m_vAmbientLightColour.rgb);
 	iSpecPowerUniform = glGetUniformLocation(m_uiModelProgramID, "specular_power");
@@ -1628,7 +1640,7 @@ void	Checkers::SetupDeferredLights()
 	{
 		for (int j = 0; j < 13; ++j)
 		{
-			AddPointLight(i - 6.0f, 0.5f, j - 6.0f, 0.25f, 0.25f, 0.25f, 1.5f);
+			AddPointLight(i - 6.0f, 0.5f, j - 6.0f, 0.25f, 0.25f, 0.25f, 1.0f);
 		}
 	}
 	//	Add lights below the board

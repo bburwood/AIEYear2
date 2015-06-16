@@ -29,7 +29,7 @@ public:
 	void	BuildCheckerboard(OpenGLData& a_board, float a_fSideLength, float a_fThickness);
 	void	BuildBackboard(OpenGLData& a_board, float a_fSideLength, float a_fThickness);
 	void	LoadMeshes();
-	void	DrawModels();
+	void	DrawModels(vec3 a_vLightDir, vec4 a_vLightColour);
 	void	DrawSelectedBox(int a_iXIndex, int a_iZIndex, float a_fSideLength, float a_fYCoord, vec4 a_Colour);
 	void	FireEmitterAt(int a_iXIndex, int a_iZindex, float a_fHeight);
 	void	FireCaptureEmitterAt(int a_iXIndex, int a_iZindex, float a_fHeight);
