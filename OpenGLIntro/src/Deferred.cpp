@@ -28,7 +28,7 @@ bool	Deferred::startup()
 	}
 
 	TwInit(TW_OPENGL_CORE, nullptr);
-	TwWindowSize(1280, 720);
+	TwWindowSize(BUFFER_WIDTH, BUFFER_HEIGHT);
 	//	setup callbacks to send info to AntTweakBar
 	glfwSetMouseButtonCallback(m_window, OnMouseButton);
 	glfwSetCursorPosCallback(m_window, OnMousePosition);
@@ -47,7 +47,7 @@ bool	Deferred::startup()
 	m_bDrawGizmos = false;
 
 	//	now initialise the FlyCamera
-	m_FlyCamera = FlyCamera(vec3(20, 40, 45), vec3(0, 18, 0), glm::radians(50.0f), 1280.0f / 720.0f, 0.1f, 1000.0f);
+	m_FlyCamera = FlyCamera(vec3(20, 40, 45), vec3(0, 18, 0), glm::radians(50.0f), (float)BUFFER_WIDTH / (float)BUFFER_HEIGHT, 0.1f, 1000.0f);
 
 	//	initialise basic AntTweakBar info
 	m_bar = TwNewBar("Amazing new AntTweakBar!!");

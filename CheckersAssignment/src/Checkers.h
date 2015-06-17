@@ -8,6 +8,7 @@
 #include "AntTweakBar.h"
 
 #include "Game.h"
+#include <vector>
 
 const	int	c_iNUM_EMITTERS = 64;
 
@@ -28,7 +29,7 @@ public:
 	void	BuildCheckerboard(OpenGLData& a_board, float a_fSideLength, float a_fThickness);
 	void	BuildBackboard(OpenGLData& a_board, float a_fSideLength, float a_fThickness);
 	void	LoadMeshes();
-	void	DrawModels();
+	void	DrawModels(vec3 a_vLightDir, vec4 a_vLightColour);
 	void	DrawSelectedBox(int a_iXIndex, int a_iZIndex, float a_fSideLength, float a_fYCoord, vec4 a_Colour);
 	void	FireEmitterAt(int a_iXIndex, int a_iZindex, float a_fHeight);
 	void	FireCaptureEmitterAt(int a_iXIndex, int a_iZindex, float a_fHeight);
@@ -36,10 +37,26 @@ public:
 	void	DrawBitboardAsBoxes(Bitboard a_bbBoard, float a_fBoxSize, vec4 a_vColour);
 	void	DebugDrawMoveList(float a_fHeight, vec4 a_vColour);
 
+	//	Deferred Lighting additions ...
+	void	SetupDeferredLights();
+	void	AddPointLight(float a_fX, float a_fY, float a_fZ, float a_fR, float a_fG, float a_fB, float a_fRange);//
+	void	RenderPointLights();//
+	void	RenderDirectionalLight(vec3 light_dir, vec3 light_colour);
+	void	BuildScreenSpaceQuad();//
+	void	BuildLightCube();//
+	void	BuildGBuffer();//
+	void	BuildLightBuffer();//
+	void	DrawModelsDeferred();
+	void	AccumulateLightsDeferred();
+	void	RenderCompositePass();
+
 	OpenGLData	m_BoardMesh;
 	OpenGLData	m_BackBoardMesh;
 	OpenGLData	m_CheckerMesh;
 	OpenGLData	m_KingMesh;
+	//	deferred rendering extras
+	OpenGLData	m_ScreenSpaceQuad;
+	OpenGLData	m_LightCube;
 
 	mat4	m_view;
 	mat4	m_projection;
@@ -70,6 +87,7 @@ public:
 	bool	m_bDrawGizmos;
 	bool	m_bResetGame;
 	bool	m_bDebug;
+	bool	m_bDeferredRendering;
 
 
 private:
@@ -87,6 +105,7 @@ private:
 
 	float	m_fCheckerboardSpecPower;
 	float	m_fCheckerPieceSpecPower;
+	float	m_fDeferredSpecPower;
 
 	mat4	m_CheckerBoardWorldTransform;
 	mat4	m_BackBoardWorldTransform;
@@ -94,6 +113,30 @@ private:
 	mat4	m_KingWorldTransform;
 
 	int		m_iPlayerToMoveFirst;
+
+	//	Deferred Lighting additions ...
+	std::vector<float>	aPointLightsX;
+	std::vector<float>	aPointLightsY;
+	std::vector<float>	aPointLightsZ;
+	std::vector<float>	aPointLightsColourR;
+	std::vector<float>	aPointLightsColourG;
+	std::vector<float>	aPointLightsColourB;
+	std::vector<float>	aPointLightsRange;
+	//	we need our shaders
+	unsigned int	m_uiGBufferProgram;
+	unsigned int	m_uiDirectionalLightProgram;
+	unsigned int	m_uiPointLightProgram;
+	unsigned int	m_uiCompositeProgram;
+	//	generate a g-buffer
+	unsigned int	m_uiGBufferFBO;
+	unsigned int	m_uiAlbedoTexture;
+	unsigned int	m_uiNormalsTexture;
+	unsigned int	m_uiPositionsTexture;
+	unsigned int	m_uiGBufferDepth;
+	//	render lights
+	unsigned int	m_uiLightFBO;
+	unsigned int	m_uiLightTexture;
+
 
 	int		m_iXSelected;
 	int		m_iZSelected;

@@ -2,7 +2,7 @@
 #include "gl_core_4_4.h"
 #include <GLFW\glfw3.h>
 #include <cstdio>
-
+#include "Bitboard.h"
 
 Application::Application()
 {
@@ -41,7 +41,7 @@ bool	Application::startup()
 		return false;
 	}
 
-	this->m_window = glfwCreateWindow(1600, 900, "Checkers Assignment", nullptr, nullptr);
+	this->m_window = glfwCreateWindow(BUFFER_WIDTH, BUFFER_HEIGHT, "Checkers Assignment", nullptr, nullptr);
 	if (m_window == nullptr)
 	{
 		return false;

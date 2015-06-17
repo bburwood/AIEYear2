@@ -558,6 +558,10 @@ void	Player::ConductPlayouts()
 float	Player::ScorePlayout(int a_iLookAheadCountDown, int a_iLastMover, GameState a_oGameState)
 {
 	//	This function conducts a playout
+
+	//	*********************  Also need to pass in a Bitboard for the actual last piece that moved if it was a jump, so that it can be correctly dealt with!
+	//	This is likely why the AI is playing like Forrest Gump at present!
+
 	float	fScore = 0.0f;
 	if (a_iLastMover == a_oGameState.m_iCurrentPlayer)
 	{
