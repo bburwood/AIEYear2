@@ -458,7 +458,7 @@ void	Checkers::draw()
 	if (m_bDeferredRendering)
 	{
 		DrawModelsDeferred();
-		AccumulateLightsDeferred();
+		AccumulateLightsDeferred();	//	<<---- This is where the spec calculations need to be done - modify shaders to pass in the G-Buffer to the light accumulation shader
 		RenderCompositePass();
 	}
 	else

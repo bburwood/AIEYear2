@@ -56,6 +56,8 @@ public:
 	glm::vec2 contactPoint; //if a collision occurs then this is the point of contact
 	float mass;
 	float rotation2D; //2D so we only need a single float to represent our rotation about Z
+	float	staticFriction;
+	float	dynamicFriction;
 	glm::mat4 rotationMatrix;
 	DIYRigidBody(glm::vec2 position,glm::vec2 velocity,float rotation,float mass);
 	virtual void update(glm::vec2 gravity,float timeStep);
@@ -83,6 +85,13 @@ public:
 	BoxClass(	glm::vec2 position,glm::vec2 velocity,float rotation,float mass,float width, float height,glm::vec4& colour);
 	BoxClass(	glm::vec2 position, float angle, float speed, float rotation, float width, float height, float mass, glm::vec4& colour);
 	virtual void makeGizmo();
+	virtual	void	update(glm::vec2 gravity, float delta)
+	{
+		DIYRigidBody::update(gravity, delta);
+		this->m_bIsColliding = false;
+	};
+
+	bool	m_bIsColliding;
 };
 
 
@@ -100,13 +109,13 @@ class DIYPhysicScene
 	void debugScene();
 	void upDateGizmos();
 	void	CheckForCollision();
-	static	bool	Plane2Plane(PhysicsObject* first, PhysicsObject* second);
-	static	bool	Plane2Sphere(PhysicsObject* first, PhysicsObject* second);
-	static	bool	Plane2Box(PhysicsObject* first, PhysicsObject* second);
-	static	bool	Sphere2Plane(PhysicsObject* first, PhysicsObject* second);
-	static	bool	Sphere2Sphere(PhysicsObject* first, PhysicsObject* second);
-	static	bool	Sphere2Box(PhysicsObject* first, PhysicsObject* second);
-	static	bool	Box2Plane(PhysicsObject* first, PhysicsObject* second);
-	static	bool	Box2Sphere(PhysicsObject* first, PhysicsObject* second);
-	static	bool	Box2Box(PhysicsObject* first, PhysicsObject* second);
+	static	bool	Plane2Plane		(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	bool	Plane2Sphere	(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	bool	Plane2Box		(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	bool	Sphere2Plane	(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	bool	Sphere2Sphere	(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	bool	Sphere2Box		(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	bool	Box2Plane		(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	bool	Box2Sphere		(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	bool	Box2Box			(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
 };

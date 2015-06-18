@@ -14,6 +14,7 @@ void onUpdateRocket(float deltaTime);
 
 DIYPhysicScene* physicsScene;
 SphereClass* rocket;
+GLFWwindow* window;
 
 int main()
 {
@@ -24,7 +25,7 @@ int main()
 
 //	DIYPhysicsRocketSetup();
 	DIYPhysicsCollisionTutorial();
-	GLFWwindow* window = glfwCreateWindow(1080, 720, "Physics 2D", nullptr, nullptr);
+	window = glfwCreateWindow(1080, 720, "Physics 2D", nullptr, nullptr);
 
 	if (window == nullptr)
 	{
@@ -92,6 +93,35 @@ void draw2DGizmo()
 
 void upDate2DPhysics(float delta)
 {
+	BoxClass*	box1 = (BoxClass*)physicsScene->actors[0];
+	float	fSpeed = 15.0f;
+
+	if (glfwGetKey(window, GLFW_KEY_LEFT))
+	{
+		box1->position.x -= delta * fSpeed;
+	}
+	if (glfwGetKey(window, GLFW_KEY_RIGHT))
+	{
+		box1->position.x += delta * fSpeed;
+	}
+	if (glfwGetKey(window, GLFW_KEY_UP))
+	{
+		box1->position.y += delta * fSpeed;
+	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN))
+	{
+		box1->position.y -= delta * fSpeed;
+	}
+	fSpeed = 2.0f;
+	if (glfwGetKey(window, GLFW_KEY_Q))
+	{
+		box1->rotation2D += delta * fSpeed;
+	}
+	if (glfwGetKey(window, GLFW_KEY_E))
+	{
+		box1->rotation2D -= delta * fSpeed;
+	}
+
 	physicsScene->upDate();
 	physicsScene->upDateGizmos();
 	onUpdateRocket(delta);
@@ -109,6 +139,21 @@ void DIYPhysicsRocketSetup()
 	physicsScene->addActor(rocket);
 }
 
+void	SetupPoolGame()
+{
+	float	fBallRadius = 3.0f;
+	float	fSqrt3 = 1.7320508075688772935274463415059f;
+	for (int iRow = 1; iRow <= 5; ++iRow)
+	{
+		for (int iNumInRow = iRow; iNumInRow <= 5; ++iNumInRow)
+		{
+			SphereClass* sphere1 = new SphereClass(glm::vec2(70.0f - (fBallRadius * iRow * fSqrt3), 25.0f - (iRow * 0.0f) - (iNumInRow * fBallRadius * 2.0f)), glm::vec2(0, 0), fBallRadius, 0.5f, glm::vec4(1, 0, 0, 1));
+			physicsScene->addActor(sphere1);
+		}
+	}
+
+}
+
 void DIYPhysicsCollisionTutorial()
 {
 
@@ -116,7 +161,16 @@ void DIYPhysicsCollisionTutorial()
 	physicsScene = new DIYPhysicScene();
 	physicsScene->collisionEnabled = true;
 	physicsScene->timeStep = 0.001f;
-	physicsScene->gravity = glm::vec2(0, -10);
+	physicsScene->gravity = glm::vec2(0, 0);
+
+	SetupPoolGame();
+	/*
+	BoxClass*	box1 = new BoxClass(glm::vec2(-8, 30), glm::vec2(0, 0), 0.0f, 10, 4, 4, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+	physicsScene->addActor(box1);
+	BoxClass*	box2 = new BoxClass(glm::vec2(-14, 30), glm::vec2(0, 0), 0.0f, 10, 4, 4, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+	physicsScene->addActor(box2);
+	BoxClass*	box3 = new BoxClass(glm::vec2(-24, 20), glm::vec2(0, 0), 0.0f, 10, 4, 4, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+	physicsScene->addActor(box3);
 
 	SphereClass* sphere1 = new SphereClass(glm::vec2(-70, 25), glm::vec2(0, 0), 8.0f, 8, glm::vec4(1, 0, 0, 1));
 	physicsScene->addActor(sphere1);
@@ -135,26 +189,22 @@ void DIYPhysicsCollisionTutorial()
 	SphereClass* sphere3a = new SphereClass(glm::vec2(-25, 15), glm::vec2(0, 0), 4.5f, 4.5f, glm::vec4(1, 0, 0, 1));
 	physicsScene->addActor(sphere3a);
 
-	SphereClass* sphere4 = new SphereClass(glm::vec2(0, 7), glm::vec2(0, 0), 6.0f, 6, glm::vec4(1, 0, 0, 1));
+	SphereClass* sphere4 = new SphereClass(glm::vec2(10, 50), glm::vec2(4, -4), 6.0f, 6, glm::vec4(1, 0, 0, 1));
 	physicsScene->addActor(sphere4);
-	SphereClass* sphere4a = new SphereClass(glm::vec2(5, 20), glm::vec2(0, 0), 7.0f, 7, glm::vec4(1, 0, 0, 1));
+	SphereClass* sphere4a = new SphereClass(glm::vec2(-5, 0), glm::vec2(0, 0), 7.0f, 7, glm::vec4(1, 0, 0, 1));
 	physicsScene->addActor(sphere4a);
 
-	SphereClass* sphere5 = new SphereClass(glm::vec2(2, 35), glm::vec2(0, 0), 7.0f, 7, glm::vec4(1, 0, 0, 1));
+	SphereClass* sphere5 = new SphereClass(glm::vec2(-10, 15), glm::vec2(0, 0), 7.0f, 7, glm::vec4(1, 0, 0, 1));
 	physicsScene->addActor(sphere5);
-	SphereClass* sphere5a = new SphereClass(glm::vec2(4, 55), glm::vec2(0, 0), 9.0f, 9, glm::vec4(1, 0, 0, 1));
+	SphereClass* sphere5a = new SphereClass(glm::vec2(20, 35), glm::vec2(3, -3), 9.0f, 9, glm::vec4(1, 0, 0, 1));
 	physicsScene->addActor(sphere5a);
-
-	BoxClass*	box1 = new BoxClass(glm::vec2(-8, 30), glm::vec2(0, 0), 0.0f, 10, 4, 4, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-	physicsScene->addActor(box1);
-	BoxClass*	box2 = new BoxClass(glm::vec2(-14, 30), glm::vec2(0, 0), 0.0f, 10, 4, 4, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-	physicsScene->addActor(box2);
 
 	PlaneClass* plane = new PlaneClass(glm::vec2(0.5f, 1), -30);
 	physicsScene->addActor(plane);
 
 	PlaneClass* plane2 = new PlaneClass(glm::vec2(-0.5f, 1), -30);
 	physicsScene->addActor(plane2);
+	*/
 }
 
 
