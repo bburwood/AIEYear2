@@ -104,8 +104,8 @@ DIYRigidBody::DIYRigidBody(	glm::vec2 position,glm::vec2 velocity,float rotation
 	this->velocity = velocity;
 	this->rotation2D = rotation;
 	this->mass = mass;
-	this->dynamicFriction = 0.1f;
-	this->staticFriction = 0.1f;
+	this->dynamicFriction = 0.2f;
+	this->staticFriction = 0.2f;
 	colour = glm::vec4(1,1,1,1); //white by default
 }
 

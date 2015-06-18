@@ -124,7 +124,7 @@ void upDate2DPhysics(float delta)
 
 	physicsScene->upDate();
 	physicsScene->upDateGizmos();
-	onUpdateRocket(delta);
+	//onUpdateRocket(delta);
 }
 
 void DIYPhysicsRocketSetup()
@@ -143,11 +143,16 @@ void	SetupPoolGame()
 {
 	float	fBallRadius = 3.0f;
 	float	fSqrt3 = 1.7320508075688772935274463415059f;
-	for (int iRow = 1; iRow <= 5; ++iRow)
+	glm::vec2	vStartTriangleHead(40.0f, 0.0f);
+	SphereClass* sphere1;
+	sphere1 = new SphereClass(glm::vec2(-60.0f, vStartTriangleHead.y), glm::vec2(35.0f, 2.05f), fBallRadius, 1.5f, glm::vec4(1, 1, 1, 1));
+	physicsScene->addActor(sphere1);
+	for (int iRow = 0; iRow < 10; ++iRow)
 	{
-		for (int iNumInRow = iRow; iNumInRow <= 5; ++iNumInRow)
+		for (int iNumInRow = 0; iNumInRow <= iRow; ++iNumInRow)
 		{
-			SphereClass* sphere1 = new SphereClass(glm::vec2(70.0f - (fBallRadius * iRow * fSqrt3), 25.0f - (iRow * 0.0f) - (iNumInRow * fBallRadius * 2.0f)), glm::vec2(0, 0), fBallRadius, 0.5f, glm::vec4(1, 0, 0, 1));
+			sphere1 = new SphereClass(glm::vec2(vStartTriangleHead.x + (fBallRadius * iRow * fSqrt3), vStartTriangleHead.y + (fBallRadius * (iRow - (2.0f * iNumInRow)))),
+				glm::vec2(0, 0), fBallRadius, 0.5f, glm::vec4(1, 0, 0, 1));
 			physicsScene->addActor(sphere1);
 		}
 	}
@@ -160,7 +165,7 @@ void DIYPhysicsCollisionTutorial()
 	//note - collision detection must be disabled in the physics engine for this to work.
 	physicsScene = new DIYPhysicScene();
 	physicsScene->collisionEnabled = true;
-	physicsScene->timeStep = 0.001f;
+	physicsScene->timeStep = 0.01f;
 	physicsScene->gravity = glm::vec2(0, 0);
 
 	SetupPoolGame();
