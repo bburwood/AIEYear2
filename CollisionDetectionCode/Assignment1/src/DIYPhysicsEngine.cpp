@@ -5,7 +5,7 @@ using namespace std;
 void	BuildBoxPoints(BoxClass* box, glm::vec2* points);
 
 //	function pointer array for doing our collisions
-typedef	bool(*fn)(DIYPhysicScene* scene, PhysicsObject*, PhysicsObject*);
+typedef	CollisionManifold	(*fn)(DIYPhysicScene* scene, PhysicsObject*, PhysicsObject*);
 static	fn	CollisionFunctionArray[] =
 {
 	DIYPhysicScene::Plane2Plane, DIYPhysicScene::Plane2Sphere, DIYPhysicScene::Plane2Box,
@@ -42,6 +42,7 @@ SphereClass::SphereClass(	glm::vec2 position,glm::vec2 velocity,float radius,flo
 	this->colour = colour;
 	std::cout<<"adding sphere "<<this->position.x<<','<<this->position.y<<std::endl;
 	_shapeID = SPHERE;
+	this->momentOfInertia = this->mass * this->_radius * this->_radius * 0.5f;
 }
 
 SphereClass::SphereClass(	glm::vec2 position,float angle,float speed,float radius,float mass,glm::vec4& colour)
@@ -51,12 +52,13 @@ SphereClass::SphereClass(	glm::vec2 position,float angle,float speed,float radiu
 	this->colour = colour;
 	std::cout<<"adding sphere "<<this->position.x<<','<<this->position.y<<std::endl;
 	_shapeID = SPHERE;
+	this->momentOfInertia = this->mass * this->_radius * this->_radius * 0.5f;
 }
 
 void SphereClass::makeGizmo()
 {
 	glm::vec2 center = position.xy();
-	Gizmos::add2DCircle(center, _radius,30, colour);
+	Gizmos::add2DCircle(center, _radius, 30, colour);
 }
 
 //box class functions
@@ -69,6 +71,9 @@ BoxClass::BoxClass(	glm::vec2 position,glm::vec2 velocity,float rotation,float m
 	this->colour = colour;
 	_shapeID = BOX;
 	m_bIsColliding = false;
+	float	h = 2.0f * height;
+	float	w = 2.0f * width;
+	this->momentOfInertia = (mass * ((h * h) + (w * w))) / 12.0f;
 }
 
 BoxClass::BoxClass(	glm::vec2 position, float angle, float speed, float rotation, float width, float height, float mass, glm::vec4& colour)
@@ -79,6 +84,9 @@ BoxClass::BoxClass(	glm::vec2 position, float angle, float speed, float rotation
 	this->colour = colour;
 	_shapeID = BOX;
 	m_bIsColliding = false;
+	float	h = 2.0f * height;
+	float	w = 2.0f * width;
+	this->momentOfInertia = (mass * ((h * h) + (w * w))) / 12.0f;
 }
 
 void BoxClass::makeGizmo()
@@ -97,6 +105,19 @@ void BoxClass::makeGizmo()
 	Gizmos::add2DAABBFilled(position, glm::vec2(width, height), vMyColour, &rotationMatrix);
 }
 
+bool	BoxClass::IsPointOver(glm::vec2 point)
+{
+	glm::vec2	vRelPoint = point - position;
+	float	fCosTh = cosf(-rotation2D);
+	float	fSinTh = sinf(-rotation2D);
+
+	vRelPoint = glm::vec2(fCosTh * vRelPoint.x - fSinTh * vRelPoint.y,
+							fSinTh * vRelPoint.x + fCosTh * vRelPoint.y);
+
+	bool	bResult = (vRelPoint.x > -width) && (vRelPoint.x < width) && (vRelPoint.y > -height) && (vRelPoint.y < height);
+	return bResult;
+}
+
 DIYRigidBody::DIYRigidBody(	glm::vec2 position,glm::vec2 velocity,float rotation,float mass)
 {
 	std::cout<<"adding rigid body "<<position.x<<','<<position.y<<std::endl;
@@ -104,14 +125,25 @@ DIYRigidBody::DIYRigidBody(	glm::vec2 position,glm::vec2 velocity,float rotation
 	this->velocity = velocity;
 	this->rotation2D = rotation;
 	this->mass = mass;
-	this->dynamicFriction = 0.2f;
-	this->staticFriction = 0.2f;
+	this->dynamicFriction = 0.1f;
+	this->staticFriction = 0.1f;
+	this->totalTorque = 0.0f;
+	this->totalForce = glm::vec2(0.0f, 0.0f);
+	this->angularVelocity = 0.0f;
 	colour = glm::vec4(1,1,1,1); //white by default
 }
 
 void DIYRigidBody::applyForce(glm::vec2 force)
 {
-		velocity += force/mass;
+	applyForceAtPoint(force, this->position);
+}
+
+void	DIYRigidBody::applyForceAtPoint(glm::vec2 force, glm::vec2 point)
+{
+	totalForce += force;
+	glm::vec2	cmToPoint = point - this->position;
+	glm::vec2	perpToPoint(-cmToPoint.y, cmToPoint.x);
+	totalTorque += glm::dot(perpToPoint, force);
 }
 
 void DIYRigidBody::applyForceToActor(DIYRigidBody* actor2, glm::vec2 force)
@@ -130,17 +162,35 @@ void DIYRigidBody::collisionResponse(glm::vec2 collisionPoint)
 void DIYRigidBody::update(glm::vec2 gravity,float timeStep)
 {
 
-	applyForce(gravity * mass * timeStep);
-	oldPosition = position; //keep our old position for collision response
-
+	applyForce(gravity * mass);
 
 	float	fNormalForce = this->mass;
-	glm::vec2	vFrictionForceVector = -fNormalForce * this->dynamicFriction * this->velocity;
+	glm::vec2	vFrictionForceVector = -this->mass * this->dynamicFriction * this->velocity;
+	applyForce(vFrictionForceVector);
+
+	float	fFrictionTorque = -momentOfInertia * this->dynamicFriction * angularVelocity;
+	totalTorque += fFrictionTorque;
+
+	glm::vec2	vAcceleration = (totalForce / mass);
+	glm::vec2	vDeltaV = vAcceleration * timeStep;
+
+	float	fAngularAcceleration = totalTorque / momentOfInertia;
+	float	fDeltaW = fAngularAcceleration * timeStep;
+
+	oldPosition = position; //keep our old position for collision response
+	position += velocity * timeStep;
+	velocity += vDeltaV;
+
+	rotation2D += angularVelocity * timeStep;
+	angularVelocity += fDeltaW;
+
 	glm::vec2	vFrictionAcceleration = vFrictionForceVector / this->mass;
 	this->velocity += vFrictionAcceleration * timeStep;
 
-	position += velocity * timeStep;
-	rotationMatrix = glm::rotate(rotation2D,glm::vec3(0.0f,0.0f,1.0f)); 
+	rotationMatrix = glm::rotate(rotation2D,glm::vec3(0.0f,0.0f,1.0f));
+
+	totalForce = glm::vec2(0.0f, 0.0f);
+	totalTorque = 0.0f;
 }
 
 void DIYRigidBody::debug()
@@ -216,47 +266,98 @@ void	DIYPhysicScene::CheckForCollision()
 			fn pCollisionFunctionPointer = CollisionFunctionArray[iFunctionIndex];
 			if (pCollisionFunctionPointer != nullptr)
 			{
-				pCollisionFunctionPointer(this, object1, object2);
+				CollisionManifold	manifold = pCollisionFunctionPointer(this, object1, object2);
+				if (manifold.bColliding)
+				{
+					float	fInvMass1 = 1.0f / manifold.first->mass;
+					float	fInvMass2 = manifold.second ? 1.0f / manifold.second->mass : 0;
+
+					float	fInvMOI1 = 1.0f / manifold.first->momentOfInertia;
+					float	fInvMOI2 = manifold.second ? 1.0f / manifold.first->momentOfInertia : 0;
+
+					glm::vec2	vCom1 = manifold.first->position;
+					glm::vec2	vCom2 = manifold.second ? manifold.second->position : manifold.P;
+
+					glm::vec2	vR1P = manifold.P - manifold.first->position;
+					vR1P = glm::vec2(-vR1P.y, vR1P.x);
+					glm::vec2	vR2P = manifold.P - (manifold.second ? manifold.second->position : manifold.P);
+					vR2P = glm::vec2(-vR2P.y, vR2P.x);
+					glm::vec2	vVelocity1 = manifold.first->velocity + manifold.first->angularVelocity * vR1P;
+					glm::vec2	vVelocity2;
+					if (manifold.second)
+					{
+						vVelocity2 = manifold.second->velocity + manifold.second->angularVelocity * vR2P;
+					}
+					float	R1PdotN = glm::dot(vR1P, manifold.N);
+					float	R2PdotN = glm::dot(vR2P, manifold.N);
+					float	fDenom = glm::dot(manifold.N, manifold.N * (fInvMass1 + fInvMass2)) + R1PdotN * R1PdotN * fInvMOI1 + R2PdotN * R2PdotN * fInvMOI2;
+					float	j = (-(1.0f + manifold.e) * glm::dot(vVelocity1 - vVelocity2, manifold.N)) / fDenom;
+
+					manifold.first->velocity += (j * fInvMass1) * manifold.N;
+					manifold.first->angularVelocity += glm::dot(vR1P, j * manifold.N) * fInvMOI1;
+					if (manifold.second)
+					{
+						manifold.second->velocity += (-j * fInvMass2) * manifold.N;
+						manifold.second->angularVelocity += glm::dot(vR2P, -j * manifold.N) * fInvMOI2;
+					}
+					//	now deal with friction
+					glm::vec2	vTangent(-manifold.N.y, manifold.N.x);
+					float	fR1PdotT = glm::dot(vR1P, vTangent);
+					float	fR2PdotT = glm::dot(vR2P, vTangent);
+					float	fFrictionDenom = fInvMass1 + fInvMass2 + (fR1PdotT * fR1PdotT) * fInvMOI1 + (fR2PdotT * fR2PdotT) * fInvMOI2;
+					float	fFrictionJ = (-(1.0f + manifold.e) * glm::dot(vVelocity1 - vVelocity2, vTangent)) / fFrictionDenom;
+
+					manifold.first->velocity += (fFrictionJ * fInvMass1) * vTangent;
+					manifold.first->angularVelocity += glm::dot(vR1P, fFrictionJ * vTangent) * fInvMOI1;
+					if (manifold.second)
+					{
+						manifold.second->velocity += (-fFrictionJ * fInvMass2) * vTangent;
+						manifold.second->angularVelocity += glm::dot(vR2P, -fFrictionJ * vTangent) * fInvMOI2;
+					}
+				}
 			}
 		}
 	}
 }
 
-bool	DIYPhysicScene::Plane2Plane(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
+CollisionManifold	DIYPhysicScene::Plane2Plane(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
 {
-	return false;
+	CollisionManifold	result = {};
+	result.bColliding = false;
+	return result;
 }
 
-bool	DIYPhysicScene::Plane2Sphere(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
+CollisionManifold	DIYPhysicScene::Plane2Sphere(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
 {
 	return Sphere2Plane(scene, second, first);
 }
 
-bool	DIYPhysicScene::Sphere2Plane(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
+CollisionManifold	DIYPhysicScene::Sphere2Plane(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
 {
 	SphereClass*	sphere = (SphereClass*)first;
 	PlaneClass*		plane = (PlaneClass*)second;
 
 	float	fPerpendicularDist = glm::dot(sphere->position, plane->normal) - plane->distance;
+
+	CollisionManifold	result;
+	result.bColliding = false;
+	result.first = sphere;
+	result.second = nullptr;
+
 	if (fPerpendicularDist < sphere->_radius)
 	{
 		float	fIntersection = sphere->_radius - fPerpendicularDist;
-		glm::vec2	vInLineWithNormal = plane->normal * glm::dot(plane->normal, sphere->velocity);
-		glm::vec2	vPerpendicular = sphere->velocity - vInLineWithNormal;
-
-		float	fRestitution = 0.999f;
-		vInLineWithNormal *= -1.0f * fRestitution;
-
-		sphere->velocity = vPerpendicular + vInLineWithNormal;
-
 		sphere->position += plane->normal * fIntersection;
 
-		return true;
+		result.bColliding = true;
+		result.N = plane->normal;
+		result.e = 0.97f;
+		result.P = sphere->position - plane->normal * sphere->_radius;
 	}
-	return false;
+	return result;
 }
 
-bool	DIYPhysicScene::Sphere2Sphere(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
+CollisionManifold	DIYPhysicScene::Sphere2Sphere(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
 {
 	SphereClass*	sphere1 = (SphereClass*)first;
 	SphereClass*	sphere2 = (SphereClass*)second;
@@ -267,74 +368,40 @@ bool	DIYPhysicScene::Sphere2Sphere(DIYPhysicScene* scene, PhysicsObject* first, 
 	float	fDistance = glm::length(vDelta);
 	float	fRadiiSum = sphere1->_radius + sphere2->_radius;
 
+	CollisionManifold	result = {};
+	result.first = sphere1;
+	result.second = sphere2;
+	result.bColliding = false;
+
 	if (fDistance < fRadiiSum)
 	{
-		//	collision reponse
-		////	kill all speed
-		//sphere1->velocity = glm::vec2(0);
-		//sphere2->velocity = glm::vec2(0);
-
 		//	get the normal of the collision
 		glm::vec2	vCollisionNormal = glm::normalize(vDelta);
-
-		//	split velocities into normal and non-normal components
-		glm::vec2	vInLineWithNormal1 = vCollisionNormal * glm::dot(vCollisionNormal, sphere1->velocity);
-		glm::vec2	vPerpendicularToNormal1 = sphere1->velocity - vInLineWithNormal1;
-		glm::vec2	vInLineWithNormal2 = vCollisionNormal * glm::dot(vCollisionNormal, sphere2->velocity);
-		glm::vec2	vPerpendicularToNormal2 = sphere2->velocity - vInLineWithNormal2;
-
-		float	fRestitution = 0.999f;
-
-		//	get mass and velocity amount in line with the normal
-		float	u1 = glm::dot(vCollisionNormal, sphere1->velocity);
-		float	m1 = sphere1->mass;
-		float	u2 = glm::dot(vCollisionNormal, sphere2->velocity);
-		float	m2 = sphere2->mass;
-
-		//float	u = u1 - u2;
-		//	conservation of momentum equation!
-		float	v1 = (u1 * (m1 - m2) / (m1 + m2)) + (u2 * (2 * m2) / (m1 + m2));
-		float	v2 = (u2 * (m2 - m1) / (m1 + m2)) + (u1 * (2 * m1) / (m1 + m2));
-		//float	v1 = (u * (m1 - m2)) / (m1 + m2);
-		//float	v2 = (u * (2 * m1)) / (m1 + m2);
-
-		//v1 += u2;
-		//v2 += u2;
-
-		v1 *= fRestitution;
-		v2 *= fRestitution;
-
-		//	rebuild velocity vectors
-		glm::vec2	vNewInLineWithNormal1 = vCollisionNormal * v1;
-		glm::vec2	vNewInLineWithNormal2 = vCollisionNormal * v2;
-
-		glm::vec2	vNewV1 = vNewInLineWithNormal1 + vPerpendicularToNormal1;
-		glm::vec2	vNewV2 = vNewInLineWithNormal2 + vPerpendicularToNormal2;
-
-		sphere1->velocity = vNewV1;
-		sphere2->velocity = vNewV2;
 
 		//	move circles apart
 		float	fIntersection = fRadiiSum - fDistance;
 		sphere1->position -= fIntersection * vCollisionNormal;
 		sphere2->position += fIntersection * vCollisionNormal;
 
-		return true;
+		result.e = 0.97f;
+		result.N = vCollisionNormal;
+		result.P = sphere1->position + vCollisionNormal * sphere1->_radius;
+		result.bColliding = true;
 	}
-	return false;
+	return result;
 }
 
-bool	DIYPhysicScene::Plane2Box(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
+CollisionManifold	DIYPhysicScene::Plane2Box(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
 {
 	return Box2Plane(scene, second, first);
 }
 
-bool	DIYPhysicScene::Sphere2Box(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
+CollisionManifold	DIYPhysicScene::Sphere2Box(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
 {
 	return Box2Sphere(scene, second, first);
 }
 
-bool	DIYPhysicScene::Box2Plane(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
+CollisionManifold	DIYPhysicScene::Box2Plane(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
 {
 	BoxClass*	box = (BoxClass*)first;
 	PlaneClass*	plane = (PlaneClass*)second;
@@ -342,28 +409,39 @@ bool	DIYPhysicScene::Box2Plane(DIYPhysicScene* scene, PhysicsObject* first, Phys
 	glm::vec2	vPoints[4];
 	BuildBoxPoints(box, vPoints);
 
-	int	iPointSides = 0;
+	CollisionManifold	result = {};
+	result.bColliding = false;
+	result.e = 0.97f;
+	result.first = box;
+	result.second = nullptr;
+
+	float	fLowestDistance = 0.0f;
+	glm::vec2	vLowestPoint;
 	for (int iPointIndex = 0; iPointIndex < 4; ++iPointIndex)
 	{
 		float	fDistance = glm::dot(plane->normal, vPoints[iPointIndex]) - plane->distance;
-		if (fDistance > 0)
+		if (fDistance < 0)
 		{
-			++iPointSides;
-		}
-		else
-		{
-			--iPointSides;
+			result.bColliding = true;
+			result.N = plane->normal;
+
+			if (fDistance < fLowestDistance)
+			{
+				fLowestDistance = fDistance;
+				result.P = vPoints[iPointIndex] + plane->normal * fLowestDistance;
+			}
+
 		}
 	}
-	if ((iPointSides == 4) || (iPointSides == -4))
+	if (result.bColliding)
 	{
-		return false;
+		box->m_bIsColliding = true;
+		box->position -= plane->normal * fLowestDistance;
 	}
-	box->m_bIsColliding = true;
-	return true;
+	return result;
 }
 
-bool	DIYPhysicScene::Box2Sphere(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
+CollisionManifold	DIYPhysicScene::Box2Sphere(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
 {
 	BoxClass*	box = (BoxClass*)first;
 	SphereClass*	sphere = (SphereClass*)second;
@@ -372,6 +450,12 @@ bool	DIYPhysicScene::Box2Sphere(DIYPhysicScene* scene, PhysicsObject* first, Phy
 
 	float	fSinTheta = sinf(-box->rotation2D);
 	float	fCosTheta = cosf(-box->rotation2D);
+
+	CollisionManifold	result = {};
+	result.bColliding = false;
+	result.e = 0.97f;
+	result.first = box;
+	result.second = nullptr;
 
 	//	rotate the vector
 	vVectorToCircle = glm::vec2(fCosTheta * vVectorToCircle.x - fSinTheta * vVectorToCircle.y,
@@ -402,9 +486,10 @@ bool	DIYPhysicScene::Box2Sphere(DIYPhysicScene* scene, PhysicsObject* first, Phy
 	if ((sphere->_radius * sphere->_radius) > fDistSquared)
 	{
 		box->m_bIsColliding = true;
-		return true;
+		result.bColliding = true;
+		return result;
 	}
-	return false;
+	return result;
 }
 
 void	BuildBoxPoints(BoxClass* box, glm::vec2* points)
@@ -415,7 +500,7 @@ void	BuildBoxPoints(BoxClass* box, glm::vec2* points)
 	points[3] = (box->rotationMatrix * glm::vec4(box->width, -box->height, 0, 1)).xy() + box->position;
 }
 
-bool	DIYPhysicScene::Box2Box(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
+CollisionManifold	DIYPhysicScene::Box2Box(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second)
 {
 	BoxClass*	box1 = (BoxClass*)first;
 	BoxClass*	box2 = (BoxClass*)second;
@@ -428,7 +513,14 @@ bool	DIYPhysicScene::Box2Box(DIYPhysicScene* scene, PhysicsObject* first, Physic
 	BuildBoxPoints(box1, vPoints);
 	BuildBoxPoints(box2, vPoints + 4);
 
-	float	minOverlap;
+	CollisionManifold	result = {};
+	result.bColliding = true;
+	result.first = box1;
+	result.second = box2;
+	result.e = 0.97f;
+
+	glm::vec2	vSmallestNormal;
+	float	minOverlap = FLT_MAX;
 
 	for (int boxIndex = 0; boxIndex < 2; ++boxIndex)
 	{
@@ -439,34 +531,49 @@ bool	DIYPhysicScene::Box2Box(DIYPhysicScene* scene, PhysicsObject* first, Physic
 			glm::vec2	perpVector(edgeVector.y, -edgeVector.x);
 			float	firstMin = FLT_MAX, firstMax = -FLT_MAX;
 			float	secondMin = FLT_MAX, secondMax = -FLT_MAX;
+
+			glm::vec2	vFirstMinPoint, vFirstMaxPoint;
+			glm::vec2	vSecondMinPoint, vSecondMaxPoint;
+
 			for (int checkIndex = 0; checkIndex < 4; ++checkIndex)
 			{
 				float	firstProjected = glm::dot(firstPoints[checkIndex], perpVector);
 				if (firstProjected < firstMin)
 				{
 					firstMin = firstProjected;
+					vFirstMinPoint = firstPoints[checkIndex];
 				}
 				if (firstProjected > firstMax)
 				{
 					firstMax = firstProjected;
+					vFirstMaxPoint = firstPoints[checkIndex];
 				}
 				float	secondProjected = glm::dot(secondPoints[checkIndex], perpVector);
 				if (secondProjected < secondMin)
 				{
 					secondMin = secondProjected;
+					vSecondMinPoint = secondPoints[checkIndex];
 				}
 				if (secondProjected > secondMax)
 				{
 					secondMax = secondProjected;
+					vSecondMaxPoint = secondPoints[checkIndex];
 				}
 			}
 			if ((firstMin > secondMax) || (secondMin > firstMax))
 			{
-				return false;
+				return result;	//	colliding will be false
 			}
 			else
 			{
-
+				float	max1_min0 = secondMax - firstMin;
+				float	max0_min1 = firstMax - secondMin;
+				float	fOverlap = glm::min(max1_min0, max0_min1);
+				if (fOverlap < minOverlap)
+				{
+					result.N = perpVector;
+					//result.P = ;
+				}
 			}
 		}
 		firstPoints = vPoints + 4;
@@ -479,6 +586,6 @@ bool	DIYPhysicScene::Box2Box(DIYPhysicScene* scene, PhysicsObject* first, Physic
 	box1->m_bIsColliding = true;
 	box2->m_bIsColliding = true;
 
-	return true;
+	return result;
 }
 

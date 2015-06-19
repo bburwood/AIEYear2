@@ -58,6 +58,10 @@ public:
 	float rotation2D; //2D so we only need a single float to represent our rotation about Z
 	float	staticFriction;
 	float	dynamicFriction;
+	float	angularVelocity;
+	float	momentOfInertia;
+	glm::vec2	totalForce;
+	float	totalTorque;
 	glm::mat4 rotationMatrix;
 	DIYRigidBody(glm::vec2 position,glm::vec2 velocity,float rotation,float mass);
 	virtual void update(glm::vec2 gravity,float timeStep);
@@ -65,8 +69,19 @@ public:
 	virtual void collisionResponse(glm::vec2 collisionPoint);
 	virtual void resetPosition(){position = oldPosition;};
 	void applyForce(glm::vec2 force);
+	void	applyForceAtPoint(glm::vec2 force, glm::vec2 point);
 	void applyForceToActor(DIYRigidBody* actor2, glm::vec2 force);
 
+};
+
+struct CollisionManifold
+{
+	DIYRigidBody*	first;
+	DIYRigidBody*	second;
+	glm::vec2	P;
+	glm::vec2	N;
+	float	e;
+	bool	bColliding;
 };
 
 class SphereClass: public DIYRigidBody
@@ -90,7 +105,7 @@ public:
 		DIYRigidBody::update(gravity, delta);
 		this->m_bIsColliding = false;
 	};
-
+	bool	IsPointOver(glm::vec2 point);
 	bool	m_bIsColliding;
 };
 
@@ -109,13 +124,13 @@ class DIYPhysicScene
 	void debugScene();
 	void upDateGizmos();
 	void	CheckForCollision();
-	static	bool	Plane2Plane		(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
-	static	bool	Plane2Sphere	(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
-	static	bool	Plane2Box		(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
-	static	bool	Sphere2Plane	(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
-	static	bool	Sphere2Sphere	(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
-	static	bool	Sphere2Box		(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
-	static	bool	Box2Plane		(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
-	static	bool	Box2Sphere		(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
-	static	bool	Box2Box			(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	CollisionManifold	Plane2Plane		(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	CollisionManifold	Plane2Sphere	(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	CollisionManifold	Plane2Box		(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	CollisionManifold	Sphere2Plane	(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	CollisionManifold	Sphere2Sphere	(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	CollisionManifold	Sphere2Box		(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	CollisionManifold	Box2Plane		(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	CollisionManifold	Box2Sphere		(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
+	static	CollisionManifold	Box2Box			(DIYPhysicScene* scene, PhysicsObject* first, PhysicsObject* second);
 };

@@ -91,26 +91,44 @@ void draw2DGizmo()
 	Gizmos::draw2D(glm::ortho<float>(-100, 100, -100 / AR, 100 / AR, -1.0f, 1.0f));
 }
 
+glm::vec2	GetWorldMouse()
+{
+	int	iWidth = 0, iHeight = 0;
+	glfwGetWindowSize(glfwGetCurrentContext(), &iWidth, &iHeight);
+	double	mouseX, mouseY;
+	glfwGetCursorPos(window, &mouseX, &mouseY);
+	mouseX /= iWidth;
+	mouseY /= iHeight;
+	mouseX -= 0.5;
+	mouseX *= 200.0f;
+	mouseY -= 0.5;
+	mouseY *= -200.0f * ((float)iHeight / (float)iWidth);
+	return glm::vec2((float)mouseX, (float)mouseY);
+}
+
 void upDate2DPhysics(float delta)
 {
+	static glm::vec2	vCMToAnchor = glm::vec2(0);
+	static bool	bGrabbed = false;
+
 	BoxClass*	box1 = (BoxClass*)physicsScene->actors[0];
-	float	fSpeed = 15.0f;
+	float	fSpeed = 25.0f;
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT))
 	{
-		box1->position.x -= delta * fSpeed;
+		box1->velocity.x -= delta * fSpeed;
 	}
 	if (glfwGetKey(window, GLFW_KEY_RIGHT))
 	{
-		box1->position.x += delta * fSpeed;
+		box1->velocity.x += delta * fSpeed;
 	}
 	if (glfwGetKey(window, GLFW_KEY_UP))
 	{
-		box1->position.y += delta * fSpeed;
+		box1->velocity.y += delta * fSpeed;
 	}
 	if (glfwGetKey(window, GLFW_KEY_DOWN))
 	{
-		box1->position.y -= delta * fSpeed;
+		box1->velocity.y -= delta * fSpeed;
 	}
 	fSpeed = 2.0f;
 	if (glfwGetKey(window, GLFW_KEY_Q))
@@ -122,6 +140,41 @@ void upDate2DPhysics(float delta)
 		box1->rotation2D -= delta * fSpeed;
 	}
 
+	if (glfwGetMouseButton(window, 0) == GLFW_PRESS)
+	{
+		if (!bGrabbed)
+		{
+			//	if the mouse is over the box
+			if (box1->IsPointOver(GetWorldMouse()))
+			{
+				//	store anchor point
+				vCMToAnchor = GetWorldMouse() - box1->position;
+				float	fSinTheta = sinf(-box1->rotation2D);
+				float	fCosTheta = cosf(-box1->rotation2D);
+				vCMToAnchor = glm::vec2(fCosTheta * vCMToAnchor.x - fSinTheta * vCMToAnchor.y,
+										fSinTheta * vCMToAnchor.x + fCosTheta * vCMToAnchor.y);
+				//	set grabbed to true
+				bGrabbed = true;
+			}
+		}
+		else
+		{
+			//	compute anchor point
+			float	fSinTheta = sinf(box1->rotation2D);
+			float	fCosTheta = cosf(box1->rotation2D);
+			glm::vec2 vRotLocalPos = glm::vec2(	fCosTheta * vCMToAnchor.x - fSinTheta * vCMToAnchor.y,
+												fSinTheta * vCMToAnchor.x + fCosTheta * vCMToAnchor.y);
+			glm::vec2	vAnchor = box1->position + vRotLocalPos;
+
+			//	add force at anchor point towards the mouse
+			box1->applyForceAtPoint(GetWorldMouse() - vAnchor, vAnchor);
+			Gizmos::add2DLine(vAnchor, GetWorldMouse(), glm::vec4(1, 1, 0, 1));
+		}
+	}
+	else
+	{
+		bGrabbed = false;
+	}
 	physicsScene->upDate();
 	physicsScene->upDateGizmos();
 	//onUpdateRocket(delta);
@@ -141,13 +194,17 @@ void DIYPhysicsRocketSetup()
 
 void	SetupPoolGame()
 {
-	float	fBallRadius = 3.0f;
+	float	fBallRadius = 2.50f;
 	float	fSqrt3 = 1.7320508075688772935274463415059f;
-	glm::vec2	vStartTriangleHead(40.0f, 0.0f);
+	glm::vec2	vStartTriangleHead(20.0f, 0.0f);
+
+//	BoxClass*	box1 = new BoxClass(glm::vec2(-8, 30), glm::vec2(0, 0), 0.0f, 10, 4, 4, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+//	physicsScene->addActor(box1);
+
 	SphereClass* sphere1;
-	sphere1 = new SphereClass(glm::vec2(-60.0f, vStartTriangleHead.y), glm::vec2(35.0f, 2.05f), fBallRadius, 1.5f, glm::vec4(1, 1, 1, 1));
+	sphere1 = new SphereClass(glm::vec2(-60.0f, vStartTriangleHead.y), glm::vec2(35.0f, 2.05f), fBallRadius, 10.5f, glm::vec4(1, 1, 1, 1));
 	physicsScene->addActor(sphere1);
-	for (int iRow = 0; iRow < 10; ++iRow)
+	for (int iRow = 0; iRow < 5; ++iRow)
 	{
 		for (int iNumInRow = 0; iNumInRow <= iRow; ++iNumInRow)
 		{
@@ -165,8 +222,8 @@ void DIYPhysicsCollisionTutorial()
 	//note - collision detection must be disabled in the physics engine for this to work.
 	physicsScene = new DIYPhysicScene();
 	physicsScene->collisionEnabled = true;
-	physicsScene->timeStep = 0.01f;
-	physicsScene->gravity = glm::vec2(0, 0);
+	physicsScene->timeStep = 0.001f;
+	physicsScene->gravity = glm::vec2(0, -1);
 
 	SetupPoolGame();
 	/*
@@ -203,13 +260,13 @@ void DIYPhysicsCollisionTutorial()
 	physicsScene->addActor(sphere5);
 	SphereClass* sphere5a = new SphereClass(glm::vec2(20, 35), glm::vec2(3, -3), 9.0f, 9, glm::vec4(1, 0, 0, 1));
 	physicsScene->addActor(sphere5a);
-
-	PlaneClass* plane = new PlaneClass(glm::vec2(0.5f, 1), -30);
+*/
+	PlaneClass* plane = new PlaneClass(glm::vec2(0.5f, 1), -50);
 	physicsScene->addActor(plane);
 
-	PlaneClass* plane2 = new PlaneClass(glm::vec2(-0.5f, 1), -30);
+	PlaneClass* plane2 = new PlaneClass(glm::vec2(-0.5f, 1), -50);
 	physicsScene->addActor(plane2);
-	*/
+//	*/
 }
 
 
@@ -222,7 +279,7 @@ void onUpdateRocket(float deltaTime)
 		if (fireCounter <= 0)
 		{
 			float exhaustMass = .001f;
-			fireCounter = 0.02;
+			fireCounter = 0.02f;
 			SphereClass *exhaust;
 			glm::vec2 position = rocket->position;
 			if (rocket->mass > exhaustMass)
