@@ -57,16 +57,19 @@ bool Physics::startup()
 	m_bSpheresCreated = false;
 	m_iNextSphereToFire = 0;
 	m_fFiringTimer = 0.0f;
-	m_fFiringInterval = 0.1f;
-	m_fFiringSpeed = 50.0f;
+	m_fFiringInterval = c_fSphereFiringInterval;
+	m_fFiringSpeed = c_fSphereFiringSpeed;
 
     setupPhysx();
     setupTutorial1();
-	setupVidualDebugger();
-    return true;
+	setupVisualDebugger();
+
+	m_oTank.Init(&m_camera, m_pPhysicsScene);	//	initialise the tank!
+
+	return true;
 }
 
-void	Physics::setupVidualDebugger()
+void	Physics::setupVisualDebugger()
 {
 	//	check if the PVDConnection manager is available on this platform - will NOT be in release
 	if (m_pPhysics->getPvdConnectionManager() == 0)
@@ -99,7 +102,7 @@ void Physics::setupTutorial1()
 	for (int i = 0; i < c_iNumBoxes; ++i)
 	{
 		PxBoxGeometry	tBox(c_fBoxSize, c_fBoxSize, c_fBoxSize);
-		PxTransform		tBoxTransform(PxVec3((float)(rand() % 40) - 20.0f, 200.0f + c_fBoxSize + (float)i * 0.2f, (float)(rand() % 40) - 20.0f));
+		PxTransform		tBoxTransform(PxVec3((float)(rand() % 40) - 20.0f, 50.0f + c_fBoxSize + (float)i * 0.2f, (float)(rand() % 40) - 20.0f));
 		m_aBoxes[i] = PxCreateDynamic(*m_pPhysics, tBoxTransform, tBox, *m_pPhysicsMaterial, density);
 		m_pPhysicsScene->addActor(*m_aBoxes[i]);
 		//	now make their colours
@@ -165,7 +168,7 @@ bool Physics::update()
     float dt = (float)glfwGetTime();
     glfwSetTime(0.0);
 	m_fTimer += dt;
-	if ((m_fTimer > 15.0f) && !m_bSpheresCreated)
+	if ((m_fTimer > 5.0f) && !m_bSpheresCreated)
 	{
 		CreateSpheres();
 	}
@@ -183,13 +186,20 @@ bool Physics::update()
 
 	if(m_bSpheresCreated)
 	{
-		if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		m_fFiringTimer += dt;
+		if ((glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS) && (m_fFiringTimer > m_fFiringInterval))
 		{
+			//	fire the next sphere in the array in the forward direction of the camera, from just below the camera
 			vec3	vCamPos = m_camera.world[3].xyz;
+			vec3	vForward = (m_camera.world[2].xyz) * (-1.0f);
+			vCamPos += 2.0f * vForward;
+			vCamPos.y -= 3.0f;
 			PxTransform		tSphereTransform(PxVec3(vCamPos.x, vCamPos.y, vCamPos.z));
-			m_aSpheres[m_iNextSphereToFire++]->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
-			m_aSpheres[m_iNextSphereToFire++]->setKinematicTarget(tSphereTransform);
-			m_aSpheres[m_iNextSphereToFire++]->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, false);
+			m_aSpheres[m_iNextSphereToFire]->setGlobalPose(tSphereTransform);
+			vForward *= m_fFiringSpeed;
+			m_aSpheres[m_iNextSphereToFire]->setLinearVelocity(PxVec3(vForward.x, vForward.y, vForward.z));
+			m_iNextSphereToFire = (m_iNextSphereToFire + 1) % c_iNumSpheres;
+			m_fFiringTimer = 0.0f;
 		}
 	}
 
@@ -199,6 +209,8 @@ bool Physics::update()
 	{
 
 	}
+
+	m_oTank.update(dt);
 
 	//	get the box transform
 	PxTransform	boxTransform = m_pBoxActor->getGlobalPose();
@@ -251,7 +263,7 @@ bool Physics::update()
 void Physics::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
+	m_oTank.draw();
     Gizmos::draw(m_camera.proj, m_camera.view);
 
     glfwSwapBuffers(m_window);
