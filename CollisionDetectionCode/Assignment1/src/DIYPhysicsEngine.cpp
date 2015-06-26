@@ -19,6 +19,7 @@ PlaneClass::PlaneClass(glm::vec2 normal,float distance)
 {
 	this->normal = glm::normalize(normal);
 	this->distance = distance;
+	
 	_shapeID = PLANE;
 }
 
@@ -57,8 +58,20 @@ SphereClass::SphereClass(	glm::vec2 position,float angle,float speed,float radiu
 
 void SphereClass::makeGizmo()
 {
-	glm::vec2 center = position.xy();
-	Gizmos::add2DCircle(center, _radius, 30, colour);
+	glm::vec2 centre = position.xy();
+	Gizmos::add2DCircle(centre, _radius, 30, colour);
+	//	now add in visualising the rotation as well!
+	//	get the vector to the edge in the rotation angle
+	glm::vec2	vDirection(_radius, 0.0f);
+	vDirection = glm::rotate(vDirection, rotation2D);
+	if (colour == glm::vec4(1, 1, 1, 1))
+	{
+		Gizmos::add2DLine(centre, centre + vDirection, glm::vec4(0.5f, 0.5f, 0.5f, 1));
+	}
+	else
+	{
+		Gizmos::add2DLine(centre, centre + vDirection, glm::vec4(1, 1, 1, 1));
+	}
 }
 
 //box class functions
@@ -130,6 +143,7 @@ DIYRigidBody::DIYRigidBody(	glm::vec2 position,glm::vec2 velocity,float rotation
 	this->totalTorque = 0.0f;
 	this->totalForce = glm::vec2(0.0f, 0.0f);
 	this->angularVelocity = 0.0f;
+	this->bIsStatic = false;
 	colour = glm::vec4(1,1,1,1); //white by default
 }
 
@@ -161,7 +175,10 @@ void DIYRigidBody::collisionResponse(glm::vec2 collisionPoint)
 
 void DIYRigidBody::update(glm::vec2 gravity,float timeStep)
 {
-
+	if (bIsStatic)
+	{
+		return;
+	}
 	applyForce(gravity * mass);
 
 	float	fNormalForce = this->mass;
@@ -178,8 +195,8 @@ void DIYRigidBody::update(glm::vec2 gravity,float timeStep)
 	float	fDeltaW = fAngularAcceleration * timeStep;
 
 	oldPosition = position; //keep our old position for collision response
-	position += velocity * timeStep;
 	velocity += vDeltaV;
+	position += velocity * timeStep;
 
 	rotation2D += angularVelocity * timeStep;
 	angularVelocity += fDeltaW;
@@ -204,7 +221,7 @@ void DIYPhysicScene::addActor(PhysicsObject* object)
 {
 	actors.push_back(object);
 }
-	
+
 void DIYPhysicScene::removeActor(PhysicsObject* object)
 {
 	auto item = std::find(actors.begin(), actors.end(), object);
@@ -214,14 +231,32 @@ void DIYPhysicScene::removeActor(PhysicsObject* object)
 	}
 }
 
+void DIYPhysicScene::addJoint(Joint* object)
+{
+	joints.push_back(object);
+}
+
+void DIYPhysicScene::removeJoint(Joint* object)
+{
+	auto item = std::find(joints.begin(), joints.end(), object);
+	if (item < joints.end())
+	{
+		joints.erase(item);
+	}
+}
+
 void DIYPhysicScene::upDate()
 {
 	bool runPhysics = true;
 	int maxIterations = 10; //emergency count to stop us repeating for ever in extreme situations
 
-	for(auto actorPtr:actors)
+	for (auto actorPtr : actors)
 	{
-		actorPtr->update(gravity,timeStep);
+		actorPtr->update(gravity, timeStep);
+	}
+	for (auto jointPtr : joints)
+	{
+		jointPtr->Update(timeStep);
 	}
 	if (collisionEnabled)
 	{
@@ -243,9 +278,13 @@ void DIYPhysicScene::debugScene()
 
 void DIYPhysicScene::upDateGizmos()
 {
-	for (auto actorPtr:actors)
+	for (auto actorPtr : actors)
 	{
 		actorPtr->makeGizmo();
+	}
+	for (auto jointPtr : joints)
+	{
+		jointPtr->DrawGizmo();
 	}
 }
 
@@ -269,14 +308,19 @@ void	DIYPhysicScene::CheckForCollision()
 				CollisionManifold	manifold = pCollisionFunctionPointer(this, object1, object2);
 				if (manifold.bColliding)
 				{
-					float	fInvMass1 = 1.0f / manifold.first->mass;
-					float	fInvMass2 = manifold.second ? 1.0f / manifold.second->mass : 0;
+					if (manifold.first->bIsStatic && manifold.second && manifold.second->bIsStatic)
+					{
+						continue;
+					}
 
-					float	fInvMOI1 = 1.0f / manifold.first->momentOfInertia;
+					float	fInvMass1 = (!manifold.first->bIsStatic) ? 1.0f / manifold.first->mass : 0;
+					float	fInvMass2 = (manifold.second && !manifold.second->bIsStatic) ? 1.0f / manifold.second->mass : 0;
+
+					float	fInvMOI1 = (!manifold.first->bIsStatic) ? 1.0f / manifold.first->momentOfInertia : 0;
 					float	fInvMOI2 = manifold.second ? 1.0f / manifold.first->momentOfInertia : 0;
 
 					glm::vec2	vCom1 = manifold.first->position;
-					glm::vec2	vCom2 = manifold.second ? manifold.second->position : manifold.P;
+					glm::vec2	vCom2 = (manifold.second && !manifold.second->bIsStatic) ? manifold.second->position : manifold.P;
 
 					glm::vec2	vR1P = manifold.P - manifold.first->position;
 					vR1P = glm::vec2(-vR1P.y, vR1P.x);
@@ -293,9 +337,12 @@ void	DIYPhysicScene::CheckForCollision()
 					float	fDenom = glm::dot(manifold.N, manifold.N * (fInvMass1 + fInvMass2)) + R1PdotN * R1PdotN * fInvMOI1 + R2PdotN * R2PdotN * fInvMOI2;
 					float	j = (-(1.0f + manifold.e) * glm::dot(vVelocity1 - vVelocity2, manifold.N)) / fDenom;
 
-					manifold.first->velocity += (j * fInvMass1) * manifold.N;
-					manifold.first->angularVelocity += glm::dot(vR1P, j * manifold.N) * fInvMOI1;
-					if (manifold.second)
+					if (!manifold.first->bIsStatic)
+					{
+						manifold.first->velocity += (j * fInvMass1) * manifold.N;
+						manifold.first->angularVelocity += glm::dot(vR1P, j * manifold.N) * fInvMOI1;
+					}
+					if (manifold.second && !manifold.second->bIsStatic)
 					{
 						manifold.second->velocity += (-j * fInvMass2) * manifold.N;
 						manifold.second->angularVelocity += glm::dot(vR2P, -j * manifold.N) * fInvMOI2;
@@ -307,9 +354,12 @@ void	DIYPhysicScene::CheckForCollision()
 					float	fFrictionDenom = fInvMass1 + fInvMass2 + (fR1PdotT * fR1PdotT) * fInvMOI1 + (fR2PdotT * fR2PdotT) * fInvMOI2;
 					float	fFrictionJ = (-(1.0f + manifold.e) * glm::dot(vVelocity1 - vVelocity2, vTangent)) / fFrictionDenom;
 
-					manifold.first->velocity += (fFrictionJ * fInvMass1) * vTangent;
-					manifold.first->angularVelocity += glm::dot(vR1P, fFrictionJ * vTangent) * fInvMOI1;
-					if (manifold.second)
+					if (!manifold.first->bIsStatic)
+					{
+						manifold.first->velocity += (fFrictionJ * fInvMass1) * vTangent;
+						manifold.first->angularVelocity += glm::dot(vR1P, fFrictionJ * vTangent) * fInvMOI1;
+					}
+					if (manifold.second && !manifold.second->bIsStatic)
 					{
 						manifold.second->velocity += (-fFrictionJ * fInvMass2) * vTangent;
 						manifold.second->angularVelocity += glm::dot(vR2P, -fFrictionJ * vTangent) * fInvMOI2;
@@ -379,9 +429,19 @@ CollisionManifold	DIYPhysicScene::Sphere2Sphere(DIYPhysicScene* scene, PhysicsOb
 		glm::vec2	vCollisionNormal = glm::normalize(vDelta);
 
 		//	move circles apart
-		float	fIntersection = fRadiiSum - fDistance;
-		sphere1->position -= fIntersection * vCollisionNormal;
-		sphere2->position += fIntersection * vCollisionNormal;
+		float	fIntersection = (fRadiiSum - fDistance) * 0.5f;
+		if (sphere1->bIsStatic || sphere2->bIsStatic)
+		{
+			fIntersection *= 2.0f;
+		}
+		if (!sphere1->bIsStatic)
+		{
+			sphere1->position -= fIntersection * vCollisionNormal;
+		}
+		if (!sphere2->bIsStatic)
+		{
+			sphere2->position += fIntersection * vCollisionNormal;
+		}
 
 		result.e = 0.97f;
 		result.N = vCollisionNormal;
@@ -589,3 +649,47 @@ CollisionManifold	DIYPhysicScene::Box2Box(DIYPhysicScene* scene, PhysicsObject* 
 	return result;
 }
 
+SpringJoint::SpringJoint(DIYRigidBody* a_A, DIYRigidBody* a_B, float a_k, float a_d, float a_restingDistance)
+{
+	this->bodyA = a_A;
+	this->bodyB = a_B;
+	this->k = a_k;
+	this->d = a_d;
+	this->fRestingdistance = a_restingDistance;
+}
+
+SpringJoint::~SpringJoint()
+{
+}
+
+Joint::Joint()
+{
+}
+
+Joint::~Joint()
+{
+}
+
+void	SpringJoint::Update(float fDt)
+{
+	if (!bodyA || !bodyB)
+	{
+		return;
+	}
+	glm::vec2	vDiffVector = bodyA->position - bodyB->position;	//	vector from B to A
+	float	fDistance = glm::length(vDiffVector);
+	glm::vec2	vForce = -k * (fDistance - fRestingdistance) * glm::normalize(vDiffVector);
+	if (!bodyA->bIsStatic)
+	{
+		bodyA->applyForce(vForce - (d * bodyA->velocity));
+	}
+	if (!bodyB->bIsStatic)
+	{
+		bodyB->applyForce(-vForce - (d * bodyB->velocity));
+	}
+}
+
+void	SpringJoint::DrawGizmo()
+{
+	Gizmos::add2DLine(bodyA->position, bodyB->position, glm::vec4(0, 0.6f, 0, 1));
+}

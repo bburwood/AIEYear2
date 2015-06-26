@@ -9,6 +9,7 @@
 void DIYPhysicsRocketSetup();
 void upDate2DPhysics(float delta);
 void DIYPhysicsCollisionTutorial();
+void SetupSpringPhysics();
 void draw2DGizmo();
 void onUpdateRocket(float deltaTime);
 
@@ -24,7 +25,9 @@ int main()
 	}
 
 //	DIYPhysicsRocketSetup();
-	DIYPhysicsCollisionTutorial();
+//	DIYPhysicsCollisionTutorial();
+	SetupSpringPhysics();
+
 	window = glfwCreateWindow(1080, 720, "Physics 2D", nullptr, nullptr);
 
 	if (window == nullptr)
@@ -112,7 +115,7 @@ void upDate2DPhysics(float delta)
 	static bool	bGrabbed = false;
 
 	BoxClass*	box1 = (BoxClass*)physicsScene->actors[0];
-	float	fSpeed = 25.0f;
+	float	fSpeed = 75.0f;
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT))
 	{
@@ -213,7 +216,94 @@ void	SetupPoolGame()
 			physicsScene->addActor(sphere1);
 		}
 	}
+	sphere1 = new SphereClass(glm::vec2(-20.0f, vStartTriangleHead.y - 30.0f), glm::vec2(0.0f, 0.0f), fBallRadius, 10.5f, glm::vec4(0, 0, 1, 1));
+	sphere1->bIsStatic = true;
+	physicsScene->addActor(sphere1);
 
+}
+
+void	SetupSpringPhysics()
+{
+	physicsScene = new DIYPhysicScene();
+	physicsScene->collisionEnabled = true;
+	physicsScene->timeStep = 0.015f;
+	physicsScene->gravity = glm::vec2(0, -1);
+
+	SphereClass* sphere;	//	user controllable sphere
+	sphere = new SphereClass(glm::vec2(-60.0f, 0), glm::vec2(5.0f, 2.05f), 3, 10.5f, glm::vec4(1, 1, 1, 1));
+	physicsScene->addActor(sphere);
+
+	SphereClass*	topSphere = new SphereClass(glm::vec2(-40, 40), glm::vec2(0), 1, 5, glm::vec4(1, 1, 0, 1));
+	topSphere->bIsStatic = true;
+	physicsScene->addActor(topSphere);
+	SphereClass*	topRightSphere = new SphereClass(glm::vec2(40, 40), glm::vec2(0), 1, 5, glm::vec4(1, 1, 0, 1));
+	topRightSphere->bIsStatic = true;
+	physicsScene->addActor(topRightSphere);
+
+	const int	iCHAIN_LENGTH = 20;
+	const int	iCHAIN_HEIGHT = 15;
+	SphereClass*	chain[iCHAIN_LENGTH * iCHAIN_HEIGHT];
+	Joint*	joints[iCHAIN_LENGTH * iCHAIN_HEIGHT * 2];
+//	SphereClass**	chain = new SphereClass*[iCHAIN_LENGTH * iCHAIN_HEIGHT];
+//	Joint**	joints = new Joint* [iCHAIN_LENGTH * iCHAIN_HEIGHT * 2];
+	float	fSeparation = 3.0f;
+	float	fSpringK = 200.0f;
+	float	fSpringDamping = 0.5f;
+	float	fStartChainX = -20.0f;
+	float	fStartChainY = 30.0f;
+	//	first make the spheres
+	float	fSphereMass = 0.80f;
+	float	fSphereRadius = 1.0f;
+	int	iIndex = 0;
+	for (int j = 0; j < iCHAIN_HEIGHT; ++j)
+	{
+		float	fHeight = fStartChainY - (j * fSeparation);
+		for (int i = 0; i < iCHAIN_LENGTH; ++i)
+		{
+			float	fDistance = fStartChainX + (fSeparation * i);
+			chain[iIndex] = new SphereClass(glm::vec2(fDistance, fHeight), glm::vec2(0), fSphereRadius, fSphereMass, glm::vec4(0, 0, (float)j / (float)iCHAIN_HEIGHT, 1));
+			physicsScene->addActor(chain[iIndex++]);
+		}
+	}
+	//	now make the joints between them
+	float	fRestDistance = fSeparation;
+	iIndex = 0;
+	for (int j = 0; j < iCHAIN_HEIGHT; ++j)
+	{
+		for (int i = 0; i < iCHAIN_LENGTH; ++i)
+		{
+			if (i >= (iCHAIN_LENGTH - 1))
+			{
+				if (j < (iCHAIN_HEIGHT - 1))
+				{
+					joints[iIndex] = new SpringJoint(chain[(j * iCHAIN_LENGTH) + i], chain[((j + 1) * iCHAIN_LENGTH) + i], fSpringK, fSpringDamping, fRestDistance);
+					physicsScene->addJoint(joints[iIndex]);
+				}
+			}
+			else if (j >= (iCHAIN_HEIGHT - 1))
+			{
+				joints[iIndex] = new SpringJoint(chain[(j * iCHAIN_LENGTH) + i], chain[(j * iCHAIN_LENGTH) + i + 1], fSpringK, fSpringDamping, fRestDistance);
+				physicsScene->addJoint(joints[iIndex]);
+			}
+			else
+			{
+				joints[iIndex] = new SpringJoint(chain[(j * iCHAIN_LENGTH) + i], chain[(j * iCHAIN_LENGTH) + i + 1], fSpringK, fSpringDamping, fRestDistance);
+				physicsScene->addJoint(joints[iIndex]);
+				joints[iIndex] = new SpringJoint(chain[(j * iCHAIN_LENGTH) + i], chain[((j + 1) * iCHAIN_LENGTH) + i], fSpringK, fSpringDamping, fRestDistance);
+				physicsScene->addJoint(joints[iIndex]);
+			}
+			++iIndex;
+		}
+	}
+
+	joints[iIndex] = new SpringJoint(topSphere, chain[0], fSpringK, fSpringDamping, fRestDistance);
+	physicsScene->addJoint(joints[iIndex++]);
+	joints[iIndex] = new SpringJoint(chain[iCHAIN_LENGTH - 1], topRightSphere, fSpringK, fSpringDamping, fRestDistance);
+	physicsScene->addJoint(joints[iIndex]);
+
+
+//	delete[]	chain;
+//	delete[]	joints;
 }
 
 void DIYPhysicsCollisionTutorial()

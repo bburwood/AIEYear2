@@ -45,8 +45,8 @@ void	Tank::Init(FlyCamera* a_pCamera, PxScene* a_pPhysicsScene, PxPhysics* a_pPh
 	//	now add the rigid body(or bodies) for the tank to the PxScene passed in.
 	PxBoxGeometry	box = PxBoxGeometry(1, 1, 1);
 	//	PhysX and glm matrices are the same internally so we can simply cast between them
-	PxTransform	transform(*(PxMat44*)(&m_WorldTransform[0]));
-	m_pDynamicActor = PxCreateDynamic(*m_pPhysics, transform, box, m_fDensity);
+//	PxTransform	transform(*(PxMat44*)(&m_WorldTransform[0]));
+//	m_pDynamicActor = PxCreateDynamic(*m_pPhysics, transform, box, m_fDensity);
 
 }
 

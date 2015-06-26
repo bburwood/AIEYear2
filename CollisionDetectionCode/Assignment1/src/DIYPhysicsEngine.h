@@ -54,6 +54,7 @@ public:
 	glm::vec4 colour;
 	glm::vec2 oldPosition;
 	glm::vec2 contactPoint; //if a collision occurs then this is the point of contact
+	bool	bIsStatic;
 	float mass;
 	float rotation2D; //2D so we only need a single float to represent our rotation about Z
 	float	staticFriction;
@@ -71,6 +72,38 @@ public:
 	void applyForce(glm::vec2 force);
 	void	applyForceAtPoint(glm::vec2 force, glm::vec2 point);
 	void applyForceToActor(DIYRigidBody* actor2, glm::vec2 force);
+
+};
+
+class Joint
+{
+public:
+	Joint();
+	~Joint();
+
+	virtual	void	Update(float fDt) = 0;
+	virtual	void	DrawGizmo() = 0;
+
+	DIYRigidBody*	bodyA;
+	DIYRigidBody*	bodyB;
+
+private:
+
+};
+
+class SpringJoint : public Joint
+{
+public:
+	SpringJoint(DIYRigidBody* A, DIYRigidBody* B, float a_k, float a_d, float a_restingDistance);
+	~SpringJoint();
+	virtual	void	Update(float fDt);
+	virtual	void	DrawGizmo();
+
+	float	k;	//	spring stiffness
+	float	d;	//	spring damping value
+	float	fRestingdistance;
+
+private:
 
 };
 
@@ -117,8 +150,11 @@ class DIYPhysicScene
 	glm::vec2 gravity;
 	float timeStep;
 	std::vector<PhysicsObject*> actors;
+	std::vector<Joint*> joints;
 	void addActor(PhysicsObject*);
 	void removeActor(PhysicsObject*);
+	void addJoint(Joint*);
+	void removeJoint(Joint*);
 	void upDate();
 	void solveIntersections();
 	void debugScene();
