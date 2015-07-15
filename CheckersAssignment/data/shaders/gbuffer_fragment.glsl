@@ -3,9 +3,9 @@
 in vec4 viewspace_position;
 in vec4 viewspace_normal;
 
-layout (location = 0) out vec3 albedo;
-layout (location = 1) out vec3 position;
-layout (location = 2) out vec3 normal;
+layout (location = 0) out vec3 position;
+layout (location = 1) out vec3 normal;
+layout (location = 2) out vec3 albedo;
 
 uniform vec3 material_colour;
 

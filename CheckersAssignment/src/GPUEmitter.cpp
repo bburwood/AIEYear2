@@ -71,7 +71,7 @@ void	GPUPointEmitter::Init(unsigned int a_MaxParticles, vec3 a_position, vec3 a_
 	CreateDrawShader();
 }
 
-void	GPUPointEmitter::Draw(float a_fDT, mat4 a_cameraTransform, mat4 a_projectionView)
+void	GPUPointEmitter::Draw(float a_fDT, mat4 a_cameraTransform, mat4 a_projectionView, unsigned int a_uiFBO, bool a_bDeferred)
 {
 	///////////////////////////////// debug info for FPS and particle count.
 	float fDt = a_fDT;	//	a_currTime - m_fLastDrawTime;
@@ -129,6 +129,10 @@ void	GPUPointEmitter::Draw(float a_fDT, mat4 a_cameraTransform, mat4 a_projectio
 	glBindBufferBase(GL_TRANSFORM_FEEDBACK, 0, 0);
 
 	//	render pass
+	if (a_bDeferred)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, a_uiFBO);
+	}
 	glUseProgram(m_uiDrawShader);
 
 	glDisable(GL_DEPTH_TEST);

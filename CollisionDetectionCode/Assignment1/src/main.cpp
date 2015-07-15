@@ -226,11 +226,11 @@ void	SetupSpringPhysics()
 {
 	physicsScene = new DIYPhysicScene();
 	physicsScene->collisionEnabled = true;
-	physicsScene->timeStep = 0.015f;
-	physicsScene->gravity = glm::vec2(0, -1);
+	physicsScene->timeStep = 0.01f;
+	physicsScene->gravity = glm::vec2(0, -20);
 
 	SphereClass* sphere;	//	user controllable sphere
-	sphere = new SphereClass(glm::vec2(-60.0f, 0), glm::vec2(5.0f, 2.05f), 3, 10.5f, glm::vec4(1, 1, 1, 1));
+	sphere = new SphereClass(glm::vec2(0.0f, 60), glm::vec2(0.0f, 0.0f), 3, 20.5f, glm::vec4(1, 1, 1, 1));
 	physicsScene->addActor(sphere);
 
 	SphereClass*	topSphere = new SphereClass(glm::vec2(-40, 40), glm::vec2(0), 1, 5, glm::vec4(1, 1, 0, 1));
@@ -240,20 +240,20 @@ void	SetupSpringPhysics()
 	topRightSphere->bIsStatic = true;
 	physicsScene->addActor(topRightSphere);
 
-	const int	iCHAIN_LENGTH = 20;
+	const int	iCHAIN_LENGTH = 15;
 	const int	iCHAIN_HEIGHT = 15;
 	SphereClass*	chain[iCHAIN_LENGTH * iCHAIN_HEIGHT];
 	Joint*	joints[iCHAIN_LENGTH * iCHAIN_HEIGHT * 2];
 //	SphereClass**	chain = new SphereClass*[iCHAIN_LENGTH * iCHAIN_HEIGHT];
 //	Joint**	joints = new Joint* [iCHAIN_LENGTH * iCHAIN_HEIGHT * 2];
-	float	fSeparation = 3.0f;
-	float	fSpringK = 200.0f;
-	float	fSpringDamping = 0.5f;
+	float	fSeparation = 1.75f;
+	float	fSpringK = 50.0f;
+	float	fSpringDamping = 0.2f;
 	float	fStartChainX = -20.0f;
 	float	fStartChainY = 30.0f;
 	//	first make the spheres
-	float	fSphereMass = 0.80f;
-	float	fSphereRadius = 1.0f;
+	float	fSphereMass = 0.05f;
+	float	fSphereRadius = 0.0005f;
 	int	iIndex = 0;
 	for (int j = 0; j < iCHAIN_HEIGHT; ++j)
 	{
@@ -262,9 +262,16 @@ void	SetupSpringPhysics()
 		{
 			float	fDistance = fStartChainX + (fSeparation * i);
 			chain[iIndex] = new SphereClass(glm::vec2(fDistance, fHeight), glm::vec2(0), fSphereRadius, fSphereMass, glm::vec4(0, 0, (float)j / (float)iCHAIN_HEIGHT, 1));
+			chain[iIndex]->dynamicFriction = 0.001f;
+			chain[iIndex]->staticFriction = 0.001f;
 			physicsScene->addActor(chain[iIndex++]);
 		}
 	}
+	//	increase the mass of the corner sphere's in the grid
+	chain[0]->mass *= 5.0f;
+	chain[iCHAIN_LENGTH - 1]->mass *= 5.0f;
+	chain[(iCHAIN_HEIGHT-1) * iCHAIN_LENGTH]->mass *= 20.0f;
+	chain[(iCHAIN_HEIGHT) * (iCHAIN_LENGTH) - 1]->mass *= 20.0f;
 	//	now make the joints between them
 	float	fRestDistance = fSeparation;
 	iIndex = 0;
@@ -296,9 +303,9 @@ void	SetupSpringPhysics()
 		}
 	}
 
-	joints[iIndex] = new SpringJoint(topSphere, chain[0], fSpringK, fSpringDamping, fRestDistance);
+	joints[iIndex] = new SpringJoint(topSphere, chain[0], fSpringK * 10.0f, fSpringDamping, fRestDistance * 10.0f);
 	physicsScene->addJoint(joints[iIndex++]);
-	joints[iIndex] = new SpringJoint(chain[iCHAIN_LENGTH - 1], topRightSphere, fSpringK, fSpringDamping, fRestDistance);
+	joints[iIndex] = new SpringJoint(chain[iCHAIN_LENGTH - 1], topRightSphere, fSpringK * 10.0f, fSpringDamping, fRestDistance * 10.0f);
 	physicsScene->addJoint(joints[iIndex]);
 
 

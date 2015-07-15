@@ -33,7 +33,7 @@ public:
 		float a_fGravityStrength,
 		float a_fStartSize, float a_fEndSize,
 		vec4 a_StartColour, vec4 a_EndColour, int a_iEmitterID);
-	void	Draw(float a_currTime, mat4 a_cameraTransform, mat4 a_projectionView);
+	void	Draw(float a_currTime, mat4 a_cameraTransform, mat4 a_projectionView, unsigned int a_uiFBO = 0xFFFFFFFF, bool a_bDeferred = false);
 	void	CreateBuffers();
 	void	CreateUpdateShader();
 	void	CreateDrawShader();

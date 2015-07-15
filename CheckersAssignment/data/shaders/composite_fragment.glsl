@@ -4,9 +4,9 @@ in vec2 frag_texcoord;
 
 out vec4 out_colour;
 
-uniform sampler2D albedo_tex;
 uniform sampler2D position_tex;
 uniform sampler2D normals_tex;
+uniform sampler2D albedo_tex;
 uniform sampler2D light_tex;
 uniform	float	fSpecPower;
 uniform vec3 eye_pos;
@@ -16,14 +16,14 @@ void main()
 {
 	vec4 albedo_sample = texture(albedo_tex, frag_texcoord);
 	vec4 light_sample = texture(light_tex, frag_texcoord);
-	vec4 normalSample = texture(normals_tex, frag_texcoord);
-	vec4 positionSample = texture(position_tex, frag_texcoord);
+//	vec4 normalSample = texture(normals_tex, frag_texcoord);
+//	vec4 positionSample = texture(position_tex, frag_texcoord);
 //	vec2	temp = vec2(tempColour.y, tempColour.z);
 //	vec2	temp = normalize(tempColour.xy + tempColour.zw);
 //	out_colour = texture(normals_tex, temp);
 //	out_colour = texture(normals_tex, frag_texcoord);
 //	out_colour = vec4(0, frag_texcoord, 1);
-
+/*
 
 	vec3	ambient = albedo_sample.xyz * ambient_light;
 	vec3	N = normalize(normalSample.xyz);
@@ -41,8 +41,8 @@ void main()
 	s = pow(s, fSpecPower);
 
 	vec3	specular = vec3(s) * light_sample.xyz * albedo_sample.xyz;
-
-	out_colour = vec4(ambient + diffuse + specular, 1);
+*/
+//	out_colour = vec4(ambient + diffuse + specular, 1);
 	
 //	out_colour = vec4(ambient, 1);
 //	out_colour = vec4(diffuse, 1);
@@ -55,7 +55,7 @@ void main()
 //	out_colour = vec4(0, d, 0, 1);
 //	out_colour = albedo_sample * light_sample;
 //	out_colour = albedo_sample;
-//	out_colour = light_sample;
+	out_colour = light_sample;
 //	out_colour = normalSample;
 //	out_colour = positionSample;
 //	out_colour = vec4(ambient_light, 1.0f);

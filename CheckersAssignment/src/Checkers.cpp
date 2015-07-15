@@ -108,7 +108,7 @@ bool	Checkers::startup()
 
 	m_Player1Colour = vec4(0.7f, 0.05f, 0.05f, 1.0f);
 	m_Player2Colour = vec4(0.05f, 0.05f, 0.7f, 1.0f);
-	m_vAmbientLightColour = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	m_vAmbientLightColour = vec4(0.01f, 0.01f, 0.01f, 1.0f);
 	m_vLightColour = vec4(0.2f, 0.2f, 0.2f, 1.0f);
 	m_vLightDir = glm::normalize(vec3(-0.10f, -0.85f, 0.5f));
 
@@ -208,7 +208,7 @@ bool	Checkers::startup()
 	BuildScreenSpaceQuad();
 	BuildLightCube();
 	SetupDeferredLights();	//	actually add the lights
-	m_bDeferredRendering = false;
+	m_bDeferredRendering = true;
 
 	glEnable(GL_CULL_FACE);
 	return true;
@@ -476,13 +476,19 @@ void	Checkers::draw()
 		DrawModels(glm::normalize(vec3(-1, -6, 1)), m_vLightColour);
 		glDepthFunc(GL_LESS);
 		glDisable(GL_BLEND);
+		//	now draw any particle emitters
+		for (unsigned int i = 0; i < c_iNUM_EMITTERS; ++i)
+		{
+			m_emitters[i].Draw(1.0f / m_fFPS, m_FlyCamera.m_worldTransform, m_FlyCamera.GetProjectionView());
+		}
 	}
-
 	//	now draw any particle emitters
-	for (unsigned int i = 0; i < c_iNUM_EMITTERS; ++i)
-	{
-		m_emitters[i].Draw(1.0f / m_fFPS, m_FlyCamera.m_worldTransform, m_FlyCamera.GetProjectionView());
-	}
+//	for (unsigned int i = 0; i < c_iNUM_EMITTERS; ++i)
+//	{
+//		//m_emitters[i].Draw(1.0f / m_fFPS, m_FlyCamera.m_worldTransform, m_FlyCamera.GetProjectionView(), m_uiLightFBO, m_bDeferredRendering);
+//		m_emitters[i].Draw(1.0f / m_fFPS, m_FlyCamera.m_worldTransform, m_FlyCamera.GetProjectionView());
+//	}
+
 
 	if (m_bDrawGizmos)
 	{
@@ -582,7 +588,7 @@ void	Checkers::FireGameOverEmitterAt(int a_iXIndex, int a_iZindex, float a_fHeig
 	}
 	//cout << "Firing Emitter " << m_iNextEmitterToFire << " at location " << vEmitterPosition.x << "/" << vEmitterPosition.y << "/" << vEmitterPosition.z << '\n';
 	m_emitters[m_iNextEmitterToFire].Init(m_uiEmitterMaxParticles, vEmitterPosition, vec3(0.0f, 0.5f, 0.0f), m_fEmitRate,
-		4.0f * m_fEmitterLifespan, 0.3f * m_fEmitterParticleLifespan, m_fEmitterParticleLifespan, 0.75f, 1.0f,
+		5.0f * m_fEmitterLifespan, 0.3f * m_fEmitterParticleLifespan, m_fEmitterParticleLifespan, 0.75f, 1.0f,
 		0.5f, 0.04f, 0.1f, vStartColour, vEndColour, m_iNextEmitterToFire);
 	m_iNextEmitterToFire = (m_iNextEmitterToFire + 1) % c_iNUM_EMITTERS;
 }
@@ -1132,32 +1138,32 @@ void	Checkers::BuildLightCube()
 	float	vertexData[]
 	{
 		-1, -1, 1, 1,
-			1, -1, 1, 1,
-			1, -1, -1, 1,
-			-1, -1, -1, 1,
+		1, -1, 1, 1,
+		1, -1, -1, 1,
+		-1, -1, -1, 1,
 
-			-1, 1, 1, 1,
-			1, 1, 1, 1,
-			1, 1, -1, 1,
-			-1, 1, -1, 1,
+		-1, 1, 1, 1,
+		1, 1, 1, 1,
+		1, 1, -1, 1,
+		-1, 1, -1, 1,
 	};
 
 	//	the index data is in REVERSE winding order so the back face is rendered rather than the front face
 	unsigned int	indexData[]
 	{
 		4, 5, 0,
-			5, 1, 0,
-			5, 6, 1,
-			6, 2, 1,
-			6, 7, 2,
-			7, 3, 2,
+		5, 1, 0,
+		5, 6, 1,
+		6, 2, 1,
+		6, 7, 2,
+		7, 3, 2,
 
-			7, 4, 3,
-			4, 0, 3,
-			7, 6, 4,
-			6, 5, 4,
-			0, 1, 3,
-			1, 2, 3,
+		7, 4, 3,
+		4, 0, 3,
+		7, 6, 4,
+		6, 5, 4,
+		0, 1, 3,
+		1, 2, 3,
 	};
 
 	m_LightCube.m_uiIndexCount = 36;
@@ -1237,6 +1243,15 @@ void	Checkers::RenderPointLights()
 	int	iViewPosUniform = glGetUniformLocation(m_uiPointLightProgram, "light_view_position");
 	int	iLightDiffuseUniform = glGetUniformLocation(m_uiPointLightProgram, "light_diffuse");
 	int	iLightRadiusUniform = glGetUniformLocation(m_uiPointLightProgram, "light_radius");
+
+	int	iSpecularUniform = glGetUniformLocation(m_uiPointLightProgram, "fSpecPower");
+	int	iEyePosUniform = glGetUniformLocation(m_uiPointLightProgram, "eye_pos");
+	int	iAmbientLightUniform = glGetUniformLocation(m_uiPointLightProgram, "ambient_light");
+
+	glUniform1f(iSpecularUniform, m_fDeferredSpecPower);
+	glUniform3fv(iEyePosUniform, 1, (float*)&m_FlyCamera.GetPosition());
+	glUniform3fv(iAmbientLightUniform, 1, (float*)&m_vAmbientLightColour.xyz);
+
 	vec3	vLightPos(0, 0, 0);
 	vec3	vLightDiffuse(0, 0, 0);
 	vec4	viewspacePos;
@@ -1292,13 +1307,7 @@ void	Checkers::BuildGBuffer()
 	glBindFramebuffer(GL_FRAMEBUFFER, m_uiGBufferFBO);
 
 	//	generate all our textures
-	//	albedo, position, normal, depthI(depth is render buffer)
-	glGenTextures(1, &m_uiAlbedoTexture);
-	glBindTexture(GL_TEXTURE_2D, m_uiAlbedoTexture);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, BUFFER_WIDTH, BUFFER_HEIGHT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
+	//	position, normal, albedo, depthI(depth is render buffer)
 	glGenTextures(1, &m_uiPositionsTexture);
 	glBindTexture(GL_TEXTURE_2D, m_uiPositionsTexture);
 	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, BUFFER_WIDTH, BUFFER_HEIGHT);
@@ -1311,14 +1320,20 @@ void	Checkers::BuildGBuffer()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+	glGenTextures(1, &m_uiAlbedoTexture);
+	glBindTexture(GL_TEXTURE_2D, m_uiAlbedoTexture);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, BUFFER_WIDTH, BUFFER_HEIGHT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
 	glGenRenderbuffers(1, &m_uiGBufferDepth);
 	glBindRenderbuffer(GL_RENDERBUFFER, m_uiGBufferDepth);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, BUFFER_WIDTH, BUFFER_HEIGHT);
 
 	//	attach our textures to the framebuffer
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_uiAlbedoTexture, 0);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, m_uiPositionsTexture, 0);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, m_uiNormalsTexture, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_uiPositionsTexture, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, m_uiNormalsTexture, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, m_uiAlbedoTexture, 0);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_uiGBufferDepth);
 
 	GLenum	targets[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
@@ -1379,8 +1394,8 @@ void	Checkers::DrawModelsDeferred()
 	vec4	clearNormal = vec4(0.5f, 0.5f, 0.5f, 0.0f);
 
 	glClearBufferfv(GL_COLOR, 0, (float*)&clearColour);
-	glClearBufferfv(GL_COLOR, 1, (float*)&clearColour);
-	glClearBufferfv(GL_COLOR, 2, (float*)&clearNormal);
+	glClearBufferfv(GL_COLOR, 1, (float*)&clearNormal);
+	glClearBufferfv(GL_COLOR, 2, (float*)&clearColour);
 
 	glUseProgram(m_uiGBufferProgram);
 
@@ -1525,6 +1540,7 @@ void	Checkers::AccumulateLightsDeferred()
 
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
+	glBlendEquation(GL_FUNC_ADD);
 	glBlendFunc(GL_ONE, GL_ONE);
 
 	glUseProgram(m_uiDirectionalLightProgram);
@@ -1540,7 +1556,8 @@ void	Checkers::AccumulateLightsDeferred()
 	vec3	light_dir = m_vLightDir;
 	////	vec3	light_colour = vec3(0.2f, 0.4f, 0.8f);
 	vec3	light_colour = m_vLightColour.rgb;
-	RenderDirectionalLight(light_dir, light_colour);
+	//RenderDirectionalLight(light_dir, light_colour);
+
 	//	RenderDirectionalLight(vec3(0, 1, 0), vec3(0.5f, 0.25f, 0.0f));
 	//	RenderDirectionalLight(vec3(1, 1, 0), vec3(0.6f, 0.0f, 0.0f));
 	//	RenderDirectionalLight(vec3(1, 0, 0), vec3(0.0f, 0.6f, 0.0f));
@@ -1551,18 +1568,23 @@ void	Checkers::AccumulateLightsDeferred()
 	//	now render the point lights
 	glUseProgram(m_uiPointLightProgram);
 	int	iViewProjUniform = glGetUniformLocation(m_uiPointLightProgram, "proj_view");
-	iPositionTexUniform = glGetUniformLocation(m_uiPointLightProgram, "position_texture");
-	iNormalsTexUniform = glGetUniformLocation(m_uiPointLightProgram, "normal_texture");
+	iPositionTexUniform = glGetUniformLocation(m_uiPointLightProgram, "position_tex");
+	iNormalsTexUniform = glGetUniformLocation(m_uiPointLightProgram, "normals_tex");
+	int	iAlbedoTexUniform = glGetUniformLocation(m_uiPointLightProgram, "albedo_tex");
 
 	glUniformMatrix4fv(iViewProjUniform, 1, GL_FALSE, (float*)&m_FlyCamera.m_projectionViewTransform);
 	glUniform1i(iPositionTexUniform, 0);
 	glUniform1i(iNormalsTexUniform, 1);
+	glUniform1i(iAlbedoTexUniform, 2);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_uiPositionsTexture);
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, m_uiNormalsTexture);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, m_uiAlbedoTexture);
 
 	//	draw the point lights
 	RenderPointLights();
@@ -1587,28 +1609,28 @@ void	Checkers::RenderCompositePass()
 	//	m_uiPositionsTexture
 	//	m_uiNormalsTexture
 
-	int	iAlbedoTexUniform = glGetUniformLocation(m_uiCompositeProgram, "albedo_tex");
 	int	iPositionsTexUniform = glGetUniformLocation(m_uiCompositeProgram, "position_tex");
 	int	iNormalsTexUniform = glGetUniformLocation(m_uiCompositeProgram, "normals_tex");
+	int	iAlbedoTexUniform = glGetUniformLocation(m_uiCompositeProgram, "albedo_tex");
 	int	iLightTexUniform = glGetUniformLocation(m_uiCompositeProgram, "light_tex");
 	int	iSpecUniform = glGetUniformLocation(m_uiCompositeProgram, "fSpecPower");
 	int	iEyePosUniform = glGetUniformLocation(m_uiCompositeProgram, "eye_pos");
 	int	iAmbientUniform = glGetUniformLocation(m_uiCompositeProgram, "ambient_light");
 
-	glUniform1i(iAlbedoTexUniform, 0);
-	glUniform1i(iPositionsTexUniform, 1);
-	glUniform1i(iNormalsTexUniform, 2);
+	glUniform1i(iPositionsTexUniform, 0);
+	glUniform1i(iNormalsTexUniform, 1);
+	glUniform1i(iAlbedoTexUniform, 2);
 	glUniform1i(iLightTexUniform, 3);
 	glUniform1f(iSpecUniform, m_fDeferredSpecPower);
 	glUniform3fv(iEyePosUniform, 1, (float*)&m_FlyCamera.GetPosition());
 	glUniform3fv(iAmbientUniform, 1, (float*)&m_vAmbientLightColour.rgb);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_uiAlbedoTexture);
-	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, m_uiPositionsTexture);
-	glActiveTexture(GL_TEXTURE2);
+	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, m_uiNormalsTexture);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, m_uiAlbedoTexture);
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, m_uiLightTexture);
 
@@ -1625,22 +1647,26 @@ void	Checkers::RenderCompositePass()
 
 void	Checkers::SetupDeferredLights()
 {
+	int	iLightCount = 0;
 	//	Add lights to indicate Player 1's side
 	for (int i = 0; i < 5; ++i)
 	{
 		AddPointLight(i * 2 - 4.0f, 2.0f, -4.0f, 0.5f, 0.1f, 0.1f, 3.5f);
+		++iLightCount;
 	}
 	//	Add lights to indicate Player 2's side
 	for (int i = 0; i < 5; ++i)
 	{
 		AddPointLight(i * 2 - 4.0f, 2.0f, 4.0f, 0.1f, 0.1f, 0.5f, 3.5f);
+		++iLightCount;
 	}
 	//	Add lights above the board
 	for (int i = 0; i < 13; ++i)
 	{
 		for (int j = 0; j < 13; ++j)
 		{
-			AddPointLight(i - 6.0f, 0.5f, j - 6.0f, 0.25f, 0.25f, 0.25f, 1.0f);
+			AddPointLight(i - 6.0f, 0.5f, j - 6.0f, 0.25f, 0.25f, 0.25f, 4.0f);
+			++iLightCount;
 		}
 	}
 	//	Add lights below the board
@@ -1649,6 +1675,7 @@ void	Checkers::SetupDeferredLights()
 		for (int j = 0; j < 7; ++j)
 		{
 			AddPointLight(i*2 - 6.0f, -1.5f, j*2 - 6.0f, 0.25f, 0.25f, 0.25f, 2.5f);
+			++iLightCount;
 		}
 	}
 
@@ -1656,4 +1683,5 @@ void	Checkers::SetupDeferredLights()
 //	AddPointLight(-3, 1, 0, 0.25f, 0.25f, 0.5f, 2.5f);	//	initial test light at (0, 5, 0) with a range of 10
 //	AddPointLight(3, 1, -3, 0.25f, 0.5f, 0.25f, 2.5f);	//	initial test light at (0, 5, 0) with a range of 10
 //	AddPointLight(-3, 1, -3, 0.5f, 0.25f, 0.25f, 2.5f);	//	initial test light at (0, 5, 0) with a range of 10
+	cout << "Deferred Light Count: " << iLightCount << '\n';
 }
