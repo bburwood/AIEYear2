@@ -46,7 +46,7 @@ void main()
 	////////	new deferred code below, calculating the Phong model for the current light ...
 	vec4 albedo_sample = texture(albedo_tex, texcoord);
 
-	vec3	ambient = albedo_sample.xyz * ambient_light;
+//	vec3	ambient = albedo_sample.xyz * ambient_light;
 	vec3	E = normalize(eye_pos - positionSample.xyz);
 	//	L is already calculated above
 	vec3	R = normalize(-reflect(L, N));
@@ -61,13 +61,15 @@ void main()
 
 	vec3	specular = vec3(s) * surfaceLighting * albedo_sample.xyz;
 
-	light_output = ambient + diffuse + specular;
+//	light_output = ambient + diffuse + specular;
+	//	ambient should only be added ONCE - not for every point light!
+	light_output = diffuse + specular;
 
 
 	//	debugs
 //	light_output = vec3(1, 1, 1);	//	debug white point light 
 //	light_output = light_diffuse;	//	shows the light box / sphere *AND* its colour when combined with just light_sample in the composite fragment shader
-//	light_output = normalSample;
+//	light_output = normalSample.xyz;
 //	light_output = surfaceLighting;
 //	light_output = albedo_sample.xyz;
 //	light_output = ambient_light;
@@ -85,4 +87,5 @@ void main()
 //	light_output = vec3(0, 0, falloff);
 //	light_output = vec3(d);
 //	light_output = vec3(s);
+//	light_output = vec3(1,0,0);
 }

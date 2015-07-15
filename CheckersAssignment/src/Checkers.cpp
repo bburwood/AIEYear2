@@ -108,7 +108,7 @@ bool	Checkers::startup()
 
 	m_Player1Colour = vec4(0.7f, 0.05f, 0.05f, 1.0f);
 	m_Player2Colour = vec4(0.05f, 0.05f, 0.7f, 1.0f);
-	m_vAmbientLightColour = vec4(0.01f, 0.01f, 0.01f, 1.0f);
+	m_vAmbientLightColour = vec4(0.001f, 0.001f, 0.001f, 1.0f);
 	m_vLightColour = vec4(0.2f, 0.2f, 0.2f, 1.0f);
 	m_vLightDir = glm::normalize(vec3(-0.10f, -0.85f, 0.5f));
 
@@ -1649,6 +1649,7 @@ void	Checkers::SetupDeferredLights()
 {
 	int	iLightCount = 0;
 	//	Add lights to indicate Player 1's side
+/*
 	for (int i = 0; i < 5; ++i)
 	{
 		AddPointLight(i * 2 - 4.0f, 2.0f, -4.0f, 0.5f, 0.1f, 0.1f, 3.5f);
@@ -1665,7 +1666,7 @@ void	Checkers::SetupDeferredLights()
 	{
 		for (int j = 0; j < 13; ++j)
 		{
-			AddPointLight(i - 6.0f, 0.5f, j - 6.0f, 0.25f, 0.25f, 0.25f, 4.0f);
+			AddPointLight(i - 6.0f, 1.0f, j - 6.0f, 0.35f, 0.35f, 0.35f, 3.0f);
 			++iLightCount;
 		}
 	}
@@ -1678,8 +1679,8 @@ void	Checkers::SetupDeferredLights()
 			++iLightCount;
 		}
 	}
-
-//	AddPointLight(0, 2, 0, 0.5f, 0.5f, 0.5f, 2.75f);	//	initial test light at (0, 5, 0) with a range of 10
+*/
+	AddPointLight(0, 2, 0, 1.0f, 1.0f, 1.0f, 10.0f);	//	initial test light at (0, 5, 0) with a range of 10
 //	AddPointLight(-3, 1, 0, 0.25f, 0.25f, 0.5f, 2.5f);	//	initial test light at (0, 5, 0) with a range of 10
 //	AddPointLight(3, 1, -3, 0.25f, 0.5f, 0.25f, 2.5f);	//	initial test light at (0, 5, 0) with a range of 10
 //	AddPointLight(-3, 1, -3, 0.5f, 0.25f, 0.25f, 2.5f);	//	initial test light at (0, 5, 0) with a range of 10

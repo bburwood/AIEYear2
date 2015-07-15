@@ -13,6 +13,7 @@ void main()
 {
 	position = viewspace_position.xyz;
 	normal = normalize(viewspace_normal.xyz) * 0.5f + 0.5f;
+	//normal = viewspace_normal.xyz;
 
 	//albedo = vec3(1);	//	just plain white for now - normally the raw unlit colour
 	//albedo = vec3(1.0f, 0.1f, 0.1f);	//	red test ...
