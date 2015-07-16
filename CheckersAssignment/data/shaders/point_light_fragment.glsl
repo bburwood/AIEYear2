@@ -47,9 +47,9 @@ void main()
 	vec4 albedo_sample = texture(albedo_tex, texcoord);
 
 //	vec3	ambient = albedo_sample.xyz * ambient_light;
-	vec3	E = normalize(eye_pos - positionSample.xyz);
+	vec3	E = normalize(vec3(0) - positionSample.xyz);
 	//	L is already calculated above
-	vec3	R = normalize(-reflect(L, N));
+	vec3	R = normalize(reflect(-L, N));
 
 	d = max(0.0, dot(N, L));
 	//d = 0.5f;	//	for debugging!

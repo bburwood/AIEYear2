@@ -316,6 +316,9 @@ bool	Checkers::update()
 		}
 	}
 
+	//	show the first light position
+//	glm::vec3 light_pos = glm::vec3(aPointLightsX[0], aPointLightsY[0], aPointLightsZ[0]);
+//	Gizmos::addSphere(light_pos, 0.1f, 16, 16, glm::vec4(1, 1, 0, 1));
 
 	double	dXDelta, dYDelta;
 	glfwGetCursorPos(m_window, &dXDelta, &dYDelta);
@@ -1649,7 +1652,7 @@ void	Checkers::SetupDeferredLights()
 {
 	int	iLightCount = 0;
 	//	Add lights to indicate Player 1's side
-/*
+///*
 	for (int i = 0; i < 5; ++i)
 	{
 		AddPointLight(i * 2 - 4.0f, 2.0f, -4.0f, 0.5f, 0.1f, 0.1f, 3.5f);
@@ -1666,7 +1669,7 @@ void	Checkers::SetupDeferredLights()
 	{
 		for (int j = 0; j < 13; ++j)
 		{
-			AddPointLight(i - 6.0f, 1.0f, j - 6.0f, 0.35f, 0.35f, 0.35f, 3.0f);
+			AddPointLight(i - 6.0f, 1.0f, j - 6.0f, 0.3f, 0.3f, 0.3f, 3.0f);
 			++iLightCount;
 		}
 	}
@@ -1679,8 +1682,9 @@ void	Checkers::SetupDeferredLights()
 			++iLightCount;
 		}
 	}
-*/
-	AddPointLight(0, 2, 0, 1.0f, 1.0f, 1.0f, 10.0f);	//	initial test light at (0, 5, 0) with a range of 10
+//*/
+//	AddPointLight(2, 4, 0, 1.0f, 1.0f, 1.0f, 20.0f);	//	initial test light at (0, 5, 0) with a range of 10
+
 //	AddPointLight(-3, 1, 0, 0.25f, 0.25f, 0.5f, 2.5f);	//	initial test light at (0, 5, 0) with a range of 10
 //	AddPointLight(3, 1, -3, 0.25f, 0.5f, 0.25f, 2.5f);	//	initial test light at (0, 5, 0) with a range of 10
 //	AddPointLight(-3, 1, -3, 0.5f, 0.25f, 0.25f, 2.5f);	//	initial test light at (0, 5, 0) with a range of 10
