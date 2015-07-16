@@ -54,7 +54,7 @@ bool	Checkers::startup()
 
 	//	now initialise the FlyCamera
 	m_FlyCamera = FlyCamera(vec3(-1, 10, 5), vec3(-1, 0, 1), glm::radians(50.0f), (float)BUFFER_WIDTH / (float)BUFFER_HEIGHT, 0.1f, 300.0f);
-	m_FlyCamera.SetSpeed(15.0f);
+	m_FlyCamera.SetSpeed(4.0f);
 
 	//	initialise basic AntTweakBar info
 	//m_bar = TwNewBar("Stuff you can mess with!!");
@@ -103,7 +103,7 @@ bool	Checkers::startup()
 	TwAddVarRW(m_bar, "Player 2 AI LookAheadMoves", TW_TYPE_INT32, &m_Game.m_P2.m_iAILookAheadMoves, "min=0 max=50 step=1");	//	might change this to 100 later ...
 	TwAddVarRW(m_bar, "Checkerboard SpecPower", TW_TYPE_FLOAT, &m_fCheckerboardSpecPower, "min=0.0 max=250.0 step=0.5");
 	TwAddVarRW(m_bar, "Checker Piece SpecPower", TW_TYPE_FLOAT, &m_fCheckerPieceSpecPower, "min=0.0 max=500.0 step=0.5");
-	TwAddVarRW(m_bar, "Deferred SpecPower", TW_TYPE_FLOAT, &m_fDeferredSpecPower, "min=0.0 max=250.0 step=0.5");
+	TwAddVarRW(m_bar, "Deferred SpecPower", TW_TYPE_FLOAT, &m_fDeferredSpecPower, "min=0.0 max=500.0 step=0.5");
 
 
 	m_Player1Colour = vec4(0.7f, 0.05f, 0.05f, 1.0f);
@@ -132,7 +132,7 @@ bool	Checkers::startup()
 
 	m_fCheckerboardSpecPower = 100.0f;
 	m_fCheckerPieceSpecPower = 250.0f;
-	m_fDeferredSpecPower = 20.0f;
+	m_fDeferredSpecPower = 350.0f;
 	m_CheckerBoardWorldTransform = glm::translate(vec3(0, -0.248f, 0));
 	m_BackBoardWorldTransform = glm::translate(vec3(0, -0.748f, 0));
 	m_CheckerWorldTransform = glm::scale(glm::translate(vec3(0.5f, 0.080f, 0.5f)), vec3(0.25f));
@@ -1665,11 +1665,11 @@ void	Checkers::SetupDeferredLights()
 		++iLightCount;
 	}
 	//	Add lights above the board
-	for (int i = 0; i < 13; ++i)
+	for (int i = 0; i < 25; ++i)
 	{
-		for (int j = 0; j < 13; ++j)
+		for (int j = 0; j < 25; ++j)
 		{
-			AddPointLight(i - 6.0f, 1.0f, j - 6.0f, 0.3f, 0.3f, 0.3f, 3.0f);
+			AddPointLight(0.5f * i - 6.0f, 1.0f, 0.5f * j - 6.0f, 0.2f, 0.2f, 0.2f, 1.5f);
 			++iLightCount;
 		}
 	}
