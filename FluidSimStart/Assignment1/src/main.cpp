@@ -5,6 +5,7 @@
 #include <glm/ext.hpp>
 #include <iostream>
 #include "DIYPhysicsEngine.h"
+#include "DIYFluid.h"
 
 void DIYPhysicsRocketSetup();
 void upDate2DPhysics(float delta);
@@ -57,6 +58,9 @@ int main()
 	glm::vec3 loc2 = glm::vec3(8, 0, 0);
 	glm::vec3 loc3 = glm::vec3(4, 0, 0);
 	float prevTime = 0;
+	float	fTimer = 0.0f;
+
+	DIYFluid	fluid = DIYFluid(256, 256, 0.1f, 0.1f);
 
 	while (glfwWindowShouldClose(window) == false && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS)
 	{
@@ -71,8 +75,21 @@ int main()
 		glEnable(GL_DEPTH_TEST);
 
 		Gizmos::clear();
-		upDate2DPhysics(deltaTime);
+		//upDate2DPhysics(deltaTime);
 //		Gizmos::addTransform(glm::mat4(1));
+
+		fTimer += deltaTime;
+		if (fTimer > 1.0f)
+		{
+			std::cout << "Frame rate: " << 1.0f / deltaTime << '\n';
+			fTimer = 0.0f;
+		}
+		fluid.UpdateFluid(deltaTime);
+
+		int	width = 0, height = 0;
+		glfwGetWindowSize(glfwGetCurrentContext(), &width, &height);
+		float AR = (float)width / (float)height;
+		fluid.RenderFluid(glm::ortho<float>(-10, 10, -10/AR, 10/AR, -1.0f, 1.0f));
 
 		Gizmos::draw(projection * view);
 		draw2DGizmo();

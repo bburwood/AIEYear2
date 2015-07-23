@@ -465,6 +465,12 @@
     <ClInclude Include="src\DIYPhysicsEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\DIYFluid.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utilities.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\gl_core_4_4.c">
@@ -480,6 +486,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\DIYPhysicsEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DIYFluid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -810,6 +822,12 @@
     </None>
     <None Include="dep\glm\gtx\wrap.inl">
       <Filter>Header Files</Filter>
+    </None>
+    <None Include="shaders\simple_texture.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\simple_vertex.vs">
+      <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
 </Project>

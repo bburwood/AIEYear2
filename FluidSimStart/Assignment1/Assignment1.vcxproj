@@ -42,6 +42,10 @@
     <IncludePath>$(ProjectDir)dep;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)dep;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(ProjectDir)dep;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)dep;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -226,14 +230,18 @@
     <ClInclude Include="dep\glm\vector_relational.hpp" />
     <ClInclude Include="dep\gl_core_4_4.h" />
     <ClInclude Include="dep\stb_image.h" />
+    <ClInclude Include="src\DIYFluid.h" />
     <ClInclude Include="src\DIYPhysicsEngine.h" />
+    <ClInclude Include="src\Utilities.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dep\aieutilities\Gizmos.cpp" />
     <ClCompile Include="dep\glm\detail\glm.cpp" />
+    <ClCompile Include="src\DIYFluid.cpp" />
     <ClCompile Include="src\DIYPhysicsEngine.cpp" />
     <ClCompile Include="src\gl_core_4_4.c" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dep\glm\detail\func_common.inl" />
@@ -345,6 +353,8 @@
     <None Include="dep\glm\gtx\vector_angle.inl" />
     <None Include="dep\glm\gtx\vector_query.inl" />
     <None Include="dep\glm\gtx\wrap.inl" />
+    <None Include="shaders\simple_texture.fs" />
+    <None Include="shaders\simple_vertex.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
