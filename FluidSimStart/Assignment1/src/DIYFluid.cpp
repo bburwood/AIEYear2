@@ -150,7 +150,7 @@ void	DIYFluid::UpdateFluid(float fDt)
 	SwapVelocities();
 	SwapColours();
 
-	for (int iDiffuseStep = 0; iDiffuseStep < 1; ++iDiffuseStep)
+	for (int iDiffuseStep = 0; iDiffuseStep < 10; ++iDiffuseStep)
 	{
 		Diffuse(fDt);
 		SwapVelocities();
@@ -158,7 +158,7 @@ void	DIYFluid::UpdateFluid(float fDt)
 
 	Divergence(fDt);
 
-	for (int iPressureStep = 0; iPressureStep < 1; ++iPressureStep)
+	for (int iPressureStep = 0; iPressureStep < 10; ++iPressureStep)
 	{
 		UpdatePressure(fDt);
 		SwapPressures();
@@ -169,8 +169,8 @@ void	DIYFluid::UpdateFluid(float fDt)
 
 	UpdateBoundary();
 
-	BoxVelocityPush(iWidth / 2 - 5, iHeight / 4, 4, glm::vec2(0.0f, 20.0f), fDt);	//	add a vertical velocity push in the centre
-
+	//BoxVelocityPush(iWidth / 2 - 5, iHeight / 4, 4, glm::vec2(0.0f, 0.0001f), fDt);	//	add a vertical velocity push in the centre
+	
 	//BoxVelocityPush(iWidth / 4, 5 + iHeight / 3, 4, glm::vec2(10.0f, 20.0f), fDt);
 	//BoxVelocityPush(iWidth * 3 / 4, 5 + iHeight * 5 / 6, 4, glm::vec2(10.0f, -15.0f), fDt);
 
@@ -180,12 +180,12 @@ void	DIYFluid::UpdateFluid(float fDt)
 	glfwGetWindowSize(pWindow, &width, &height);
 	float AR = (float)width / (float)height;
 	//	fluid.RenderFluid(glm::ortho<float>(-10, 10, -10 / AR, 10 / AR, -1.0f, 1.0f));	//	original render call from main ...
-	fDebugTimer += fDt;
-	if (fDebugTimer > 1.0f)
-	{
-		std::cout << "Window size: " << width << " / " << height << "  AR: " << AR << '\n';
-		fDebugTimer = 0.0f;
-	}
+//	fDebugTimer += fDt;
+//	if (fDebugTimer > 1.0f)
+//	{
+//		std::cout << "Window size: " << width << " / " << height << "  AR: " << AR << '\n';
+//		fDebugTimer = 0.0f;
+//	}
 	if (glfwGetMouseButton(pWindow, 0))
 	{
 		//	do the mouse stuff if the left button has been pressed
@@ -210,7 +210,7 @@ void	DIYFluid::UpdateFluid(float fDt)
 	}
 	if (glfwGetMouseButton(pWindow, 2))
 	{
-		//	add dye if the right button is pressed
+		//	add dye if the centre button is pressed
 		double	dXDelta, dYDelta;
 		glfwGetCursorPos(pWindow, &dXDelta, &dYDelta);
 		glm::vec2 mouseWorldPos = GetMouseWorldCoords((float)dXDelta, (float)dYDelta, width, height, 20.0f, AR);

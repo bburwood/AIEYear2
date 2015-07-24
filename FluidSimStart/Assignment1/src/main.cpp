@@ -60,7 +60,7 @@ int main()
 	float prevTime = 0;
 	float	fTimer = 0.0f;
 
-	DIYFluid	fluid = DIYFluid(512, 512, 0.05f, 0.1f);
+	DIYFluid	fluid = DIYFluid(256, 256, 0.001f, 0.1f);
 
 	while (glfwWindowShouldClose(window) == false && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS)
 	{
@@ -69,6 +69,7 @@ int main()
 
 		// calculate a delta time
 		float deltaTime = time - prevTime;
+		deltaTime = 1.0f / 60.0f;
 		prevTime = time;
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glClearColor(0.102f, 0.489f, 0.866f, 1);
@@ -84,7 +85,8 @@ int main()
 			std::cout << "Frame rate: " << 1.0f / deltaTime << '\n';
 			fTimer = 0.0f;
 		}
-		fluid.UpdateFluid(deltaTime);
+		//fluid.UpdateFluid(deltaTime);
+		fluid.UpdateFluid(deltaTime * 4);
 
 		int	width = 0, height = 0;
 		glfwGetWindowSize(glfwGetCurrentContext(), &width, &height);
