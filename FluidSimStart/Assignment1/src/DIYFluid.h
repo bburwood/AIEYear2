@@ -24,6 +24,9 @@ public:
 	void	UpdatePressure(float fDt);
 	void	ApplyPressure(float fDt);
 	void	UpdateBoundary();
+	void	BoxVelocityPush(int a_iCentreX, int a_iCentreY, int a_iBoxSize, glm::vec2 a_vVelocity, float a_fDt);
+	glm::ivec2	DIYFluid::GetGridCoordsFromWorldCoords(glm::vec2 worldPos);
+	void	BoxAddDye(int a_iCentreX, int a_iCentreY, int a_iBoxSize, glm::vec3 a_vColour, float a_fDt);
 
 	void	SwapColours();
 	void	SwapVelocities();
@@ -31,6 +34,8 @@ public:
 
 	float	fViscosity;
 	float	fCellDist;
+	float	fQuadHalfSize;
+	float	fDebugTimer;
 	FluidCells	frontCells;
 	FluidCells	backCells;
 	float*	aFDivergence;
