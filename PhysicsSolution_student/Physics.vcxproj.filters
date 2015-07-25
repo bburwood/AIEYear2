@@ -7,6 +7,8 @@
     <ClCompile Include="src\gl_core_4_4.c" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Physics.cpp" />
+    <ClCompile Include="src\Tank.cpp" />
+    <ClCompile Include="src\Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h" />
@@ -14,6 +16,11 @@
     <ClInclude Include="src\Gizmos.h" />
     <ClInclude Include="src\gl_core_4_4.h" />
     <ClInclude Include="src\Physics.h" />
+    <ClInclude Include="deps\FBXLoader\FBXFile.h" />
+    <ClInclude Include="src\GLMHeader.h" />
+    <ClInclude Include="src\Tank.h" />
+    <ClInclude Include="src\Utility.h" />
+    <ClInclude Include="src\Vertex.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ResourceFiles">
