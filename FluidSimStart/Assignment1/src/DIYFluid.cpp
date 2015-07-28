@@ -150,7 +150,7 @@ void	DIYFluid::UpdateFluid(float fDt)
 	SwapVelocities();
 	SwapColours();
 
-	for (int iDiffuseStep = 0; iDiffuseStep < 10; ++iDiffuseStep)
+	for (int iDiffuseStep = 0; iDiffuseStep < 20; ++iDiffuseStep)
 	{
 		Diffuse(fDt);
 		SwapVelocities();
@@ -158,7 +158,7 @@ void	DIYFluid::UpdateFluid(float fDt)
 
 	Divergence(fDt);
 
-	for (int iPressureStep = 0; iPressureStep < 10; ++iPressureStep)
+	for (int iPressureStep = 0; iPressureStep < 25; ++iPressureStep)
 	{
 		UpdatePressure(fDt);
 		SwapPressures();
