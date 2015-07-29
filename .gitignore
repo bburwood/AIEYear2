@@ -249,3 +249,7 @@ PhysicsSolution_student/deps/physx/Lib/vc12win32/SimulationController.lib
 PhysicsSolution_student/deps/physx/Lib/vc12win32/SimulationControllerCHECKED.lib
 PhysicsSolution_student/deps/physx/Lib/vc12win32/SimulationControllerDEBUG.lib
 PhysicsSolution_student/deps/physx/Lib/vc12win32/SimulationControllerPROFILE.lib
+OpenGLIntro/deps/FBXLoader/FBXLoader.lib
+OpenGLIntro/deps/FBXLoader/FBXLoader_d.lib
+PhysicsSolution_student/deps/FBXLoader/FBXLoader.lib
+PhysicsSolution_student/deps/FBXLoader/FBXLoader_d.lib
