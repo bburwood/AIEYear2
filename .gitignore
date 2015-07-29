@@ -180,13 +180,12 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
-OpenGLIntro/deps/FBXLoader/FBXLoader.lib
-OpenGLIntro/deps/FBXLoader/FBXLoader_d.lib
+*/FBXLoader.lib
+*/FBXLoader_d.lib
 OpenGLIntro/data/models/f16/F16s.bmp
 OpenGLIntro/data/models/f16/F16t.bmp
 OpenGLIntro/data/models/f16/f16.mtl
 OpenGLIntro/data/models/f16/f16.txt
-PhysicsSolution_student/deps/FBXLoader/FBXLoader_d.lib
 PhysicsSolution_student/deps/glfw/lib-vc2013/glfw3.dll
 PhysicsSolution_student/deps/glfw/lib-vc2013/glfw3.lib
 PhysicsSolution_student/deps/glfw/lib-vc2013/glfw3dll.lib
