@@ -50,6 +50,7 @@ DIYFluid::DIYFluid(int a_iWidth, int a_iHeight, float a_fViscosity, float a_fCel
 			(float)i / (1.0f * (float)iWidth),
 			(float)i / (0.5f * (float)iWidth));
 	}
+	vLastMouseWorldCoords = glm::vec2(0);
 
 	LoadShader("./shaders/simple_vertex.vs", 0, "./shaders/simple_texture.fs", &uiProgram);
 }
@@ -186,38 +187,39 @@ void	DIYFluid::UpdateFluid(float fDt)
 //		std::cout << "Window size: " << width << " / " << height << "  AR: " << AR << '\n';
 //		fDebugTimer = 0.0f;
 //	}
+	double	dXDelta, dYDelta;
+	glfwGetCursorPos(pWindow, &dXDelta, &dYDelta);
+	glm::vec2 mouseWorldPos = GetMouseWorldCoords((float)dXDelta, (float)dYDelta, width, height, 20.0f, AR);
+	glm::ivec2	mouseGridPos = GetGridCoordsFromWorldCoords(mouseWorldPos);
+	//std::cout << "Mouse Coord (world): " << mouseWorldPos.x << " / " << mouseWorldPos.y
+	//	<< "  Mouse Coord (Grid): " << mouseGridPos.x << " / " << mouseGridPos.y << '\n';
 	if (glfwGetMouseButton(pWindow, 0))
 	{
 		//	do the mouse stuff if the left button has been pressed
-		double	dXDelta, dYDelta;
-		glfwGetCursorPos(pWindow, &dXDelta, &dYDelta);
-		glm::vec2 mouseWorldPos = GetMouseWorldCoords((float)dXDelta, (float)dYDelta, width, height, 20.0f, AR);
-		//	now get the mouse coords in grid coords ...
-		glm::ivec2	mouseGridPos = GetGridCoordsFromWorldCoords(mouseWorldPos);
-		//std::cout << "Mouse Coord (world): " << mouseWorldPos.x << " / " << mouseWorldPos.y
-		//	<< "  Mouse Coord (Grid): " << mouseGridPos.x << " / " << mouseGridPos.y << '\n';
-		BoxVelocityPush(mouseGridPos.x, mouseGridPos.y, 4, glm::vec2(75.0f, 75.0f), fDt);
+		if (glfwGetKey(pWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		{
+			//	push the fluid on a 45 degree angle up and right when the left shift key is held down
+			BoxVelocityPush(mouseGridPos.x, mouseGridPos.y, 6, glm::vec2(75.0f, 75.0f), fDt);
+		}
+		else
+		{
+			//	push the fluid based on the mouse movement
+			glm::vec2	vPushDirection = (mouseWorldPos - vLastMouseWorldCoords) * 75.0f;
+			BoxVelocityPush(mouseGridPos.x, mouseGridPos.y, 10, vPushDirection, fDt);
+		}
+
 	}
 	if (glfwGetMouseButton(pWindow, 1))
 	{
 		//	add dye if the right button is pressed
-		double	dXDelta, dYDelta;
-		glfwGetCursorPos(pWindow, &dXDelta, &dYDelta);
-		glm::vec2 mouseWorldPos = GetMouseWorldCoords((float)dXDelta, (float)dYDelta, width, height, 20.0f, AR);
-		//	now get the mouse coords in grid coords ...
-		glm::ivec2	mouseGridPos = GetGridCoordsFromWorldCoords(mouseWorldPos);
 		BoxAddDye(mouseGridPos.x, mouseGridPos.y, 10, glm::vec3(100.0f, 100.0f, 255.0f), fDt);
 	}
 	if (glfwGetMouseButton(pWindow, 2))
 	{
-		//	add dye if the centre button is pressed
-		double	dXDelta, dYDelta;
-		glfwGetCursorPos(pWindow, &dXDelta, &dYDelta);
-		glm::vec2 mouseWorldPos = GetMouseWorldCoords((float)dXDelta, (float)dYDelta, width, height, 20.0f, AR);
-		//	now get the mouse coords in grid coords ...
-		glm::ivec2	mouseGridPos = GetGridCoordsFromWorldCoords(mouseWorldPos);
+		//	subtract colour from dye if the centre button is pressed
 		BoxAddDye(mouseGridPos.x, mouseGridPos.y, 10, glm::vec3(-100.0f, -100.0f, -255.0f), fDt);
 	}
+	vLastMouseWorldCoords = mouseWorldPos;
 }
 
 void	DIYFluid::BoxAddDye(int a_iCentreX, int a_iCentreY, int a_iBoxSize, glm::vec3 a_vColour, float a_fDt)

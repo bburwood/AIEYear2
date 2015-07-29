@@ -32,6 +32,7 @@ public:
 	void	SwapVelocities();
 	void	SwapPressures();
 
+	glm::vec2	vLastMouseWorldCoords;
 	float	fViscosity;
 	float	fCellDist;
 	float	fQuadHalfSize;
