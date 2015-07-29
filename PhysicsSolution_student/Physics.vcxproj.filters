@@ -9,6 +9,8 @@
     <ClCompile Include="src\Physics.cpp" />
     <ClCompile Include="src\Tank.cpp" />
     <ClCompile Include="src\Utilities.cpp" />
+    <ClCompile Include="src\ParticleEmitter.cpp" />
+    <ClCompile Include="src\ParticleFluidEmitter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h" />
@@ -21,6 +23,8 @@
     <ClInclude Include="src\Tank.h" />
     <ClInclude Include="src\Utility.h" />
     <ClInclude Include="src\Vertex.h" />
+    <ClInclude Include="src\ParticleEmitter.h" />
+    <ClInclude Include="src\ParticleFluidEmitter.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ResourceFiles">

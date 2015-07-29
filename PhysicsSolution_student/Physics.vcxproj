@@ -17,6 +17,8 @@
     <ClInclude Include="src\Gizmos.h" />
     <ClInclude Include="src\GLMHeader.h" />
     <ClInclude Include="src\gl_core_4_4.h" />
+    <ClInclude Include="src\ParticleEmitter.h" />
+    <ClInclude Include="src\ParticleFluidEmitter.h" />
     <ClInclude Include="src\Physics.h" />
     <ClInclude Include="src\Tank.h" />
     <ClInclude Include="src\Utility.h" />
@@ -28,6 +30,8 @@
     <ClCompile Include="src\Gizmos.cpp" />
     <ClCompile Include="src\gl_core_4_4.c" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\ParticleEmitter.cpp" />
+    <ClCompile Include="src\ParticleFluidEmitter.cpp" />
     <ClCompile Include="src\Physics.cpp" />
     <ClCompile Include="src\Tank.cpp" />
     <ClCompile Include="src\Utilities.cpp" />
@@ -94,10 +98,10 @@
       <PreprocessorDefinitions>GLM_FORCE_PURE;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;PhysX3DEBUG_x86.lib;PhysX3ExtensionsDEBUG.lib;PhysX3CommonDEBUG_x86.lib;FBXLoader.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;opengl32.lib;PhysX3_x86.lib;PhysX3Extensions.lib;PhysX3Common_x86.lib;FBXLoader.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

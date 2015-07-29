@@ -3,7 +3,10 @@
 
 #include "Application.h"
 #include "Camera.h"
+#include "ParticleEmitter.h"
+#include "ParticleFluidEmitter.h"
 #include "Tank.h"
+#include <vector>
 
 #include <PxPhysicsAPI.h>
 #include <PxScene.h>
@@ -28,6 +31,7 @@ public:
     void setupPhysx();
     void setupTutorial1();
 	void	setupVisualDebugger();
+	void	SetupFluidDynamics();
 	void	CreateSpheres();
 
     FlyCamera m_camera;
@@ -51,6 +55,11 @@ public:
 	PxRigidDynamic*	m_pBoxActor;
 	PxRigidDynamic*	m_aBoxes[c_iNumBoxes];
 	PxRigidDynamic*	m_aSpheres[c_iNumSpheres];
+
+	PxParticleFluid*	m_pFluidSystem;
+	ParticleFluidEmitter*	m_pFluidEmitter;
+	std::vector<PxRigidStatic*>	m_aFluidActors;
+	
 	glm::vec4	m_aColours[c_iNumBoxes];
 	glm::vec4	m_aSphereColours[c_iNumSpheres];
 	int		m_iNextSphereToFire;
@@ -59,6 +68,8 @@ public:
 	float	m_fFiringSpeed;
 	float	m_fTimer;
 	bool	m_bSpheresCreated;
+	bool	m_bBoxesAndSpheres;
+	bool	m_bFluidDynamics;
 };
 
 #endif //CAM_PROJ_H_
