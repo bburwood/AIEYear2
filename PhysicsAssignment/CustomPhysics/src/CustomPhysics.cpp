@@ -3,6 +3,22 @@
 #include "Utility.h"
 #include <iostream>
 
+/*
+Notes:
+Custom engine
+	*	class diagram
+	*	2d/3d
+	*	Pool game would work - objects interact correctly using forces and collision reactions
+	*	spring system - could do the pockets with 2d cloth/rope - maybe make the balls bounce back into the table with spring cloth/rope for the pockets
+PhysX:
+	*	Static and dynamic
+	*	Ragdolls
+	*	trigger volume
+	*	particle system / soft body
+	*	player controller
+	vv
+*/
+
 using namespace std;
 
 //	define some basic colours to use for drawing
@@ -52,7 +68,7 @@ bool	CustomPhysics::startup()
 	m_bDrawGizmos = true;
 
 	//	now initialise the FlyCamera
-	m_FlyCamera = FlyCamera(vec3(-1, 10, 5), vec3(-1, 0, 1), glm::radians(50.0f), (float)BUFFER_WIDTH / (float)BUFFER_HEIGHT, 0.1f, 300.0f);
+	m_FlyCamera = FlyCamera(vec3(-1, 10, 0.00001f), vec3(-1, 0.000001f, 0.000001f), glm::radians(50.0f), (float)BUFFER_WIDTH / (float)BUFFER_HEIGHT, 0.1f, 300.0f);
 	m_FlyCamera.SetSpeed(25.0f);
 
 	//	initialise basic AntTweakBar info
