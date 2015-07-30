@@ -11,6 +11,7 @@
     <ClCompile Include="src\Utilities.cpp" />
     <ClCompile Include="src\ParticleEmitter.cpp" />
     <ClCompile Include="src\ParticleFluidEmitter.cpp" />
+    <ClCompile Include="src\MyController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h" />
@@ -25,6 +26,7 @@
     <ClInclude Include="src\Vertex.h" />
     <ClInclude Include="src\ParticleEmitter.h" />
     <ClInclude Include="src\ParticleFluidEmitter.h" />
+    <ClInclude Include="src\MyController.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ResourceFiles">

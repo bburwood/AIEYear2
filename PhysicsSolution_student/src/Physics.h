@@ -1,8 +1,9 @@
-#ifndef SOUND_PROGRAMMING_H_
-#define SOUND_PROGRAMMING_H_
+#ifndef _PHYSICS_H_
+#define _PHYSICS_H_
 
 #include "Application.h"
 #include "Camera.h"
+#include "MyController.h"
 #include "ParticleEmitter.h"
 #include "ParticleFluidEmitter.h"
 #include "Tank.h"
@@ -33,6 +34,10 @@ public:
 	void	setupVisualDebugger();
 	void	SetupFluidDynamics();
 	void	CreateSpheres();
+	void	AddSphere(PxShape* shape, PxRigidActor* rigidActor);
+	void	AddBox(PxShape* shape, PxRigidActor* rigidActor);
+	void	AddWidget(PxShape* shape, PxRigidActor* rigidActor);
+	void	AddCapsule(PxShape* shape, PxRigidActor* rigidActor);
 
     FlyCamera m_camera;
 
@@ -52,14 +57,27 @@ public:
 	PxMaterial*	m_pBoxMaterial;
 	PxCooking*	m_pPhysicsCooker;
 
+	PxRigidDynamic*	m_pActor;
 	PxRigidDynamic*	m_pBoxActor;
 	PxRigidDynamic*	m_aBoxes[c_iNumBoxes];
 	PxRigidDynamic*	m_aSpheres[c_iNumSpheres];
 
+	MyControllerHitReport*	m_pMyHitReport;
+	PxControllerManager*	m_pCharacterManager;
+	PxCapsuleControllerDesc	m_ControllerDescription;
+	PxController*	m_pPlayerController;
+	float	m_fCharacterYVelocity;
+	float	m_fCharacterRotation;
+	float	m_fPlayerGravity;
+	float	m_fMovementSpeed;
+	float	m_fRotationSpeed;
+	bool	m_bOnGround;
+
 	PxParticleFluid*	m_pFluidSystem;
 	ParticleFluidEmitter*	m_pFluidEmitter;
 	std::vector<PxRigidStatic*>	m_aFluidActors;
-	
+	std::vector<PxRigidDynamic*>	m_aCharacterActors;
+
 	glm::vec4	m_aColours[c_iNumBoxes];
 	glm::vec4	m_aSphereColours[c_iNumSpheres];
 	int		m_iNextSphereToFire;
@@ -72,4 +90,4 @@ public:
 	bool	m_bFluidDynamics;
 };
 
-#endif //CAM_PROJ_H_
+#endif //_PHYSICS_H_

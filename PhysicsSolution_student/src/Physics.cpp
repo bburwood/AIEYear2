@@ -1,3 +1,11 @@
+/*
+Things to do:
+* Read PhysX docs for Player controller.  Done
+* Work through Player Controller tutorial.  ****
+* Work through Mesh Collision tutorial
+* Work on assessment ...
+*/
+
 #include "Physics.h"
 
 #include "gl_core_4_4.h"
@@ -5,6 +13,7 @@
 #include "Gizmos.h"
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
+#include <iostream>
 
 #include "glm/gtc/quaternion.hpp"
 
@@ -50,16 +59,18 @@ bool Physics::startup()
 	
 //	void Gizmos::create(unsigned int a_maxLines /* = 0xffff */, unsigned int a_maxTris /* = 0xffff */,
 //	unsigned int a_max2DLines /* = 0xff */, unsigned int a_max2DTris /* = 0xff */)
-	Gizmos::create(0x50000, 0x50000, 0xff, 0xff);
+	Gizmos::create(0x80000, 0x80000, 0xff, 0xff);
 
 	m_bFluidDynamics = true;
-    m_camera = FlyCamera(1280.0f / 720.0f, 10.0f);
+	m_camera = FlyCamera(1280.0f / 720.0f, 10.0f);
 	if (m_bFluidDynamics)
 	{
 		m_camera.setLookAt(vec3(-5, 10, 10), vec3(0.0f, 0.0f, 0.0f), vec3(0, 1, 0));
+		m_bBoxesAndSpheres = false;	//	force either one or the other
 	}
 	else
 	{
+		m_bBoxesAndSpheres = true;
 		m_camera.setLookAt(vec3(0, 60, 120), vec3(0, 40, 80), vec3(0, 1, 0));
 	}
     m_camera.sensitivity = 3;
@@ -70,7 +81,6 @@ bool Physics::startup()
 	m_fFiringTimer = 0.0f;
 	m_fFiringInterval = c_fSphereFiringInterval;
 	m_fFiringSpeed = c_fSphereFiringSpeed;
-	m_bBoxesAndSpheres = false;
 
     setupPhysx();
 	if (m_bBoxesAndSpheres)
@@ -135,7 +145,7 @@ void	Physics::SetupFluidDynamics()
 	//	now set up the particle/fluid system
 	//	create the particle system in PhysX SDK
 	//	set immutable properties
-	PxU32	maxParticles = 6000;
+	PxU32	maxParticles = 25000;
 	bool	perParticleRestOffset = false;
 	m_pFluidSystem = m_pPhysics->createParticleFluid(maxParticles, perParticleRestOffset);
 	m_pFluidSystem->setRestParticleDistance(0.35f);
@@ -150,9 +160,42 @@ void	Physics::SetupFluidDynamics()
 	if (m_pFluidSystem)
 	{
 		m_pPhysicsScene->addActor(*m_pFluidSystem);
-		m_pFluidEmitter = new ParticleFluidEmitter(maxParticles, PxVec3(0, 10, 0), m_pFluidSystem, 0.005f);
+		m_pFluidEmitter = new ParticleFluidEmitter(maxParticles, PxVec3(0, 10, 0), m_pFluidSystem, 0.01f);
 		m_pFluidEmitter->setStartVelocityRange(-1.0f, -50.0f, -1.0f, 1.0f, -50.0f, 1.0f);
 	}
+
+	//	now add the character controller stuff to it ...
+	//	first make a capsule
+//	float	fRadius = 0.5f;
+//	float	fHalfHeight = 2.5f;
+//	PxCapsuleGeometry	capsule(fRadius, fHalfHeight);
+//	m_pActor = PxCreateDynamic(*m_pPhysics, PxTransform(PxVec3(0.0f, 2.5f, 6.0f), PxQuat(PxHalfPi, PxVec3(0.0f, 0.0f, 1.0f))), capsule, *m_pPhysicsMaterial, 1.0f);
+//	m_pPhysicsScene->addActor(*m_pActor);
+//	m_aCharacterActors.push_back(m_pActor);
+	//	now the controller stuff ...
+	m_pMyHitReport = new MyControllerHitReport();
+	m_pCharacterManager = PxCreateControllerManager(*m_pPhysicsScene);
+	//	describe our controller
+	m_ControllerDescription.height = 1.6f;
+	m_ControllerDescription.radius = 0.4f;
+	m_ControllerDescription.position.set(0, 1, 6);
+	m_ControllerDescription.material = m_pPhysicsMaterial;
+	m_ControllerDescription.reportCallback = m_pMyHitReport;	//	connect it to our collision detection routine
+	m_ControllerDescription.density = 2.0f;
+
+	//	create the player controller
+	m_pPlayerController = m_pCharacterManager->createController(m_ControllerDescription);
+	m_pPlayerController->setPosition(m_ControllerDescription.position);
+
+	//	set up some variables to control our player with
+	m_fCharacterYVelocity = 0.0f;	//	initialise character velocity
+	m_fCharacterRotation = 0.0f;	//	and rotation
+	m_fPlayerGravity = -2.5f;	//	set up the player gravity
+	m_pMyHitReport->clearPlayerContactNormal();	//	initialise the contact normal (what we are in contact with)
+	m_aCharacterActors.push_back(m_pPlayerController->getActor());
+	m_fMovementSpeed = 8.0f;	//	forward and backward movement speed
+	m_fRotationSpeed = 1.0f;	//	turning speed (in radians? per second)
+	m_bOnGround = false;
 }
 
 void Physics::setupTutorial1()
@@ -283,6 +326,47 @@ bool Physics::update()
 
 	if (m_bFluidDynamics)
 	{
+		//	player movement in fluid dynamics sim
+		//	check if we have a contact normal.  If y > 0.3 we assume this is solid ground.  This is rather primitive - try thinking of something better ...
+		if (m_pMyHitReport->getPlayerContactNormal().y > 0.3f)
+		{
+			m_fCharacterYVelocity = -0.1f;
+			m_bOnGround = true;
+			//cout << "OnGround!\n";
+		}
+		else
+		{
+			m_fCharacterYVelocity += m_fPlayerGravity * dt;
+			m_bOnGround = false;
+		}
+		m_pMyHitReport->clearPlayerContactNormal();
+		const PxVec3	up(0, 1, 0);
+		//	scan the keys and set up our intended velocity based on a global transform
+		PxVec3	velocity(0, m_fCharacterYVelocity, 0);
+		if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
+		{
+			velocity.x += m_fMovementSpeed * dt;
+		}
+		if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		{
+			velocity.x -= m_fMovementSpeed * dt;
+		}
+		//	add in z movement and jumping
+		if (glfwGetKey(m_window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS)
+		{
+			m_fCharacterYVelocity = 5.0f;
+			velocity.y = 5.0f;
+		}
+
+		float	fMinDistance = 0.001f;
+		PxControllerFilters	filter;
+		//	make controls erlative to player facing direction
+		PxQuat	rotation(m_fCharacterRotation, PxVec3(0, 1, 0));
+		//PxVec3	newVelocity(0, m_fCharacterYVelocity, 0);
+		//	move the controller
+		PxControllerCollisionFlags flags =
+			m_pPlayerController->move(rotation.rotate(velocity), fMinDistance, dt, filter);
+		int x = 0;
 	}
 
 	m_pPhysicsScene->simulate(dt > 0.0333f ? 0.0333f : dt);	//	limit the maximum time step
@@ -385,7 +469,17 @@ bool Physics::update()
 			m_pFluidEmitter->update(dt);
 			m_pFluidEmitter->renderParticles();
 		}
-
+		//	now loop through the character actors array and draw them
+		for (int i = 0; i < m_aCharacterActors.size(); ++i)
+		{
+			PxRigidActor*	pRigidActor = (PxRigidActor*)m_aCharacterActors[i];
+			PxShape*	shapes[8] = {};
+			int	iShapeCount = pRigidActor->getShapes(shapes, 8);
+			for (int j = 0; j < iShapeCount; ++j)
+			{
+				AddWidget(shapes[j], pRigidActor);
+			}
+		}
 	}
 
     m_camera.update(dt);
@@ -401,4 +495,100 @@ void Physics::draw()
 
     glfwSwapBuffers(m_window);
     glfwPollEvents();
+}
+
+void	Physics::AddSphere(PxShape* shape, PxRigidActor* rigidActor)
+{
+	//	get the global position of the actor
+	PxTransform	pose = rigidActor->getGlobalPose();
+
+	//	get what the sphere actually looks like
+	PxSphereGeometry	geo;
+	bool	status = shape->getSphereGeometry(geo);
+	float	radius = 0.0;
+
+	//	make sure nothing broke
+	if (status)
+	{
+		radius = geo.radius;
+	}
+	//	pull information out of PxTransform into glm vars
+	glm::vec3	position = glm::vec3(pose.p.x, pose.p.y, pose.p.z);
+	glm::quat	rotation = glm::quat(pose.q.w, pose.q.x, pose.q.y, pose.q.z);
+	glm::mat4	matRotation = glm::mat4(rotation);
+	//	actually render the sphere
+	Gizmos::addSphere(position, radius, 5, 5, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), &matRotation);
+}
+
+void	Physics::AddBox(PxShape* shape, PxRigidActor* rigidActor)
+{
+	//	get the global position of the actor
+	PxTransform	pose = rigidActor->getGlobalPose();
+
+	//	get what the sphere actually looks like
+	PxBoxGeometry	geo;
+	bool	status = shape->getBoxGeometry(geo);
+	PxVec3	vExtents;
+
+	//	make sure nothing broke
+	if (status)
+	{
+		vExtents = geo.halfExtents;
+	}
+	//	pull information out of PxTransform into glm vars
+	glm::vec3	position = glm::vec3(pose.p.x, pose.p.y, pose.p.z);
+	glm::quat	rotation = glm::quat(pose.q.w, pose.q.x, pose.q.y, pose.q.z);
+	glm::mat4	matRotation = glm::mat4(rotation);
+	//	actually render the sphere
+	Gizmos::addAABBFilled(position, glm::vec3(vExtents.x, vExtents.y, vExtents.z), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), &matRotation);
+}
+
+void	Physics::AddCapsule(PxShape* shape, PxRigidActor* rigidActor)
+{
+	//	get the global position of the actor
+	PxTransform	pose = rigidActor->getGlobalPose();
+
+	//	get what the sphere actually looks like
+	PxCapsuleGeometry	geo;
+	bool	status = shape->getCapsuleGeometry(geo);
+	float	radius = 0.0;
+	float	halfHeight = 0.0;
+	//	make sure nothing broke
+	if (status)
+	{
+		halfHeight = geo.halfHeight;
+		radius = geo.radius;
+	}
+	//	pull information out of PxTransform into glm vars
+	glm::vec3	position = glm::vec3(pose.p.x, pose.p.y, pose.p.z);
+	glm::quat	rotation = glm::quat(pose.q.w, pose.q.x, pose.q.y, pose.q.z);
+	glm::mat4	matRotation = glm::mat4(rotation);
+	//	actually render the capsule
+	Gizmos::addCapsule(position, (halfHeight) * 2.0f, radius, 8, 8, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), &matRotation);
+}
+
+void	Physics::AddWidget(PxShape* shape, PxRigidActor* rigidActor)
+{
+	PxGeometryType::Enum type = shape->getGeometryType();
+	switch (type)
+	{
+	case PxGeometryType::eBOX:
+	{
+		AddBox(shape, rigidActor);
+		break;
+	}
+	case PxGeometryType::eSPHERE:
+	{
+		AddSphere(shape, rigidActor);
+		break;
+	}
+	case PxGeometryType::eCAPSULE:
+	{
+		//std::cout << "drawing capsule\n";
+		AddCapsule(shape, rigidActor);
+		break;
+	}
+	default:
+		break;
+	}
 }
