@@ -1,9 +1,13 @@
 /*
 Things to do:
 * Read PhysX docs for Player controller.  Done
-* Work through Player Controller tutorial.  ****
+* Work through Player Controller tutorial.  Mostly done **** haven't added an animated FBX player to use.
 * Work through Mesh Collision tutorial
+* Work through Soft Bodies tutorial
 * Work on assessment ...
+
+Bullet Physics is a good open source alternative to PhysX - especially if you want to publish your game without paying royalties.
+
 */
 
 #include "Physics.h"
@@ -145,7 +149,7 @@ void	Physics::SetupFluidDynamics()
 	//	now set up the particle/fluid system
 	//	create the particle system in PhysX SDK
 	//	set immutable properties
-	PxU32	maxParticles = 25000;
+	PxU32	maxParticles = 6000;
 	bool	perParticleRestOffset = false;
 	m_pFluidSystem = m_pPhysics->createParticleFluid(maxParticles, perParticleRestOffset);
 	m_pFluidSystem->setRestParticleDistance(0.35f);
@@ -160,7 +164,7 @@ void	Physics::SetupFluidDynamics()
 	if (m_pFluidSystem)
 	{
 		m_pPhysicsScene->addActor(*m_pFluidSystem);
-		m_pFluidEmitter = new ParticleFluidEmitter(maxParticles, PxVec3(0, 10, 0), m_pFluidSystem, 0.01f);
+		m_pFluidEmitter = new ParticleFluidEmitter(maxParticles, PxVec3(0, 10, 0), m_pFluidSystem, 0.003f);
 		m_pFluidEmitter->setStartVelocityRange(-1.0f, -50.0f, -1.0f, 1.0f, -50.0f, 1.0f);
 	}
 
@@ -176,12 +180,15 @@ void	Physics::SetupFluidDynamics()
 	m_pMyHitReport = new MyControllerHitReport();
 	m_pCharacterManager = PxCreateControllerManager(*m_pPhysicsScene);
 	//	describe our controller
-	m_ControllerDescription.height = 1.6f;
-	m_ControllerDescription.radius = 0.4f;
+	m_ControllerDescription.height = 3.0f;
+	m_ControllerDescription.radius = 0.75f;
 	m_ControllerDescription.position.set(0, 1, 6);
 	m_ControllerDescription.material = m_pPhysicsMaterial;
 	m_ControllerDescription.reportCallback = m_pMyHitReport;	//	connect it to our collision detection routine
-	m_ControllerDescription.density = 2.0f;
+	m_ControllerDescription.density = 2000.0f;
+	m_ControllerDescription.contactOffset = 0.03f;	//	mess with the skin thickness!
+
+	//cout << "Skin thickness: " << m_ControllerDescription.contactOffset << "\n";
 
 	//	create the player controller
 	m_pPlayerController = m_pCharacterManager->createController(m_ControllerDescription);
@@ -190,12 +197,137 @@ void	Physics::SetupFluidDynamics()
 	//	set up some variables to control our player with
 	m_fCharacterYVelocity = 0.0f;	//	initialise character velocity
 	m_fCharacterRotation = 0.0f;	//	and rotation
-	m_fPlayerGravity = -2.5f;	//	set up the player gravity
+	m_fPlayerGravity = -5.0f;	//	set up the player gravity
 	m_pMyHitReport->clearPlayerContactNormal();	//	initialise the contact normal (what we are in contact with)
 	m_aCharacterActors.push_back(m_pPlayerController->getActor());
 	m_fMovementSpeed = 8.0f;	//	forward and backward movement speed
-	m_fRotationSpeed = 1.0f;	//	turning speed (in radians? per second)
+	m_fRotationSpeed = 5.0f;	//	turning speed (in radians? per second)
 	m_bOnGround = false;
+	SetupCloth();
+
+}
+
+void	Physics::SetupCloth()
+{
+	//	set cloth properties
+	float fSpringSize = 0.2f;
+	unsigned int	uiSpringRows = 40;
+	unsigned int	uiSpringCols = 40;
+	//	this position will represent the top middle vertex
+	m_aClothPos = glm::vec3(0.0f, 12.0f, 0.0f);
+	//	shifting grid position for looks
+	float	fHalfWidth = fSpringSize * uiSpringCols * 0.5f;
+
+	//	generate vertices for a grid with texture coordinates
+	m_uiClothVertexCount = uiSpringRows * uiSpringCols;
+	m_aClothPositions = new glm::vec3[m_uiClothVertexCount];
+	glm::vec2*	clothTextureCoords = new glm::vec2[m_uiClothVertexCount];
+	int	iCurrentOffset = 0;
+	for (int r = 0; r < uiSpringRows; ++r)
+	{
+		for (int c = 0; c < uiSpringCols; ++c)
+		{
+			m_aClothPositions[iCurrentOffset].x = m_aClothPos.x + fSpringSize * c;
+			m_aClothPositions[iCurrentOffset].y = m_aClothPos.y;	//	local space - this is added to the global pose position
+			m_aClothPositions[iCurrentOffset].z = m_aClothPos.z + fSpringSize * r - fHalfWidth;
+
+			clothTextureCoords[iCurrentOffset].x = 1.0f - r / (uiSpringRows - 1.0f);
+			clothTextureCoords[iCurrentOffset].y = 1.0f - c / (uiSpringCols - 1.0f);
+
+			++iCurrentOffset;
+		}
+	}
+
+	//	set up indices for the grid
+	m_uiClothIndexCount = (uiSpringRows - 1) * (uiSpringCols - 1) * 2 * 3;
+	unsigned int*	indices = new unsigned int[m_uiClothIndexCount];
+	unsigned int*	index = indices;
+
+	for (int r = 0; r < (uiSpringRows - 1); ++r)
+	{
+		for (int c = 0; c < (uiSpringCols - 1); ++c)
+		{
+			//	indices for the 4 quad corner vertices
+			unsigned int	i0 = r * uiSpringCols + c;
+			unsigned int	i1 = i0 + 1;
+			unsigned int	i2 = i0 + uiSpringCols;
+			unsigned int	i3 = i2 + 1;
+
+			//	every second quad changes the triangle order
+			if ((c + r) % 2)
+			{
+				*index++ = i0;	*index++ = i2;	*index++ = i1;
+				*index++ = i1;	*index++ = i2;	*index++ = i3;
+			}
+			else
+			{
+				*index++ = i0;	*index++ = i2;	*index++ = i3;
+				*index++ = i0;	*index++ = i3;	*index++ = i1;
+			}
+		}
+	}
+	CreateCloth(m_aClothPos, m_uiClothVertexCount, m_uiClothIndexCount, m_aClothPositions, indices);
+	//	now we need to set up the opengl stuff for it ...
+	glGenBuffers(1, &m_uiClothVBO);
+	glGenBuffers(1, &m_uiClothIBO);
+	glGenVertexArrays(1, &m_uiClothVAO);
+	glBindVertexArray(m_uiClothVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_uiClothVBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_uiClothIBO);
+	glBufferData(GL_ARRAY_BUFFER, (sizeof(glm::vec3) + sizeof(glm::vec2)) * m_uiClothVertexCount, 0, GL_STATIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * m_uiClothVertexCount, m_aClothPositions);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * m_uiClothVertexCount, sizeof(glm::vec2) * m_uiClothVertexCount, clothTextureCoords);
+
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * m_uiClothIndexCount, indices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(glm::vec3) * m_uiClothVertexCount));
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+}
+
+void	Physics::CreateCloth(glm::vec3 &a_vPosition, unsigned int &a_uiVertexCount, unsigned int &a_uiIndexCount, const glm::vec3* a_vVertices, unsigned int *a_uiIndices)
+{
+	PxClothMeshDesc	clothDesc;
+	clothDesc.points.count = a_uiVertexCount;
+	clothDesc.invMasses.count = a_uiVertexCount;
+	clothDesc.triangles.count = a_uiIndexCount / 3;
+
+	PxClothParticle*	particles = new PxClothParticle[a_uiVertexCount];
+	for (int i = 0; i < a_uiVertexCount; ++i)
+	{
+		particles[i].pos.x = a_vVertices[i].x;
+		particles[i].pos.y = a_vVertices[i].y;
+		particles[i].pos.z = a_vVertices[i].z;
+		particles[i].invWeight = 1;	//	set to zero for static points to hang from
+	}
+	clothDesc.points.data = particles;
+	clothDesc.points.stride = sizeof(PxClothParticle);
+
+	clothDesc.invMasses.data = &particles[0].invWeight;
+	clothDesc.invMasses.stride = sizeof(PxClothParticle);
+
+	clothDesc.triangles.data = a_uiIndices;
+	clothDesc.triangles.stride = sizeof(unsigned int) * 3;
+
+	PxClothFabric*	fabric = PxClothFabricCreate(*m_pPhysics, clothDesc, PxVec3(0, -1, 0));
+	PxVec3	position;
+	position.x = a_vPosition.x;
+	position.y = a_vPosition.y;
+	position.z = a_vPosition.z;
+
+	PxTransform	clothTransform = PxTransform(position);
+	m_pCloth = m_pPhysics->createCloth(clothTransform, *fabric, particles, PxClothFlag::eSCENE_COLLISION);
+	m_pCloth->setSolverFrequency(240.0f);
+
+	m_pPhysicsScene->addActor(*m_pCloth);
+
+	delete[] particles;
 }
 
 void Physics::setupTutorial1()
@@ -327,49 +459,10 @@ bool Physics::update()
 	if (m_bFluidDynamics)
 	{
 		//	player movement in fluid dynamics sim
-		//	check if we have a contact normal.  If y > 0.3 we assume this is solid ground.  This is rather primitive - try thinking of something better ...
-		if (m_pMyHitReport->getPlayerContactNormal().y > 0.3f)
-		{
-			m_fCharacterYVelocity = -0.1f;
-			m_bOnGround = true;
-			//cout << "OnGround!\n";
-		}
-		else
-		{
-			m_fCharacterYVelocity += m_fPlayerGravity * dt;
-			m_bOnGround = false;
-		}
-		m_pMyHitReport->clearPlayerContactNormal();
-		const PxVec3	up(0, 1, 0);
-		//	scan the keys and set up our intended velocity based on a global transform
-		PxVec3	velocity(0, m_fCharacterYVelocity, 0);
-		if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
-		{
-			velocity.x += m_fMovementSpeed * dt;
-		}
-		if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
-		{
-			velocity.x -= m_fMovementSpeed * dt;
-		}
-		//	add in z movement and jumping
-		if (glfwGetKey(m_window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS)
-		{
-			m_fCharacterYVelocity = 5.0f;
-			velocity.y = 5.0f;
-		}
-
-		float	fMinDistance = 0.001f;
-		PxControllerFilters	filter;
-		//	make controls erlative to player facing direction
-		PxQuat	rotation(m_fCharacterRotation, PxVec3(0, 1, 0));
-		//PxVec3	newVelocity(0, m_fCharacterYVelocity, 0);
-		//	move the controller
-		PxControllerCollisionFlags flags =
-			m_pPlayerController->move(rotation.rotate(velocity), fMinDistance, dt, filter);
-		int x = 0;
+		UpdatePlayerController(dt > 0.025f ? 0.025f : dt);
 	}
 
-	m_pPhysicsScene->simulate(dt > 0.0333f ? 0.0333f : dt);	//	limit the maximum time step
+	m_pPhysicsScene->simulate(dt > 0.025f ? 0.025f : dt);	//	limit the maximum time step
 
 	while (m_pPhysicsScene->fetchResults() == false)
 	{
@@ -480,6 +573,23 @@ bool Physics::update()
 				AddWidget(shapes[j], pRigidActor);
 			}
 		}
+
+		//	now render the cloth
+		PxClothParticleData*	pParticles = m_pCloth->lockParticleData();
+		//glm::vec3*	vertexPositions = new glm::vec3[m_uiClothVertexCount];	//	these are stored elsewhere ...
+		for (int i = 0; i < m_uiClothVertexCount; ++i)
+		{
+			m_aClothPositions[i].x = pParticles->particles[i].pos.x;
+			m_aClothPositions[i].y = pParticles->particles[i].pos.y;
+			m_aClothPositions[i].z = pParticles->particles[i].pos.z;
+		}
+		pParticles->unlock();
+
+		//	re-buffer the new positions data into the cloth VBO for rendering
+		glBindBuffer(GL_ARRAY_BUFFER, m_uiClothVBO);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * m_uiClothVertexCount, m_aClothPositions);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 	}
 
     m_camera.update(dt);
@@ -491,6 +601,17 @@ void Physics::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//m_oTank.draw();
+
+	if (m_bFluidDynamics)
+	{
+		//use shader program ... and pass stuff into it if necessary
+		unsigned int	uiProjViewUniform = glGetUniformLocation(m_uiClothShader, "projectionView");
+		glUniformMatrix4fv(uiProjViewUniform, 1, GL_FALSE, (float*)&m_camera.view_proj);
+		glBindVertexArray(m_uiClothVAO);
+		glDrawElements(GL_TRIANGLES, m_uiClothIndexCount, GL_UNSIGNED_INT, 0);
+
+	}
+
     Gizmos::draw(m_camera.proj, m_camera.view);
 
     glfwSwapBuffers(m_window);
@@ -591,4 +712,65 @@ void	Physics::AddWidget(PxShape* shape, PxRigidActor* rigidActor)
 	default:
 		break;
 	}
+}
+
+void	Physics::UpdatePlayerController(float dt)
+{
+	//	check if we have a contact normal.  If y > 0.3 we assume this is solid ground.  This is rather primitive - try thinking of something better ...
+	if (m_pMyHitReport->getPlayerContactNormal().y > 0.1f)
+	{
+		m_fCharacterYVelocity = -0.1f;
+		m_bOnGround = true;
+		//cout << "OnGround!\n";
+	}
+	else
+	{
+		m_fCharacterYVelocity += m_fPlayerGravity * dt;
+		m_bOnGround = false;
+	}
+	m_pMyHitReport->clearPlayerContactNormal();
+	const PxVec3	up(0, 1, 0);
+	//	scan the keys and set up our intended velocity based on a global transform
+	PxVec3	velocity(0, m_fCharacterYVelocity, 0);
+	if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		velocity.x += m_fMovementSpeed * dt;
+	}
+	if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		velocity.x -= m_fMovementSpeed * dt;
+	}
+	//	add in z movement and jumping
+	if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		m_fCharacterRotation += m_fRotationSpeed * dt;
+	}
+	if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		m_fCharacterRotation -= m_fRotationSpeed * dt;
+	}
+	if (glfwGetKey(m_window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS)
+	{
+		//	jump when the right control key is pressed
+		m_fCharacterYVelocity = 2.0f;
+		velocity.y = 2.0f;
+	}
+
+	float	fMinDistance = 0.001f;
+	PxControllerFilters	filter;
+	//	make controls relative to player facing direction
+	PxQuat	rotation(m_fCharacterRotation, PxVec3(0, 1, 0));
+	//PxVec3	newVelocity(0, m_fCharacterYVelocity, 0);
+	//	move the controller
+	PxVec3	displacement = rotation.rotate(velocity);
+	PxControllerCollisionFlags flags = m_pPlayerController->move(displacement, fMinDistance, dt, filter);
+
+	//	now draw a direction vector for the controller
+	//	get the global position of the actor
+	PxExtendedVec3	position = m_pPlayerController->getPosition();
+	glm::vec3	glmPosition;
+	glmPosition.x = (float)position.x;
+	glmPosition.y = (float)position.y;
+	glmPosition.z = (float)position.z;
+	Gizmos::addLine(glmPosition, glmPosition + glm::vec3(displacement.x, displacement.y, displacement.z) * 10.0f, glm::vec4(0, 0, 1, 1));
 }

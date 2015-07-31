@@ -33,13 +33,16 @@ public:
     void setupTutorial1();
 	void	setupVisualDebugger();
 	void	SetupFluidDynamics();
+	void	SetupCloth();
+	void	CreateCloth(glm::vec3 &a_vPosition, unsigned int &a_uiVertexCount, unsigned int &a_uiIndexCount, const glm::vec3* a_vVertices, unsigned int *a_uiIndices);
 	void	CreateSpheres();
 	void	AddSphere(PxShape* shape, PxRigidActor* rigidActor);
 	void	AddBox(PxShape* shape, PxRigidActor* rigidActor);
 	void	AddWidget(PxShape* shape, PxRigidActor* rigidActor);
 	void	AddCapsule(PxShape* shape, PxRigidActor* rigidActor);
+	void	UpdatePlayerController(float fDt);
 
-    FlyCamera m_camera;
+	FlyCamera m_camera;
 
 	//	Tank variables
 	Tank	m_oTank;
@@ -72,6 +75,19 @@ public:
 	float	m_fMovementSpeed;
 	float	m_fRotationSpeed;
 	bool	m_bOnGround;
+
+	//	cloth variables
+	PxCloth*	m_pCloth;
+	unsigned int	m_uiClothShader;
+	unsigned int	m_uiClothTexture;
+	unsigned int	m_uiClothIndexCount;
+	unsigned int	m_uiClothVertexCount;
+	unsigned int	m_uiClothVAO;
+	unsigned int	m_uiClothVBO;
+	unsigned int	m_uiClothIBO;
+	//	unsigned int	m_uiClothTextureVBO;
+	glm::vec3*		m_aClothPositions;
+	glm::vec3		m_aClothPos;
 
 	PxParticleFluid*	m_pFluidSystem;
 	ParticleFluidEmitter*	m_pFluidEmitter;

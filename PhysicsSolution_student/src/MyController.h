@@ -19,7 +19,6 @@ public:
 	//	called when current controller hits another controller.  More ...
 	virtual void	onObstacleHit(const PxControllerObstacleHit &hit){};
 	//	called when current controller hits a user-defined obstacle
-
 	PxVec3	getPlayerContactNormal(){ return _playerContactNormal; };
 	void	clearPlayerContactNormal(){ _playerContactNormal = PxVec3(0, 0, 0); };
 	PxVec3	_playerContactNormal;
