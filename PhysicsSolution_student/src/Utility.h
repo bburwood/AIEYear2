@@ -23,6 +23,7 @@ bool	LoadShaderType(char* fileName, GLenum shaderType, unsigned int* output);
 
 //	other functions
 OpenGLData LoadOBJ(char* a_szFileName);
+void	LoadTexture(const char* a_szFileName, unsigned int &a_uiTextureID);
 
 //	to remove fopen error, define
 //	_CRT_SECURE_NO_WARNINGS

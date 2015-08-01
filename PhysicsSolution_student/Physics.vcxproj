@@ -21,6 +21,7 @@
     <ClInclude Include="src\ParticleEmitter.h" />
     <ClInclude Include="src\ParticleFluidEmitter.h" />
     <ClInclude Include="src\Physics.h" />
+    <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\Tank.h" />
     <ClInclude Include="src\Utility.h" />
     <ClInclude Include="src\Vertex.h" />
@@ -39,6 +40,8 @@
     <ClCompile Include="src\Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="data\shaders\BasicFragment.glsl" />
+    <None Include="data\shaders\BasicVertex.glsl" />
     <None Include="data\shaders\skinned_fragment.glsl" />
     <None Include="data\shaders\skinned_vertex.glsl" />
   </ItemGroup>

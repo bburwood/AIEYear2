@@ -27,6 +27,7 @@
     <ClInclude Include="src\ParticleEmitter.h" />
     <ClInclude Include="src\ParticleFluidEmitter.h" />
     <ClInclude Include="src\MyController.h" />
+    <ClInclude Include="src\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ResourceFiles">
@@ -38,6 +39,12 @@
       <Filter>ResourceFiles</Filter>
     </None>
     <None Include="data\shaders\skinned_vertex.glsl">
+      <Filter>ResourceFiles</Filter>
+    </None>
+    <None Include="data\shaders\BasicVertex.glsl">
+      <Filter>ResourceFiles</Filter>
+    </None>
+    <None Include="data\shaders\BasicFragment.glsl">
       <Filter>ResourceFiles</Filter>
     </None>
   </ItemGroup>

@@ -15,6 +15,7 @@ Bullet Physics is a good open source alternative to PhysX - especially if you wa
 #include "gl_core_4_4.h"
 #include "GLFW/glfw3.h"
 #include "Gizmos.h"
+#include "Utility.h"
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 #include <iostream>
@@ -211,10 +212,10 @@ void	Physics::SetupCloth()
 {
 	//	set cloth properties
 	float fSpringSize = 0.2f;
-	unsigned int	uiSpringRows = 40;
-	unsigned int	uiSpringCols = 40;
+	uiSpringRows = 40;
+	uiSpringCols = 40;
 	//	this position will represent the top middle vertex
-	m_aClothPos = glm::vec3(0.0f, 12.0f, 0.0f);
+	m_aClothPos = glm::vec3(0.0f, 4.0f, 0.0f);
 	//	shifting grid position for looks
 	float	fHalfWidth = fSpringSize * uiSpringCols * 0.5f;
 
@@ -281,14 +282,16 @@ void	Physics::SetupCloth()
 
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * m_uiClothIndexCount, indices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(glm::vec3) * m_uiClothVertexCount));
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
+	ReloadShader();
+	LoadTexture("textures/gold-metal-texture-tracery.jpg", m_uiClothTexture);
+	cout << "Cloth TextureID: " << m_uiClothTexture << "\n";
 }
 
 void	Physics::CreateCloth(glm::vec3 &a_vPosition, unsigned int &a_uiVertexCount, unsigned int &a_uiIndexCount, const glm::vec3* a_vVertices, unsigned int *a_uiIndices)
@@ -306,6 +309,9 @@ void	Physics::CreateCloth(glm::vec3 &a_vPosition, unsigned int &a_uiVertexCount,
 		particles[i].pos.z = a_vVertices[i].z;
 		particles[i].invWeight = 1;	//	set to zero for static points to hang from
 	}
+	particles[0].invWeight = 0;	//	set to zero for static points to hang from
+	particles[uiSpringCols - 1].invWeight = 0;	//	set to zero for static points to hang from
+
 	clothDesc.points.data = particles;
 	clothDesc.points.stride = sizeof(PxClothParticle);
 
@@ -409,6 +415,10 @@ bool Physics::update()
     {
         return false;
     }
+	if (glfwGetKey(m_window, GLFW_KEY_R) == GLFW_PRESS)
+	{
+		ReloadShader();
+	}
 
     Gizmos::clear();
 
@@ -582,6 +592,7 @@ bool Physics::update()
 			m_aClothPositions[i].x = pParticles->particles[i].pos.x;
 			m_aClothPositions[i].y = pParticles->particles[i].pos.y;
 			m_aClothPositions[i].z = pParticles->particles[i].pos.z;
+			m_aClothPositions[i] += m_aClothPos;
 		}
 		pParticles->unlock();
 
@@ -605,7 +616,9 @@ void Physics::draw()
 	if (m_bFluidDynamics)
 	{
 		//use shader program ... and pass stuff into it if necessary
+		glUseProgram(m_uiClothShader);
 		unsigned int	uiProjViewUniform = glGetUniformLocation(m_uiClothShader, "projectionView");
+		unsigned int	uiClothTextureUniform = glGetUniformLocation(m_uiClothShader, "diffuseMap");
 		glUniformMatrix4fv(uiProjViewUniform, 1, GL_FALSE, (float*)&m_camera.view_proj);
 		glBindVertexArray(m_uiClothVAO);
 		glDrawElements(GL_TRIANGLES, m_uiClothIndexCount, GL_UNSIGNED_INT, 0);
@@ -773,4 +786,11 @@ void	Physics::UpdatePlayerController(float dt)
 	glmPosition.y = (float)position.y;
 	glmPosition.z = (float)position.z;
 	Gizmos::addLine(glmPosition, glmPosition + glm::vec3(displacement.x, displacement.y, displacement.z) * 10.0f, glm::vec4(0, 0, 1, 1));
+}
+
+void	Physics::ReloadShader()
+{
+	//	may need to add a check for not loaded programs here, given I'm using this to do the initial shader loading as well
+	glDeleteProgram(m_uiClothShader);
+	LoadShader("shaders/BasicVertex.glsl", 0, "shaders/BasicFragment.glsl", &m_uiClothShader);
 }

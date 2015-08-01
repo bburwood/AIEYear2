@@ -28,6 +28,7 @@ public:
     virtual void shutdown();
     virtual bool update();
     virtual void draw();
+	void	ReloadShader();
 
     void setupPhysx();
     void setupTutorial1();
@@ -86,6 +87,8 @@ public:
 	unsigned int	m_uiClothVBO;
 	unsigned int	m_uiClothIBO;
 	//	unsigned int	m_uiClothTextureVBO;
+	unsigned int	uiSpringRows;
+	unsigned int	uiSpringCols;
 	glm::vec3*		m_aClothPositions;
 	glm::vec3		m_aClothPos;
 
