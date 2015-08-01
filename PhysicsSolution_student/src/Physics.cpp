@@ -292,6 +292,8 @@ void	Physics::SetupCloth()
 	ReloadShader();
 	LoadTexture("textures/gold-metal-texture-tracery.jpg", m_uiClothTexture);
 	cout << "Cloth TextureID: " << m_uiClothTexture << "\n";
+	delete[] indices;
+	delete[] clothTextureCoords;
 }
 
 void	Physics::CreateCloth(glm::vec3 &a_vPosition, unsigned int &a_uiVertexCount, unsigned int &a_uiIndexCount, const glm::vec3* a_vVertices, unsigned int *a_uiIndices)
@@ -401,6 +403,13 @@ void Physics::setupPhysx()
 void Physics::shutdown()
 {
 	//	now clean up the PhysX system
+	if (m_aClothPositions != nullptr)
+	{
+		delete[] m_aClothPositions;
+	}
+	delete m_pMyHitReport;
+	delete m_pFluidEmitter;
+
 	m_pPhysicsScene->release();
 	m_pPhysics->release();
 	m_pPhysicsFoundation->release();
@@ -586,7 +595,6 @@ bool Physics::update()
 
 		//	now render the cloth
 		PxClothParticleData*	pParticles = m_pCloth->lockParticleData();
-		//glm::vec3*	vertexPositions = new glm::vec3[m_uiClothVertexCount];	//	these are stored elsewhere ...
 		for (int i = 0; i < m_uiClothVertexCount; ++i)
 		{
 			m_aClothPositions[i].x = pParticles->particles[i].pos.x;
