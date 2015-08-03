@@ -121,7 +121,7 @@ class SphereClass: public DIYRigidBody
 {
 public:
 	float _radius;
-	SphereClass(	glm::vec2 position,glm::vec2 velocity,float mass,float radius, glm::vec4& colour);
+	SphereClass(glm::vec2 position, glm::vec2 velocity, float radius, float mass, glm::vec4& colour);
 	SphereClass(	glm::vec2 position, float angle, float speed, float radius, float mass, glm::vec4& colour);
 	virtual void makeGizmo();
 };

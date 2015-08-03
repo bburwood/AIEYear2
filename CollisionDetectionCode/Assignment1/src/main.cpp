@@ -25,8 +25,8 @@ int main()
 	}
 
 //	DIYPhysicsRocketSetup();
-//	DIYPhysicsCollisionTutorial();
-	SetupSpringPhysics();
+	DIYPhysicsCollisionTutorial();
+//	SetupSpringPhysics();
 
 	window = glfwCreateWindow(1080, 720, "Physics 2D", nullptr, nullptr);
 
@@ -44,6 +44,7 @@ int main()
 		glfwTerminate();
 		return -3;
 	}
+	glfwSwapInterval(0);	//	turns vsync on or off, 0 for off, 1 for on.
 
 	Gizmos::create();
 
@@ -201,12 +202,12 @@ void	SetupPoolGame()
 	float	fSqrt3 = 1.7320508075688772935274463415059f;
 	glm::vec2	vStartTriangleHead(20.0f, 0.0f);
 
-//	BoxClass*	box1 = new BoxClass(glm::vec2(-8, 30), glm::vec2(0, 0), 0.0f, 10, 4, 4, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-//	physicsScene->addActor(box1);
+	BoxClass*	box1 = new BoxClass(glm::vec2(-8, 30), glm::vec2(0, 0), 0.0f, 10, 4, 4, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+	physicsScene->addActor(box1);
 
 	SphereClass* sphere1;
-	sphere1 = new SphereClass(glm::vec2(-60.0f, vStartTriangleHead.y), glm::vec2(35.0f, 2.05f), fBallRadius, 10.5f, glm::vec4(1, 1, 1, 1));
-	physicsScene->addActor(sphere1);
+//	sphere1 = new SphereClass(glm::vec2(-60.0f, vStartTriangleHead.y), glm::vec2(35.0f, 2.05f), fBallRadius, 0.5f, glm::vec4(1, 1, 1, 1));
+//	physicsScene->addActor(sphere1);
 	for (int iRow = 0; iRow < 5; ++iRow)
 	{
 		for (int iNumInRow = 0; iNumInRow <= iRow; ++iNumInRow)

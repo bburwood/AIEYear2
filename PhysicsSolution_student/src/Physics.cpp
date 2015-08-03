@@ -1,9 +1,10 @@
 /*
 Things to do:
 * Read PhysX docs for Player controller.  Done
+* Collision Shape Hierarchies - Tutorial.  This is the one that sets up the tank.
 * Work through Player Controller tutorial.  Mostly done **** haven't added an animated FBX player to use.
 * Work through Mesh Collision tutorial
-* Work through Soft Bodies tutorial
+* Work through Soft Bodies tutorial.		Done.
 * Work on assessment ...
 
 Bullet Physics is a good open source alternative to PhysX - especially if you want to publish your game without paying royalties.
