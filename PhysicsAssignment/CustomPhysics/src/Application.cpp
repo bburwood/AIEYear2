@@ -46,7 +46,7 @@ bool	Application::startup()
 		return false;
 	}
 	glfwMakeContextCurrent(this->m_window);
-	//setVSync(1);  // 0 disable VSync, 1 enable vsync - needs glew
+	//setVSync(1);  // 0 disable VSync, 1 enable vsync - needs glew ... now doesn't work in VS 2013.
 	if (ogl_LoadFunctions() == ogl_LOAD_FAILED)	//	must be after you make context current
 	{
 		glfwDestroyWindow(this->m_window);
@@ -55,6 +55,8 @@ bool	Application::startup()
 	}
 	int	major_version = ogl_GetMajorVersion();
 	int	minor_version = ogl_GetMinorVersion();
+
+	glfwSwapInterval(0);	//	turns vsync on or off, 0 for off, 1 for on.
 
 	printf("Successfully loaded OpenGL version %d.%d!\n", major_version, minor_version);
 	return true;
