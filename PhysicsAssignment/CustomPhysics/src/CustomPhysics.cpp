@@ -76,29 +76,25 @@ bool	CustomPhysics::startup()
 	m_bar = TwNewBar("GeneralStuff");	//	must be a single word (no spaces) if you want to be able to resize it
 	TwDefine(" GeneralStuff size='280 300' "); // resize bar
 	TwAddSeparator(m_bar, "Misc Data", "");
-	//TwAddVarRW(m_bar, "Light Direction", TW_TYPE_DIR3F, &m_vLightDir, "label='Light Direction'");
-	//TwAddVarRW(m_bar, "Light Colour", TW_TYPE_COLOR4F, &m_vLightColour, "");
 	TwAddVarRW(m_bar, "Ambient Colour", TW_TYPE_COLOR4F, &m_vAmbientLightColour, "");
 	TwAddVarRW(m_bar, "Clear Colour", TW_TYPE_COLOR4F, &m_BackgroundColour, "");
 	TwAddVarRW(m_bar, "Draw Gizmos", TW_TYPE_BOOL8, &m_bDrawGizmos, "");
 	TwAddVarRW(m_bar, "Draw Gizmos Grid", TW_TYPE_BOOL8, &m_bDrawGrid, "");
 	TwAddVarRW(m_bar, "Camera Speed", TW_TYPE_FLOAT, &m_FlyCamera.m_fSpeed, "min=1 max=250 step=1");
-	TwAddVarRW(m_bar, "Physics Update FPS", TW_TYPE_FLOAT, &m_fPhysicsFrameRate, "min=10 max=250 step=1");
-	TwAddVarRW(m_bar, "Cue Sensitivity", TW_TYPE_FLOAT, &m_fCueSpeed, "min=50 max=500 step=1");
+	TwAddVarRW(m_bar, "Physics Update FPS", TW_TYPE_FLOAT, &m_fPhysicsFrameRate, "min=10 max=500 step=1");
+	TwAddVarRW(m_bar, "Cue Sensitivity", TW_TYPE_FLOAT, &m_fCueSpeed, "min=0.02 max=1.5 step=0.02");
 	TwAddVarRW(m_bar, "Gravity On/Off", TW_TYPE_BOOL8, &m_bGravity, "");
 	TwAddVarRW(m_bar, "Gravity Strength", TW_TYPE_FLOAT, &m_fGravityStrength, "min=-50 max=10 step=0.5");
 	TwAddVarRO(m_bar, "Rendering FPS", TW_TYPE_FLOAT, &m_fFPS, "");
 
-	m_fPhysicsFrameRate = 120.0f;
+	m_fPhysicsFrameRate = 500.0f;
 	m_fPhysicsUpdateTimout = 1.0f / m_fPhysicsFrameRate;
 	m_fPhysicsUpdateTimer = 0.0f;
-	m_fCueSpeed = 500.0f;
+	m_fCueSpeed = 1.0f;
 	m_fGravityStrength = -10.0f;
 	m_bGravity = false;
 
 	m_vAmbientLightColour = vec4(0.001f, 0.001f, 0.001f, 1.0f);
-	//m_vLightColour = vec4(0.2f, 0.2f, 0.2f, 1.0f);
-	//m_vLightDir = glm::normalize(vec3(-0.10f, -0.85f, 0.5f));
 
 	SetupPoolGame();
 
@@ -112,6 +108,7 @@ void	CustomPhysics::shutdown()
 	Gizmos::destroy();
 	TwDeleteAllBars();
 	TwTerminate();
+	Application::shutdown();
 }
 
 bool	CustomPhysics::update()
@@ -151,42 +148,10 @@ bool	CustomPhysics::update()
 	}
 	m_fPhysicsUpdateTimer += dT;
 
-	/////////////////////////////////////////////////
 	static glm::vec2	vCMToAnchor = glm::vec2(0);
 	static bool	bGrabbed = false;
-	//static bool	bAiming = false;
 
 	SphereClass*	pSphere = (SphereClass*)physicsScene->actors[0];
-	/*
-	BoxClass*	box1 = (BoxClass*)physicsScene->actors[0];
-	float	fSpeed = 75.0f;
-
-	if (glfwGetKey(m_window, GLFW_KEY_LEFT))
-	{
-		box1->velocity.x -= dT * fSpeed;
-	}
-	if (glfwGetKey(m_window, GLFW_KEY_RIGHT))
-	{
-		box1->velocity.x += dT * fSpeed;
-	}
-	if (glfwGetKey(m_window, GLFW_KEY_UP))
-	{
-		box1->velocity.y += dT * fSpeed;
-	}
-	if (glfwGetKey(m_window, GLFW_KEY_DOWN))
-	{
-		box1->velocity.y -= dT * fSpeed;
-	}
-	fSpeed = 2.0f;
-	if (glfwGetKey(m_window, GLFW_KEY_Q))
-	{
-		box1->rotation2D += dT * fSpeed;
-	}
-	if (glfwGetKey(m_window, GLFW_KEY_E))
-	{
-		box1->rotation2D -= dT * fSpeed;
-	}
-	*/
 	double	mouseX, mouseY;
 	glfwGetCursorPos(m_window, &mouseX, &mouseY);
 	vec2	vMouseWorld;	// = m_FlyCamera.PickAgainstPlane(mouseX, mouseY, vec4(0, 1, 0, 0));
@@ -206,8 +171,8 @@ bool	CustomPhysics::update()
 			//	if the mouse is over the sphere
 			if (pSphere->IsPointOver(vMouseWorld))
 			{
-				cout << "Mouse world pos: " << vMouseWorld.x << " / " << vMouseWorld.y << "\n";
-				cout << "Circle world pos: " << pSphere->position.x << " / " << pSphere->position.y << "\n";
+				//cout << "Mouse world pos: " << vMouseWorld.x << " / " << vMouseWorld.y << "\n";
+				//cout << "Circle world pos: " << pSphere->position.x << " / " << pSphere->position.y << "\n";
 				//	store anchor point
 				vCMToAnchor = vMouseWorld - pSphere->position;
 				float	fSinTheta = sinf(-pSphere->rotation2D);
@@ -216,7 +181,6 @@ bool	CustomPhysics::update()
 					fSinTheta * vCMToAnchor.x + fCosTheta * vCMToAnchor.y);
 				//	set grabbed to true
 				bGrabbed = true;
-				//bAiming = true;
 			}
 		}
 		else
@@ -228,9 +192,8 @@ bool	CustomPhysics::update()
 				fSinTheta * vCMToAnchor.x + fCosTheta * vCMToAnchor.y);
 			glm::vec2	vTempAnchor = pSphere->position + vRotLocalPos;
 
-			//	add force at anchor point towards the mouse - not for pool
-			//box1->applyForceAtPoint(vMouseWorld - vAnchor, vAnchor);
 			Gizmos::add2DLine(vTempAnchor, vMouseWorld, glm::vec4(1, 1, 0, 1));
+			Gizmos::add2DLine(vTempAnchor, vTempAnchor + (vTempAnchor - vMouseWorld), glm::vec4(0.5f, 0.5f, 0, 1.0f));
 		}
 	}
 	else
@@ -245,12 +208,12 @@ bool	CustomPhysics::update()
 			vAnchor = pSphere->position + vRotLocalPos;
 
 			//	add force at anchor point towards the mouse
-			pSphere->applyForceAtPoint(-m_fCueSpeed * (vMouseWorld - vAnchor), vAnchor);
+			pSphere->applyForceAtPoint(-(m_fCueSpeed / m_fPhysicsUpdateTimout) * (vMouseWorld - vAnchor), vAnchor);
 			Gizmos::add2DLine(vAnchor, vMouseWorld, glm::vec4(1, 1, 0, 1));
+			Gizmos::add2DLine(vAnchor, vAnchor + (vAnchor - vMouseWorld), glm::vec4(0.5f, 0.5f, 0, 1.0f));
 			vCMToAnchor = glm::vec2(0);
 			vAnchor = glm::vec2(0);
 			bGrabbed = false;
-			//bAiming = false;
 		}
 	}
 
@@ -273,8 +236,6 @@ void	CustomPhysics::draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	Application::draw();
-
-
 
 	if (m_bDrawGizmos)
 	{
@@ -317,13 +278,15 @@ void	CustomPhysics::SetupPoolGame()
 	}
 
 	float	fBallRadius = 2.25f;
-	float	fCueBallMass = 2.0f;
+	float	fCueBallMass = 1.0f;
 	float	fRedBallMass = 0.5f;
 	float	fSqrt3 = 1.7320508075688772935274463415059f;
 	glm::vec2	vStartTriangleHead(45.0f, 5.0f);
 
 	SphereClass* sphere1;
 	sphere1 = new SphereClass(glm::vec2(-25.0f, vStartTriangleHead.y), glm::vec2(0.0f, 0.0f), fBallRadius, fCueBallMass, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	//	test start position for box collisions
+	//sphere1 = new SphereClass(glm::vec2(-75.0f, -10.0f), glm::vec2(0.0f, 0.0f), fBallRadius, fCueBallMass, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	physicsScene->addActor(sphere1);
 //	BoxClass*	box1 = new BoxClass(glm::vec2(-8.0f, 30.0f), glm::vec2(0.0f, 0.0f), 0.0f, 10.0f, 4.0f, 4.0f, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 //	physicsScene->addActor(box1);
@@ -363,22 +326,29 @@ void	CustomPhysics::SetupPoolGame()
 	box = new BoxClass(glm::vec2(fRight1, fBottom), glm::vec2(0.0f, 0.0f), 0.0f, 10.0f, fBoxLength, fBoxThickness, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 	box->bIsStatic = true;
 	physicsScene->addActor(box);
-	box = new BoxClass(glm::vec2(fLeftEdge, fEdgeY), glm::vec2(0.0f, 0.0f), 0.0f, 10.0f, fBoxThickness, 25.0f, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+	box = new BoxClass(glm::vec2(fLeftEdge, fEdgeY), glm::vec2(0.0f, 0.0f), 0.0f, 10.0f, fBoxThickness, fBoxLength, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 	box->bIsStatic = true;
 	physicsScene->addActor(box);
-	box = new BoxClass(glm::vec2(fRightEdge, fEdgeY), glm::vec2(0.0f, 0.0f), 0.0f, 10.0f, fBoxThickness, 25.0f, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+	box = new BoxClass(glm::vec2(fRightEdge, fEdgeY), glm::vec2(0.0f, 0.0f), 0.0f, 10.0f, fBoxThickness, fBoxLength, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 	box->bIsStatic = true;
+	physicsScene->addActor(box);
+
+	//	this box is just for fun in testing for when you break a rope and get a ball outside the pool table area, so that you can test free box - sphere collisions
+	box = new BoxClass(glm::vec2(-65.0f, -10.0f), glm::vec2(0.0f, 0.0f), 0.0f, 10.0f, 2.5f, 10.0f, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+	//box->bIsStatic = true;
 	physicsScene->addActor(box);
 
 	float	fLengthPlus = 1.001f * fBoxLength;
 	float	fThicknessPlus = 1.01f * fBoxThickness;
 	int		iSegments = 6;
-	CreateChain(glm::vec2(fLeftEdge + fThicknessPlus, fEdgeY + fLengthPlus), glm::vec2(fLeft1 - fLengthPlus, fTop - fThicknessPlus), iSegments, 110.0f, 0.2f);
-	CreateChain(glm::vec2(fLeftEdge + fThicknessPlus, fEdgeY - fLengthPlus), glm::vec2(fLeft1 - fLengthPlus, fBottom + fThicknessPlus), iSegments, 110.0f, 0.2f);
-	CreateChain(glm::vec2(fLeft1 + fLengthPlus, fTop), glm::vec2(fRight1 - fLengthPlus, fTop), iSegments, 110.0f, 0.2f);
-	CreateChain(glm::vec2(fLeft1 + fLengthPlus, fBottom), glm::vec2(fRight1 - fLengthPlus, fBottom), iSegments, 110.0f, 0.2f);
-	CreateChain(glm::vec2(fRight1 + fLengthPlus, fTop - fThicknessPlus), glm::vec2(fRightEdge - fThicknessPlus, fEdgeY + fLengthPlus), iSegments, 110.0f, 0.2f);
-	CreateChain(glm::vec2(fRight1 + fLengthPlus, fBottom + fThicknessPlus), glm::vec2(fRightEdge - fThicknessPlus, fEdgeY - fLengthPlus), iSegments, 110.0f, 0.2f);
+	float	fSpringk = 250.0f;
+	float	fSpringDamping = 0.5f;
+	CreateChain(glm::vec2(fLeftEdge + fThicknessPlus, fEdgeY + fLengthPlus), glm::vec2(fLeft1 - fLengthPlus, fTop - fThicknessPlus), iSegments, fSpringk, fSpringDamping);
+	CreateChain(glm::vec2(fLeftEdge + fThicknessPlus, fEdgeY - fLengthPlus), glm::vec2(fLeft1 - fLengthPlus, fBottom + fThicknessPlus), iSegments, fSpringk, fSpringDamping);
+	CreateChain(glm::vec2(fLeft1 + fLengthPlus, fTop), glm::vec2(fRight1 - fLengthPlus, fTop), iSegments, fSpringk, fSpringDamping);
+	CreateChain(glm::vec2(fLeft1 + fLengthPlus, fBottom), glm::vec2(fRight1 - fLengthPlus, fBottom), iSegments, fSpringk, fSpringDamping);
+	CreateChain(glm::vec2(fRight1 + fLengthPlus, fTop - fThicknessPlus), glm::vec2(fRightEdge - fThicknessPlus, fEdgeY + fLengthPlus), iSegments, fSpringk, fSpringDamping);
+	CreateChain(glm::vec2(fRight1 + fLengthPlus, fBottom + fThicknessPlus), glm::vec2(fRightEdge - fThicknessPlus, fEdgeY - fLengthPlus), iSegments, fSpringk, fSpringDamping);
 
 	//	testing with planes ...
 	PlaneClass* plane = new PlaneClass(glm::vec2(0.25f, 1.0f), -55.0f);
@@ -394,7 +364,7 @@ void	CustomPhysics::CreateChain(glm::vec2 a_vStartPos, glm::vec2 a_vEndPos, int 
 	Joint**	joints = new Joint*[a_iSegments];
 	glm::vec2	vSegmentLength = (a_vEndPos - a_vStartPos) / (float)(a_iSegments);
 	//	first make the spheres
-	float	fSphereMass = 0.2f;
+	float	fSphereMass = 0.025f;
 	float	fSphereRadius = 0.0025f;
 	glm::vec2	vCurrentPos = a_vStartPos;
 	for (int i = 0; i < a_iSegments + 1; ++i)

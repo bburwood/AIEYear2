@@ -7,8 +7,8 @@ using namespace std;
 void	BuildBoxPoints(BoxClass* box, glm::vec2* points);
 
 float	fCollisionEValue = 0.8f;
-float	g_fDynamicFriction = 0.2f;
-float	g_fStaticFriction = 0.2f;
+float	g_fDynamicFriction = 0.25f;
+float	g_fStaticFriction = 0.6f;
 
 //	function pointer array for doing our collisions
 typedef	CollisionManifold	(*fn)(DIYPhysicScene* scene, PhysicsObject*, PhysicsObject*);
@@ -333,7 +333,7 @@ void	DIYPhysicScene::CheckForCollision()
 					float	fInvMass2 = (manifold.second && !manifold.second->bIsStatic) ? 1.0f / manifold.second->mass : 0;
 
 					float	fInvMOI1 = (!manifold.first->bIsStatic) ? 1.0f / manifold.first->momentOfInertia : 0;
-					float	fInvMOI2 = manifold.second ? 1.0f / manifold.first->momentOfInertia : 0;
+					float	fInvMOI2 = manifold.second ? 1.0f / manifold.second->momentOfInertia : 0;
 
 					glm::vec2	vCom1 = manifold.first->position;
 					glm::vec2	vCom2 = (manifold.second && !manifold.second->bIsStatic) ? manifold.second->position : manifold.P;
@@ -368,7 +368,13 @@ void	DIYPhysicScene::CheckForCollision()
 					float	fR1PdotT = glm::dot(vR1P, vTangent);
 					float	fR2PdotT = glm::dot(vR2P, vTangent);
 					float	fFrictionDenom = fInvMass1 + fInvMass2 + (fR1PdotT * fR1PdotT) * fInvMOI1 + (fR2PdotT * fR2PdotT) * fInvMOI2;
-					float	fFrictionJ = (-(1.0f + manifold.e) * glm::dot(vVelocity1 - vVelocity2, vTangent)) / fFrictionDenom;
+					float	fTempCoeffOfFriction = manifold.first->staticFriction;
+					if (manifold.second)
+					{
+						//	average the coefficients of friction
+						fTempCoeffOfFriction = (fTempCoeffOfFriction + manifold.second->staticFriction) * 0.5f;
+					}
+					float	fFrictionJ = (-(fTempCoeffOfFriction * manifold.e) * glm::dot(vVelocity1 - vVelocity2, vTangent)) / fFrictionDenom;
 
 					if (!manifold.first->bIsStatic)
 					{
@@ -714,7 +720,7 @@ CollisionManifold	DIYPhysicScene::Box2Box(DIYPhysicScene* scene, PhysicsObject* 
 	BuildBoxPoints(box2, vPoints + 4);
 
 	CollisionManifold	result = {};
-	result.bColliding = true;
+	result.bColliding = false;
 	result.first = box1;
 	result.second = box2;
 	result.e = fCollisionEValue;
@@ -772,6 +778,7 @@ CollisionManifold	DIYPhysicScene::Box2Box(DIYPhysicScene* scene, PhysicsObject* 
 				if (fOverlap < minOverlap)
 				{
 					result.N = perpVector;
+					minOverlap = fOverlap;
 					//result.P = ;
 				}
 			}
@@ -781,10 +788,52 @@ CollisionManifold	DIYPhysicScene::Box2Box(DIYPhysicScene* scene, PhysicsObject* 
 	}
 	//	if we made it this far and it did not return yet, that means that they are colliding
 	//	collision response
-	box1->velocity = glm::vec2(0, 0);
-	box2->velocity = glm::vec2(0, 0);
+	//	for most situations only a single point of 1 of the boxes will be overlapping the other box, so find the first overlapping point and use it as the point of contact
+	//	check the points of each box against the other box
+	float	fDirChange = 1.0f;
+	for (int pointIndex = 0; pointIndex < 8; ++pointIndex)
+	{
+		if (pointIndex < 4)
+		{
+			//	then we are checking points of the first box
+			if (box2->IsPointOver(vPoints[pointIndex]))
+			{
+				//	we have found an overlapping point
+				result.P = vPoints[pointIndex] + (0.5f * minOverlap * result.N);
+				fDirChange = -1.0f;
+				break;
+			}
+		}
+		else
+		{
+			//	then we are checking points of the second box
+			if (box1->IsPointOver(vPoints[pointIndex]))
+			{
+				//	we have found an overlapping point
+				result.P = vPoints[pointIndex] - (0.5f * minOverlap * result.N);
+				break;
+			}
+		}
+	}
+	//	as a test add a gizmo to draw the point ... maybe
+	//	box1->velocity = glm::vec2(0, 0);
+	//	box2->velocity = glm::vec2(0, 0);
 	box1->m_bIsColliding = true;
 	box2->m_bIsColliding = true;
+	result.bColliding = true;
+	if (box1->bIsStatic || box2->bIsStatic)
+	{
+		minOverlap *= 2.0f;
+	}
+	//	now move the boxes back along the collision normal
+	if (!box1->bIsStatic)
+	{
+		box1->position -= (0.5f * fDirChange * minOverlap * result.N);
+	}
+	if (!box2->bIsStatic)
+	{
+		box2->position += (0.5f * fDirChange * minOverlap * result.N);
+	}
 
 	return result;
 }
