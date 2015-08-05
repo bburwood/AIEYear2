@@ -44,6 +44,7 @@ public:
 	float	m_fPhysicsUpdateTimout;
 	float	m_fPhysicsFrameRate;
 	float	m_fCueSpeed;
+	float	m_fGravityStrength;
 
 	DIYPhysicScene* physicsScene;
 
@@ -59,7 +60,8 @@ public:
 	bool	m_bDrawGizmos;
 	bool	m_bDrawGrid;
 	bool	m_bDebug;
-/*
+	bool	m_bGravity;
+	/*
 
 OpenGLData	m_BoardMesh;
 OpenGLData	m_BackBoardMesh;

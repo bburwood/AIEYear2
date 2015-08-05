@@ -1,37 +1,93 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="src\Application.cpp" />
-    <ClCompile Include="src\Camera.cpp" />
-    <ClCompile Include="src\Gizmos.cpp" />
-    <ClCompile Include="src\gl_core_4_4.c" />
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\Physics.cpp" />
-    <ClCompile Include="src\Tank.cpp" />
-    <ClCompile Include="src\Utilities.cpp" />
-    <ClCompile Include="src\ParticleEmitter.cpp" />
-    <ClCompile Include="src\ParticleFluidEmitter.cpp" />
-    <ClCompile Include="src\MyController.cpp" />
+    <ClCompile Include="src\Application.cpp">
+      <Filter>SourceFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Camera.cpp">
+      <Filter>SourceFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gizmos.cpp">
+      <Filter>SourceFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gl_core_4_4.c">
+      <Filter>SourceFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>SourceFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MyController.cpp">
+      <Filter>SourceFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParticleEmitter.cpp">
+      <Filter>SourceFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParticleFluidEmitter.cpp">
+      <Filter>SourceFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Physics.cpp">
+      <Filter>SourceFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tank.cpp">
+      <Filter>SourceFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utilities.cpp">
+      <Filter>SourceFiles</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Application.h" />
-    <ClInclude Include="src\Camera.h" />
-    <ClInclude Include="src\Gizmos.h" />
-    <ClInclude Include="src\gl_core_4_4.h" />
-    <ClInclude Include="src\Physics.h" />
-    <ClInclude Include="deps\FBXLoader\FBXFile.h" />
-    <ClInclude Include="src\GLMHeader.h" />
-    <ClInclude Include="src\Tank.h" />
-    <ClInclude Include="src\Utility.h" />
-    <ClInclude Include="src\Vertex.h" />
-    <ClInclude Include="src\ParticleEmitter.h" />
-    <ClInclude Include="src\ParticleFluidEmitter.h" />
-    <ClInclude Include="src\MyController.h" />
-    <ClInclude Include="src\stb_image.h" />
+    <ClInclude Include="src\Application.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Camera.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="deps\FBXLoader\FBXFile.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Gizmos.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gl_core_4_4.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GLMHeader.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MyController.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleEmitter.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleFluidEmitter.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Physics.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\stb_image.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Tank.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utility.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Vertex.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ResourceFiles">
       <UniqueIdentifier>{0e2321d4-49ce-450d-972c-97e0136e9505}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="HeaderFiles">
+      <UniqueIdentifier>{dd70e9b6-dd94-4292-9ac8-4a1da0f4b797}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SourceFiles">
+      <UniqueIdentifier>{ef8da72c-6564-40ed-97fd-937a50ad5130}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

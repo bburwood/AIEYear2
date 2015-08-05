@@ -85,12 +85,16 @@ bool	CustomPhysics::startup()
 	TwAddVarRW(m_bar, "Camera Speed", TW_TYPE_FLOAT, &m_FlyCamera.m_fSpeed, "min=1 max=250 step=1");
 	TwAddVarRW(m_bar, "Physics Update FPS", TW_TYPE_FLOAT, &m_fPhysicsFrameRate, "min=10 max=250 step=1");
 	TwAddVarRW(m_bar, "Cue Sensitivity", TW_TYPE_FLOAT, &m_fCueSpeed, "min=50 max=500 step=1");
+	TwAddVarRW(m_bar, "Gravity On/Off", TW_TYPE_BOOL8, &m_bGravity, "");
+	TwAddVarRW(m_bar, "Gravity Strength", TW_TYPE_FLOAT, &m_fGravityStrength, "min=-50 max=10 step=0.5");
 	TwAddVarRO(m_bar, "Rendering FPS", TW_TYPE_FLOAT, &m_fFPS, "");
 
 	m_fPhysicsFrameRate = 120.0f;
 	m_fPhysicsUpdateTimout = 1.0f / m_fPhysicsFrameRate;
 	m_fPhysicsUpdateTimer = 0.0f;
 	m_fCueSpeed = 500.0f;
+	m_fGravityStrength = -10.0f;
+	m_bGravity = false;
 
 	m_vAmbientLightColour = vec4(0.001f, 0.001f, 0.001f, 1.0f);
 	//m_vLightColour = vec4(0.2f, 0.2f, 0.2f, 1.0f);
@@ -126,6 +130,14 @@ bool	CustomPhysics::update()
 	if (dT > 0.1f)
 	{
 		dT = 0.1f;
+	}
+	if (m_bGravity)
+	{
+		physicsScene->gravity = glm::vec2(0.0f, m_fGravityStrength);
+	}
+	else
+	{
+		physicsScene->gravity = glm::vec2(0.0f, 0.0f);
 	}
 	glfwSetTime(0.0f);
 	m_fTimer += dT;
@@ -295,7 +307,14 @@ void	CustomPhysics::SetupPoolGame()
 	physicsScene = new DIYPhysicScene();
 	physicsScene->collisionEnabled = true;
 	physicsScene->timeStep = m_fPhysicsUpdateTimout;
-	physicsScene->gravity = glm::vec2(0.0f, 0.0f);
+	if (m_bGravity)
+	{
+		physicsScene->gravity = glm::vec2(0.0f, m_fGravityStrength);
+	}
+	else
+	{
+		physicsScene->gravity = glm::vec2(0.0f, 0.0f);
+	}
 
 	float	fBallRadius = 2.25f;
 	float	fCueBallMass = 2.0f;
@@ -331,7 +350,7 @@ void	CustomPhysics::SetupPoolGame()
 	float	fRight1 = 50.0f;
 	float	fRightEdge = 85.0f;
 	float	fBoxLength = 25.0f;
-	float	fBoxThickness = 4.0f;
+	float	fBoxThickness = 3.0f;
 	BoxClass*	box = new BoxClass(glm::vec2(fLeft1, fTop), glm::vec2(0.0f, 0.0f), 0.0f, 10.0f, fBoxLength, fBoxThickness, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 	box->bIsStatic = true;
 	physicsScene->addActor(box);

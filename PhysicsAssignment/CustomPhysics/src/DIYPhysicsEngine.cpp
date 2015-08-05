@@ -7,6 +7,8 @@ using namespace std;
 void	BuildBoxPoints(BoxClass* box, glm::vec2* points);
 
 float	fCollisionEValue = 0.8f;
+float	g_fDynamicFriction = 0.2f;
+float	g_fStaticFriction = 0.2f;
 
 //	function pointer array for doing our collisions
 typedef	CollisionManifold	(*fn)(DIYPhysicScene* scene, PhysicsObject*, PhysicsObject*);
@@ -150,8 +152,8 @@ DIYRigidBody::DIYRigidBody(	glm::vec2 position,glm::vec2 velocity,float rotation
 	this->velocity = velocity;
 	this->rotation2D = rotation;
 	this->mass = mass;
-	this->dynamicFriction = 0.15f;
-	this->staticFriction = 0.15f;
+	this->dynamicFriction = g_fDynamicFriction;
+	this->staticFriction = g_fStaticFriction;
 	this->totalTorque = 0.0f;
 	this->totalForce = glm::vec2(0.0f, 0.0f);
 	this->angularVelocity = 0.0f;
