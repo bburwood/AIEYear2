@@ -40,6 +40,7 @@ public:
 	FluidCells	frontCells;
 	FluidCells	backCells;
 	float*	aFDivergence;
+	unsigned char*	texData;
 	int	iWidth, iHeight;
 	unsigned int	uiProgram;
 };

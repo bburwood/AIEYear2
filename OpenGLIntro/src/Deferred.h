@@ -56,14 +56,29 @@ public:
 	float	m_camera_x;
 	float	m_camera_z;
 	float	m_timer;
+	float	m_fCamTimer;
 	unsigned int	m_uiProgramID;
 	FlyCamera	m_FlyCamera;
 	vec4	m_BackgroundColour;
+	vec4	m_AmbientLight;
 	float	m_fFPS;
+	float	m_fCamRotatePeriod;
+	float	m_fCamRotateHeight;
+	float	m_fCamRotateRadius;
+	float	m_fCamLookAtHeight;
+	float	m_fSpecPower;
+
+	//	Colour Blindness simulation variables
+	float	m_fColourBlindSimSetting;
+	float	m_fRedWeakValue;
+	float	m_fGreenWeakValue;
+	bool	m_bColourBlindSim;
 
 	TwBar*	m_bar;
 
 	bool	m_bDrawGizmos;
+	bool	m_bPaused;
+	bool	m_bRotateCam;
 };
 
 #endif	//	_DEFERRED_H_

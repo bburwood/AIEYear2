@@ -31,6 +31,8 @@ DIYFluid::DIYFluid(int a_iWidth, int a_iHeight, float a_fViscosity, float a_fCel
 	backCells.fPressure = new float[iCellCount];
 
 	aFDivergence = new float[iCellCount];
+	//	Allocate space for texture data
+	texData = new unsigned char[iWidth * iHeight * 3];
 
 	//	initialise memory to zeroes
 	memset(frontCells.vVelocity, 0, sizeof(glm::vec2) * iCellCount);
@@ -46,9 +48,9 @@ DIYFluid::DIYFluid(int a_iWidth, int a_iHeight, float a_fViscosity, float a_fCel
 	for (int i = 0; i < iWidth * iHeight; ++i)
 	{
 		frontCells.vDyeColour[i] = glm::vec3(
-			(float)i / (2.0f * (float)iWidth),
 			(float)i / (1.0f * (float)iWidth),
-			(float)i / (0.5f * (float)iWidth));
+			(float)i / (0.5f * (float)iWidth),
+			(float)i / (0.25f * (float)iWidth));
 	}
 	vLastMouseWorldCoords = glm::vec2(0);
 
@@ -66,6 +68,7 @@ DIYFluid::~DIYFluid()
 	delete[]	backCells.vVelocity;
 
 	delete[]	aFDivergence;
+	delete[]	texData;
 }
 
 void	DIYFluid::SwapColours()
@@ -151,7 +154,7 @@ void	DIYFluid::UpdateFluid(float fDt)
 	SwapVelocities();
 	SwapColours();
 
-	for (int iDiffuseStep = 0; iDiffuseStep < 20; ++iDiffuseStep)
+	for (int iDiffuseStep = 0; iDiffuseStep < 3; ++iDiffuseStep)
 	{
 		Diffuse(fDt);
 		SwapVelocities();
@@ -159,7 +162,7 @@ void	DIYFluid::UpdateFluid(float fDt)
 
 	Divergence(fDt);
 
-	for (int iPressureStep = 0; iPressureStep < 25; ++iPressureStep)
+	for (int iPressureStep = 0; iPressureStep < 5; ++iPressureStep)
 	{
 		UpdatePressure(fDt);
 		SwapPressures();
@@ -199,13 +202,13 @@ void	DIYFluid::UpdateFluid(float fDt)
 		if (glfwGetKey(pWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		{
 			//	push the fluid on a 45 degree angle up and right when the left shift key is held down
-			BoxVelocityPush(mouseGridPos.x, mouseGridPos.y, 6, glm::vec2(75.0f, 75.0f), fDt);
+			BoxVelocityPush(mouseGridPos.x, mouseGridPos.y, 8, glm::vec2(200.0f, 200.0f), fDt);
 		}
 		else
 		{
 			//	push the fluid based on the mouse movement
-			glm::vec2	vPushDirection = (mouseWorldPos - vLastMouseWorldCoords) * 75.0f;
-			BoxVelocityPush(mouseGridPos.x, mouseGridPos.y, 10, vPushDirection, fDt);
+			glm::vec2	vPushDirection = (mouseWorldPos - vLastMouseWorldCoords) * 500.0f;
+			BoxVelocityPush(mouseGridPos.x, mouseGridPos.y, 12, vPushDirection, fDt);
 		}
 
 	}
@@ -484,8 +487,6 @@ void	DIYFluid::UpdateBoundary()
 
 void	DIYFluid::RenderFluid(glm::mat4 viewProj)
 {
-	//	Allocate space for texture data
-	unsigned char*	texData = new unsigned char[iWidth * iHeight * 3];
 	//	Fill texture with data with dye colours
 	int iTimes3 = 0;
 	for (int i = 0; i < iWidth * iHeight; ++i)
@@ -505,7 +506,5 @@ void	DIYFluid::RenderFluid(glm::mat4 viewProj)
 	//	delete texture
 	glDeleteVertexArrays(1, &quadVAO);
 	glDeleteTextures(1, &textureHandle);
-
-	delete[]	texData;
 }
 

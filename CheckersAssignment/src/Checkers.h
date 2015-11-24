@@ -124,6 +124,7 @@ private:
 	std::vector<float>	aPointLightsRange;
 	//	we need our shaders
 	unsigned int	m_uiGBufferProgram;
+	unsigned int	m_uiGBufferTexturedProgram;
 	unsigned int	m_uiDirectionalLightProgram;
 	unsigned int	m_uiPointLightProgram;
 	unsigned int	m_uiCompositeProgram;

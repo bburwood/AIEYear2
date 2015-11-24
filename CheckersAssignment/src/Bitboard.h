@@ -17,8 +17,8 @@
 typedef	unsigned int	Bitboard;
 
 //	not really the place to put these, but it serves the purpose - just need to then add the include for this header into Application.cpp as well.
-const int	BUFFER_WIDTH = 1600;
-const int	BUFFER_HEIGHT = 900;
+const int	BUFFER_WIDTH = 1920;
+const int	BUFFER_HEIGHT = 1080;
 
 //	What do I need?  ...
 //	Player 1/2 starting config

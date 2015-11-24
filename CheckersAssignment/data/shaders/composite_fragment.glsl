@@ -16,17 +16,17 @@ void main()
 {
 	vec4 albedo_sample = texture(albedo_tex, frag_texcoord);
 	vec4 light_sample = texture(light_tex, frag_texcoord);
-//	vec4 normalSample = texture(normals_tex, frag_texcoord);
+	vec4 normalSample = texture(normals_tex, frag_texcoord);
 //	vec4 positionSample = texture(position_tex, frag_texcoord);
 //	vec2	temp = vec2(tempColour.y, tempColour.z);
 //	vec2	temp = normalize(tempColour.xy + tempColour.zw);
 //	out_colour = texture(normals_tex, temp);
 //	out_colour = texture(normals_tex, frag_texcoord);
 //	out_colour = vec4(0, frag_texcoord, 1);
-/*
+
 
 	vec3	ambient = albedo_sample.xyz * ambient_light;
-	vec3	N = normalize(normalSample.xyz);
+/*	vec3	N = normalize(normalSample.xyz);
 	vec3	E = normalize(eye_pos - positionSample.xyz);
 	//vec3	L = normalize(light_sample.xyz);	//	hmmm ... light direction ... how do we get this properly ...
 	vec3	L = normalize(reflect(E, N));	//	hmmm ... light direction ... how do we get this properly ...
@@ -55,10 +55,12 @@ void main()
 //	out_colour = vec4(0, d, 0, 1);
 //	out_colour = albedo_sample * light_sample;
 //	out_colour = albedo_sample;
-	out_colour = light_sample;
+//	out_colour = light_sample;	//	the actual diffuse + specular render
+	out_colour = light_sample + vec4(ambient, 1);	//	the final render: ambient + diffuse + specular
 //	out_colour = normalSample;
 //	out_colour = positionSample;
 //	out_colour = vec4(ambient_light, 1.0f);
+//	out_colour = vec4(ambient, 1.0f);
 //	out_colour = texture(normals_tex, frag_texcoord);
 //	out_colour = texture(position_tex, frag_texcoord);
 //	out_colour = vec4(0, 0, fSpecPower, 1);

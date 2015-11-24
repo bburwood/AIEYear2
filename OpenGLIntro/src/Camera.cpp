@@ -3,7 +3,8 @@
 #include <GLFW\glfw3.h>
 
 #include <cstdio>
-
+float window_width = 1920.0f;
+float window_height = 1080.0f;
 
 /////////////////////////////////////////////////////////////////////////////////////
 //	Camera functions in this section
@@ -55,8 +56,8 @@ void	Camera::UpdateProjectionViewTransform()
 
 vec3	Camera::PickAgainstPlane(float x, float y, vec4 plane)
 {
-	float nxPos = x / 1280.0f;
-	float nyPos = y / 720.0f;
+	float nxPos = x / window_width;
+	float nyPos = y / window_height;
 
 	float sxPos = nxPos - 0.5f;
 	float syPos = nyPos - 0.5f;
@@ -134,14 +135,14 @@ bool	FlyCamera::update(float dT)
 		//	do the mouse stuff if the right button has been pressed
 		double	dXDelta, dYDelta;
 		glfwGetCursorPos(pCurrentWindow, &dXDelta, &dYDelta);
-		glfwSetCursorPos(pCurrentWindow, 1280.0 * 0.5, 720.0 * 0.5);
+		glfwSetCursorPos(pCurrentWindow, window_width * 0.5, window_height * 0.5);
 
 		//calculate x and y deltas here ...
-		dXDelta -= 1280.0f / 2.0f;
-		dYDelta -= 720.0f / 2.0f;
+		dXDelta -= window_width / 2.0f;
+		dYDelta -= window_height / 2.0f;
 
-		dXDelta /= -1280.0f / 2.0f;
-		dYDelta /= -720.0f / 2.0f;
+		dXDelta /= -window_width / 2.0f;
+		dYDelta /= -window_height / 2.0f;
 		vec3	cameraRight = (vec3)m_worldTransform[0];
 		mat4	cameraYaw = glm::rotate((float)dXDelta, vec3(0, 1, 0));
 		mat4	cameraPitch = glm::rotate((float)dYDelta, cameraRight);

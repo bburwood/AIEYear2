@@ -51,7 +51,7 @@ void main()
 	//	L is already calculated above
 	vec3	R = normalize(reflect(-L, N));
 
-	d = max(0.0, dot(N, L));
+	//d = max(0.0, dot(N, L));
 	//d = 0.5f;	//	for debugging!
 	vec3 diffuse = vec3(d) * surfaceLighting * albedo_sample.xyz;
 
@@ -59,7 +59,7 @@ void main()
 	//float s = d;
 	s = pow(s, fSpecPower);
 
-	vec3	specular = vec3(s) * surfaceLighting * albedo_sample.xyz;
+	vec3	specular = vec3(s) * albedo_sample.xyz;	// * surfaceLighting;
 
 //	light_output = ambient + diffuse + specular;
 	//	ambient should only be added ONCE - not for every point light!

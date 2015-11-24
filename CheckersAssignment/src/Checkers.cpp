@@ -71,6 +71,7 @@ bool	Checkers::startup()
 //	P1Prev = ATB_PlayerType;
 
 	TwAddSeparator(m_bar, "Misc Data", "");
+	TwAddButton(m_bar, "", NULL, NULL, " label='Misc Data' ");
 	TwAddVarRW(m_bar, "Light Direction", TW_TYPE_DIR3F, &m_vLightDir, "label='Light Direction'");
 	TwAddVarRW(m_bar, "Light Colour", TW_TYPE_COLOR4F, &m_vLightColour, "");
 	TwAddVarRW(m_bar, "Ambient Colour", TW_TYPE_COLOR4F, &m_vAmbientLightColour, "");
@@ -82,6 +83,7 @@ bool	Checkers::startup()
 	TwAddVarRO(m_bar, "FPS", TW_TYPE_FLOAT, &m_fFPS, "");
 
 	TwAddSeparator(m_bar, "Game Data", "");
+	TwAddButton(m_bar, "", NULL, NULL, " label='Game Data' ");
 	TwAddVarRW(m_bar, "Reset Game", TW_TYPE_BOOL8, &m_bResetGame, "");
 	TwAddVarRW(m_bar, "Start Player", TW_TYPE_INT32, &m_iPlayerToMoveFirst, "min=1 max=2 step=1");
 	TwAddVarRW(m_bar, "Piece Movement Speed", TW_TYPE_FLOAT, &m_Game.m_fMoveSpeed, "min=0.2 max=10 step=0.1");
@@ -108,7 +110,7 @@ bool	Checkers::startup()
 
 	m_Player1Colour = vec4(0.7f, 0.05f, 0.05f, 1.0f);
 	m_Player2Colour = vec4(0.05f, 0.05f, 0.7f, 1.0f);
-	m_vAmbientLightColour = vec4(0.001f, 0.001f, 0.001f, 1.0f);
+	m_vAmbientLightColour = vec4(0.10f, 0.10f, 0.10f, 1.0f);
 	m_vLightColour = vec4(0.2f, 0.2f, 0.2f, 1.0f);
 	m_vLightDir = glm::normalize(vec3(-0.10f, -0.85f, 0.5f));
 
@@ -1122,6 +1124,7 @@ void	Checkers::ReloadShader()
 	LoadShader("./shaders/lighting_colour_vertex.glsl", nullptr, "./shaders/lighting_colour_fragment.glsl", &m_uiModelProgramID);
 
 	LoadShader("shaders/gbuffer_vertex.glsl", 0, "shaders/gbuffer_fragment.glsl", &m_uiGBufferProgram);
+	LoadShader("shaders/gbuffer_textured_vertex.glsl", 0, "shaders/gbuffer_textured_fragment.glsl", &m_uiGBufferTexturedProgram);
 	LoadShader("shaders/composite_vertex.glsl", 0, "shaders/composite_fragment.glsl", &m_uiCompositeProgram);
 	LoadShader("shaders/composite_vertex.glsl", 0, "shaders/directional_light_fragment.glsl", &m_uiDirectionalLightProgram);
 	LoadShader("shaders/point_light_vertex.glsl", 0, "shaders/point_light_fragment.glsl", &m_uiPointLightProgram);
@@ -1489,15 +1492,18 @@ void	Checkers::DrawModelsDeferred()
 
 
 	//	draw the checkerboard
-	glUseProgram(m_uiGBufferProgram);
-	iViewProjUniform = glGetUniformLocation(m_uiGBufferProgram, "view_proj");
+	glUseProgram(m_uiGBufferTexturedProgram);
+	iViewUniform = glGetUniformLocation(m_uiGBufferTexturedProgram, "view");
+	glUniformMatrix4fv(iViewUniform, 1, GL_FALSE, (float*)&m_FlyCamera.m_viewTransform);
+	iViewProjUniform = glGetUniformLocation(m_uiGBufferTexturedProgram, "view_proj");
 	glUniformMatrix4fv(iViewProjUniform, 1, GL_FALSE, (float*)&m_FlyCamera.m_projectionViewTransform);
-	iWorldUniform = glGetUniformLocation(m_uiGBufferProgram, "worldTransform");
+	iWorldUniform = glGetUniformLocation(m_uiGBufferTexturedProgram, "worldTransform");
 	glUniformMatrix4fv(iWorldUniform, 1, GL_FALSE, (float*)&m_CheckerBoardWorldTransform);
-//	int iTexUniform = glGetUniformLocation(m_uiGBufferProgram, "albedoTexture");
-//	glUniform1i(iTexUniform, 0);
-//	glActiveTexture(GL_TEXTURE0);
-//	glBindTexture(GL_TEXTURE_2D, m_uiCheckerBoardTexture);
+
+	int iTexUniform = glGetUniformLocation(m_uiGBufferTexturedProgram, "albedoTexture");
+	glUniform1i(iTexUniform, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_uiCheckerBoardTexture);
 //	eye_pos_uniform = glGetUniformLocation(m_uiGBufferProgram, "eye_pos");
 //	glUniform3fv(eye_pos_uniform, 1, (float*)&m_FlyCamera.GetPosition());
 //	iLightDirUniform = glGetUniformLocation(m_uiGBufferProgram, "light_dir");
@@ -1511,24 +1517,23 @@ void	Checkers::DrawModelsDeferred()
 
 	//	this is temporary until I get the texture working
 	vPieceColour = vec3(0.25f);	//	make the board temporarily dark
-	iCheckerColourUniform = glGetUniformLocation(m_uiGBufferProgram, "material_colour");
+	iCheckerColourUniform = glGetUniformLocation(m_uiGBufferTexturedProgram, "material_colour");
 	glUniform3fv(iCheckerColourUniform, 1, (float*)&vPieceColour);
 
 	glBindVertexArray(m_BoardMesh.m_uiVAO);
 	glDrawElements(GL_TRIANGLES, m_BoardMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
-/*
+
 	//	now draw the Backboard
 	//	uses the same shader program, so no need to load change here yet
-	iWorldUniform = glGetUniformLocation(m_uiProgramID, "worldTransform");
+	iWorldUniform = glGetUniformLocation(m_uiGBufferTexturedProgram, "worldTransform");
 	glUniformMatrix4fv(iWorldUniform, 1, GL_FALSE, (float*)&m_BackBoardWorldTransform);
-	iTexUniform = glGetUniformLocation(m_uiProgramID, "albedoTexture");
+	iTexUniform = glGetUniformLocation(m_uiGBufferTexturedProgram, "albedoTexture");
 	glUniform1i(iTexUniform, 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_uiBackBoardTexture);
 
 	glBindVertexArray(m_BackBoardMesh.m_uiVAO);
 	glDrawElements(GL_TRIANGLES, m_BackBoardMesh.m_uiIndexCount, GL_UNSIGNED_INT, 0);
-*/
 
 }
 
@@ -1651,34 +1656,39 @@ void	Checkers::RenderCompositePass()
 void	Checkers::SetupDeferredLights()
 {
 	int	iLightCount = 0;
+	float fLightRange = 3.5f;	//	originally 3.5f
 	//	Add lights to indicate Player 1's side
 ///*
 	for (int i = 0; i < 5; ++i)
 	{
-		AddPointLight(i * 2 - 4.0f, 2.0f, -4.0f, 0.5f, 0.1f, 0.1f, 3.5f);
+		AddPointLight(i * 2 - 4.0f, 2.0f, -4.0f, m_Player1Colour.r, m_Player1Colour.g, m_Player1Colour.b, fLightRange);
 		++iLightCount;
 	}
 	//	Add lights to indicate Player 2's side
+	fLightRange = 3.5f;	//	originally 3.5f
 	for (int i = 0; i < 5; ++i)
 	{
-		AddPointLight(i * 2 - 4.0f, 2.0f, 4.0f, 0.1f, 0.1f, 0.5f, 3.5f);
+		AddPointLight(i * 2 - 4.0f, 2.0f, 4.0f, m_Player2Colour.r, m_Player2Colour.g, m_Player2Colour.b, fLightRange);
 		++iLightCount;
 	}
+///*
 	//	Add lights above the board
+	fLightRange = 2.0f;	//	originally 1.5f
 	for (int i = 0; i < 25; ++i)
 	{
 		for (int j = 0; j < 25; ++j)
 		{
-			AddPointLight(0.5f * i - 6.0f, 1.0f, 0.5f * j - 6.0f, 0.2f, 0.2f, 0.2f, 1.5f);
+			AddPointLight(0.5f * i - 6.0f, 1.0f, 0.5f * j - 6.0f, 0.1f, 0.1f, 0.1f, fLightRange);
 			++iLightCount;
 		}
 	}
 	//	Add lights below the board
+	fLightRange = 3.5f;	//	originally 2.5f
 	for (int i = 0; i < 7; ++i)
 	{
 		for (int j = 0; j < 7; ++j)
 		{
-			AddPointLight(i*2 - 6.0f, -1.5f, j*2 - 6.0f, 0.25f, 0.25f, 0.25f, 2.5f);
+			AddPointLight(i * 2 - 6.0f, -1.5f, j * 2 - 6.0f, 0.25f, 0.25f, 0.25f, fLightRange);
 			++iLightCount;
 		}
 	}

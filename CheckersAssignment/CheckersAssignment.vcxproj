@@ -116,6 +116,8 @@
     <None Include="data\shaders\composite_vertex.glsl" />
     <None Include="data\shaders\directional_light_fragment.glsl" />
     <None Include="data\shaders\gbuffer_fragment.glsl" />
+    <None Include="data\shaders\gbuffer_textured_fragment.glsl" />
+    <None Include="data\shaders\gbuffer_textured_vertex.glsl" />
     <None Include="data\shaders\gbuffer_vertex.glsl" />
     <None Include="data\shaders\gpu_particle_fragment.glsl" />
     <None Include="data\shaders\gpu_particle_geometry.glsl" />

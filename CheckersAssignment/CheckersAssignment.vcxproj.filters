@@ -148,5 +148,11 @@
     <None Include="data\shaders\point_light_vertex.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="data\shaders\gbuffer_textured_vertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\gbuffer_textured_fragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -41,7 +41,7 @@ bool	Application::startup()
 		return -1;
 	}
 
-	this->m_window = glfwCreateWindow(1280, 720, "Computer Graphics", nullptr, nullptr);
+	this->m_window = glfwCreateWindow(1920, 1080, "Computer Graphics", nullptr, nullptr);
 	if (m_window == nullptr)
 	{
 		return -2;
@@ -56,6 +56,8 @@ bool	Application::startup()
 	}
 	int	major_version = ogl_GetMajorVersion();
 	int	minor_version = ogl_GetMinorVersion();
+
+	glfwSwapInterval(0);	//	turns vsync on or off, 0 for off, 1 for on.
 
 	printf("Successfully loaded OpenGL version %d.%d!\n", major_version, minor_version);
 	return true;

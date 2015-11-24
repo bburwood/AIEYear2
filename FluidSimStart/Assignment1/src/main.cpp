@@ -29,7 +29,7 @@ int main()
 //	DIYPhysicsCollisionTutorial();
 //    SpringPhysicsTutorial();
 
-	window = glfwCreateWindow(1080, 720, "Physics: Fluid Dynamics 2D", nullptr, nullptr);
+	window = glfwCreateWindow(1920, 1080, "Physics: Fluid Dynamics 2D", nullptr, nullptr);
 
 	if (window == nullptr)
 	{
@@ -60,7 +60,7 @@ int main()
 	float prevTime = 0;
 	float	fTimer = 0.0f;
 
-	DIYFluid	fluid = DIYFluid(256, 256, 0.0000000001f, 0.1f);
+	DIYFluid	fluid = DIYFluid(640, 640, 0.0000000001f, 0.1f);
 
 	while (glfwWindowShouldClose(window) == false && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS)
 	{
